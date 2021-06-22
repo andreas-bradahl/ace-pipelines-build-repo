@@ -2,13 +2,15 @@ import json
 
 from tekton_scripts import *
 
-with open('github_payload.json') as file:
-    resp_dict = json.load(file)
 
 def test_store_repo_names():
     """Test that the created list is the same as the expected list."""
+    with open('github_payload.json') as file:
+        resp_dict = json.load(file)
+
     actual = store_repo_names(resp_dict)
     expected = ['petstore', 'petstore-config']
+    
     assert actual == expected
 
 def test_write_repos_to_file_number_of_lines_is_three():
