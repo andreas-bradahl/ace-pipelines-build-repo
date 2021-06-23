@@ -1,5 +1,4 @@
 import requests
-import json
 
 
 def store_repo_names(response_dictionary):
