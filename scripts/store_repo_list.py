@@ -1,6 +1,6 @@
 import requests
 import sys
-import json
+import os
 
 
 def store_repo_names(response_dictionary):
@@ -18,10 +18,11 @@ def write_repos_to_file(repo_list, file_path):
 def execute_github_request(topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
     url = f"https://api.github.com/search/repositories?q=user:andreas-bradahl+topic:{topic_name}"
-    user = 'andreas-bradahl'
-    token = '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'
+    # user = os.environ.get('GITHUB_USER')
+    # token = os.environ.get('GITHUB_TOKEN')
 
-    response = requests.get(url, auth=(user, token))
+    # response = requests.get(url, auth=(user, token))
+    response = requests.get(url)
 
     # Write payload to test file
     # with open('testfiles/github_payload.json', 'w') as f:
