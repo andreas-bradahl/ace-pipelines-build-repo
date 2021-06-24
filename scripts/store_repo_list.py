@@ -33,7 +33,10 @@ def execute_github_request(topic_name):
 def main():
     if len(sys.argv) == 2:
         response = execute_github_request(sys.argv[1])
+        print(response.status_code)
+
         repo_list = store_repo_names(response.json())
+        print(repo_list)
 
         write_repos_to_file(repo_list, 'repos_list.txt')
     elif len(sys.argv) > 2:
