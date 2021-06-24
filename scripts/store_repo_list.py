@@ -1,4 +1,6 @@
 import requests
+import sys
+import json
 
 
 def store_repo_names(response_dictionary):
@@ -17,18 +19,26 @@ def execute_github_request(topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
     url = f"https://api.github.com/search/repositories?q=user:andreas-bradahl+topic:{topic_name}"
     user = 'andreas-bradahl'
-    token = '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'
+    token = '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'
 
     response = requests.get(url, auth=(user, token))
+
+    # Write payload to test file
+    with open('testfiles/github_payload.json', 'w') as f:
+        f.write(json.dumps(response.json()))
 
     return response
 
 def main():
-    response = execute_github_request('petstore-topic')
+    if len(sys.argv) == 2:
+        response = execute_github_request(sys.argv[1])
+        repo_list = store_repo_names(response.json())
 
-    repo_list = store_repo_names(response.json())
-
-    write_repos_to_file(repo_list, 'repos_test.txt')
+        write_repos_to_file(repo_list, 'repos_list.txt')
+    elif len(sys.argv) > 2:
+        print("Error: Too many arguments (only one GitHub topic allowed).")
+    else:
+        print("Error: No GitHub topic argument received.")
 
 if __name__ == '__main__':
     main()
