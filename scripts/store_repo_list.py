@@ -9,11 +9,17 @@ def store_repo_names(response_dictionary):
     
     return repos
 
-def write_repos_to_file(repo_list, file_path):
+
+def write_repos_to_file(repo_list, filename):
     """Stores list of repo names to a file line by line"""
-    with open(file_path, 'w') as file:
+    
+    # Create folder structure if it doesn't exist
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    with open(filename, 'w') as file:
         for repo in repo_list:
             file.writelines(repo + '\n')
+
     
 def execute_github_request(topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
@@ -30,6 +36,7 @@ def execute_github_request(topic_name):
 
     return response
 
+
 def main():
     if len(sys.argv) == 2:
         response = execute_github_request(sys.argv[1])
@@ -38,11 +45,12 @@ def main():
         repo_list = store_repo_names(response.json())
         print(repo_list)
 
-        write_repos_to_file(repo_list, 'repos_list.txt')
+        write_repos_to_file(repo_list, 'repos/repo_list.txt')
     elif len(sys.argv) > 2:
         print("Error: Too many arguments (only one GitHub topic allowed).")
     else:
         print("Error: No GitHub topic argument received.")
+
 
 if __name__ == '__main__':
     main()
