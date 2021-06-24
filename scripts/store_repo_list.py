@@ -19,7 +19,7 @@ def execute_github_request(topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
     url = f"https://api.github.com/search/repositories?q=user:andreas-bradahl+topic:{topic_name}"
     user = 'andreas-bradahl'
-    token = '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'
+    token = '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'
 
     response = requests.get(url, auth=(user, token))
 
