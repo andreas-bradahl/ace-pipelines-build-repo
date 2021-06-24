@@ -24,8 +24,8 @@ def execute_github_request(topic_name):
     response = requests.get(url, auth=(user, token))
 
     # Write payload to test file
-    with open('testfiles/github_payload.json', 'w') as f:
-        f.write(json.dumps(response.json()))
+    # with open('testfiles/github_payload.json', 'w') as f:
+    #     f.write(json.dumps(response.json()))
 
     return response
 
