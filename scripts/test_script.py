@@ -1,1 +1,0 @@
-print("Hello pipeline from Python!")

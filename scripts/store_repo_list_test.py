@@ -15,6 +15,7 @@ def test_store_repo_names():
     # Sort so that the order of elements doesn't matter
     assert actual.sort() == expected.sort()
 
+
 def test_store_repo_names_empty_dict():
     """Test that a KeyError is thrown when sending an empty list to store_repo_names"""
     with pytest.raises(KeyError):
@@ -26,12 +27,13 @@ def test_store_repo_names_empty_dict():
         assert actual == expected
 
 
-
-def test_write_repos_to_file_number_of_lines_is_three():
+def test_write_repos_to_file_assert_content():
     """"Test that the file written has the expected format"""
     repo_list = ['repo1', 'repo2', 'repo3']
+    filename = 'repos/repo_list.json'
+    expected = '["repo1", "repo2", "repo3"]'
 
-    write_repos_to_file(repo_list, 'repos_list.txt')
+    write_repos_to_file(repo_list, filename)
     
-    with open('repos_test.txt', 'r') as f:
-        assert f.readlines() == ['repo1\n', 'repo2\n', 'repo3\n']
+    with open(filename, 'r') as f:
+        assert f.read() == expected

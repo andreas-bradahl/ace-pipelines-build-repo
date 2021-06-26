@@ -1,6 +1,7 @@
 import requests
 import sys
 import os
+import json
 
 
 def store_repo_names(response_dictionary):
@@ -17,8 +18,7 @@ def write_repos_to_file(repo_list, filename):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     with open(filename, 'w') as file:
-        for repo in repo_list:
-            file.writelines(repo + '\n')
+        file.write(json.dumps(repo_list))
 
     
 def execute_github_request(topic_name):
