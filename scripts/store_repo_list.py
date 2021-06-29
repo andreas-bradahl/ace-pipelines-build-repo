@@ -45,7 +45,7 @@ def main():
         repo_list = store_repo_names(response.json())
         print(repo_list)
 
-        write_repos_to_file(repo_list, 'repos/repo_list.txt')
+        write_repos_to_file(repo_list, 'data-location/repo_list.txt')
     elif len(sys.argv) > 2:
         print("Error: Too many arguments (only one GitHub topic allowed).")
     else:
