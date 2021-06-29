@@ -39,15 +39,21 @@ def execute_github_request(topic_name):
 
 def main():
     if len(sys.argv) == 2:
-        response = execute_github_request(sys.argv[1])
+        arguments = sys.argv[1].split()
+        topic = arguments[0]
+        repo_list_filepath = arguments[1]
+
+        response = execute_github_request(topic)
         print(response.status_code)
 
         repo_list = store_repo_names(response.json())
         print(repo_list)
 
-        write_repos_to_file(repo_list, 'data-location/repo_list.txt')
-    elif len(sys.argv) > 2:
-        print("Error: Too many arguments (only one GitHub topic allowed).")
+        repo_list_path = f'{repo_list_filepath}'
+
+        write_repos_to_file(repo_list, repo_list_path)
+    elif len(sys.argv) > 3:
+        print("Error: Too many arguments.")
     else:
         print("Error: No GitHub topic argument received.")
 
