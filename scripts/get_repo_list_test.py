@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from store_repo_list import *
+from get_repo_list import *
 
 
 def test_store_repo_names():
