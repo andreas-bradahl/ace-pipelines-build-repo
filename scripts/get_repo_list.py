@@ -8,7 +8,10 @@ def get_repo_names(response_dictionary):
     """Returns a list of repo names in the GH payload dictionary"""
     repos = [value['name'] for value in response_dictionary['items']]
 
-    print(f"Found {len(repos)} repositories.")
+    print(f"Found {len(repos)} repositories:")
+    for repo in repos:
+        print(repo)
+
     return repos
 
 
@@ -17,7 +20,6 @@ def write_repos_to_file(repo_list, filename):
 
     # Create folder structure if it doesn't exist
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    print(f"Creating directory: {filename}")
 
     with open(filename, 'w') as file:
         file.write(json.dumps(repo_list))
@@ -25,7 +27,7 @@ def write_repos_to_file(repo_list, filename):
 
 def execute_github_request(user, topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
-    print(f"GH search URL: https://api.github.com/search/repositories?q=user:{user}+topic:{topic_name}")
+    print(f'Find repos in user/org: {user}, with topic: {topic}')
     url = f"https://api.github.com/search/repositories?q=user:{user}+topic:{topic_name}"
     # user = os.environ.get('GITHUB_USER')
     # token = os.environ.get('GITHUB_TOKEN')
@@ -47,7 +49,8 @@ def main():
 
         repo_list = get_repo_names(response.json())
 
-        write_repos_to_file(repo_list, './repos/repos.json')
+        # Try running this in Ubuntu to see if it works - if not, absolute path is required
+        write_repos_to_file(repo_list, 'repos/repos.json')
     elif len(sys.argv) > NUMBER_OF_ARGUMENTS:
         print("Error: Too many arguments")
     else:
