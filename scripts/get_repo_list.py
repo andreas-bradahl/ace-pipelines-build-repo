@@ -16,6 +16,7 @@ def write_repos_to_file(repo_list, filename):
 
     # Create folder structure if it doesn't exist
     os.makedirs(os.path.dirname(filename), exist_ok=True)
+    print(f"Creating directory: {filename}")
 
     with open(filename, 'w') as file:
         file.write(json.dumps(repo_list))
@@ -23,6 +24,7 @@ def write_repos_to_file(repo_list, filename):
 
 def execute_github_request(user, topic_name):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
+    print(f"GH search URL: https://api.github.com/search/repositories?q=user:{user}+topic:{topic_name}")
     url = f"https://api.github.com/search/repositories?q=user:{user}+topic:{topic_name}"
     # user = os.environ.get('GITHUB_USER')
     # token = os.environ.get('GITHUB_TOKEN')
