@@ -47,7 +47,7 @@ def main():
 
         repo_list = get_repo_names(response.json())
 
-        write_repos_to_file(repo_list, '/workspace/data-location/repos/repos.json')
+        write_repos_to_file(repo_list, './repos/repos.json')
     elif len(sys.argv) > NUMBER_OF_ARGUMENTS:
         print("Error: Too many arguments")
     else:
