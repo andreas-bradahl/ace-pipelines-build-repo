@@ -47,7 +47,9 @@ def main():
 
         response = execute_github_request(user, topic)
         repo_list = get_repo_names(response.json())
+
         absolute_path = os.getcwd()
+        print(f'\nAbsolute path: {absolute_path}')
         write_repos_to_file(repo_list, absolute_path + 'repos/repos.json')
     elif len(sys.argv) > NUMBER_OF_ARGUMENTS:
         print("Error: Too many arguments")
