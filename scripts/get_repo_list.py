@@ -8,7 +8,7 @@ def get_repo_names(response_dictionary):
     """Returns a list of repo names in the GH payload dictionary"""
     repos = [value['name'] for value in response_dictionary['items']]
 
-    print(f"Found {len(repos)} repositories:")
+    print(f"\nFound {len(repos)} repositories:")
     for repo in repos:
         print(repo)
 
@@ -27,7 +27,7 @@ def write_repos_to_file(repo_list, filename):
 
 def execute_github_request(user, topic):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
-    print(f'Find repos in user/org: {user}, with topic: {topic}')
+    print(f"\nFind repos in org: '{user}', with topic: '{topic}'")
     url = f"https://api.github.com/search/repositories?q=user:{user}+topic:{topic}"
     # user = os.environ.get('GITHUB_USER')
     # token = os.environ.get('GITHUB_TOKEN')
