@@ -8,6 +8,7 @@ def get_repo_names(response_dictionary):
     """Returns a list of repo names in the GH payload dictionary"""
     repos = [value['name'] for value in response_dictionary['items']]
 
+    print(f"Found {len(repos)} repositories.")
     return repos
 
 
