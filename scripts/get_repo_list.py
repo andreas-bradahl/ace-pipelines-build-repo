@@ -25,10 +25,10 @@ def write_repos_to_file(repo_list, filename):
         file.write(json.dumps(repo_list))
 
 
-def execute_github_request(user, topic_name):
+def execute_github_request(user, topic):
     """Executes an http request to the GH API - finds repos which contains the parameter 'topic_name' in its topics"""
     print(f'Find repos in user/org: {user}, with topic: {topic}')
-    url = f"https://api.github.com/search/repositories?q=user:{user}+topic:{topic_name}"
+    url = f"https://api.github.com/search/repositories?q=user:{user}+topic:{topic}"
     # user = os.environ.get('GITHUB_USER')
     # token = os.environ.get('GITHUB_TOKEN')
 
