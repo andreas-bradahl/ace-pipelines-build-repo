@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Description:
 # Retrieves a GitHub topic that represents the pod which the application
 # belongs to. If it doesn't belong to a specific pod yet, null is
