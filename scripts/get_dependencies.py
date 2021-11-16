@@ -1,7 +1,9 @@
 import xml.etree.ElementTree as ET
 import json
+import sys
 
-tree = ET.parse('.project')
+project_folder = sys.argv[1]
+tree = ET.parse(f'{project_folder}/.project')
 root = tree.getroot()
 
 deps_list = []
