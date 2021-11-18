@@ -10,9 +10,9 @@
 #
 # @author: Andreas Bradahl <andreas.bradahl@tine.no>
 
-apk add jq curl > /dev/null
+# apk add jq curl > /dev/null
 
 curl \
     -H "Accept: application/vnd.github.v3+json" \
     https://api.github.com/repos/$1/$2 |
-    jq -r '.topics[] | select(. | startswith("pod"))'
+    # jq -r '.topics[] | select(. | startswith("pod"))'
