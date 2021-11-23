@@ -6,8 +6,6 @@ def fetch_deps_recursive(repo):
     url = f'https://github.com/tineikt/{repo}.git'
     workspace = 'common-workspace'
 
-    print('Currently in: ' + os.getcwd())
-
     os.chdir('/workspace')
 
     clone = f'git clone -b cicd {url} {workspace}/{repo}'
@@ -21,13 +19,13 @@ def fetch_deps_recursive(repo):
             
             dependencies = json.loads(data)
             for dep in dependencies:
-                print(dep)
+                print(f'Fetching dependency: {dep}')
                 if dep:
                     fetch_deps_recursive(dep)
         except IOError:
             print('No dependencies file for this repo.')
     else:
-        print(f'Dependency {repo} already cloned.')
+        print(f'Dependency {repo} already fetched.')
         
 def main():
     repo = sys.argv[1]
