@@ -1,21 +1,28 @@
 #!/bin/bash
 # Start this script from the root folder of the application.
 #
-# Moves all files that are located inside the 'projects' folder of an 
+# Moves all project subfolders that are located 
+# inside the 'projects' folder of an 
 # application to a common workspace.
 
-WORKSPACE_DIR="../common-workspace"
-
-if [[ ! -d "$WORKSPACE_DIR" ]];
-then
-    mkdir $WORKSPACE_DIR
-fi
-
+WORKSPACE_DIR="projects_workspace"
 PROJECTS_DIR="projects"
 
-if [[ -d "$PROJECTS_DIR" ]];
+# Create workspace directory
+if [[ ! -d "$WORKSPACE_DIR" ]];
 then
-    cp -r $PROJECTS_DIR/* $WORKSPACE_DIR
-else
-    echo "No '$PROJECTS_DIR' folder found."
+    mkdir -p $WORKSPACE_DIR
 fi
+
+for dir in */
+do
+    echo $dir
+done
+
+# Copy all directories in 'projects' folder to workspace
+# if [[ -d "$PROJECTS_DIR" ]];
+# then
+#     cp -r $PROJECTS_DIR/* $WORKSPACE_DIR
+# else
+#     echo "No '$PROJECTS_DIR' folder found."
+# fi
