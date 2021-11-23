@@ -6,7 +6,7 @@ def fetch_deps_recursive(repo):
     url = f'https://github.com/tineikt/{repo}.git'
     workspace = 'common-workspace'
 
-    os.chdir('/workspace')
+    os.chdir('/workspace/sources')
 
     clone = f'git clone -b cicd {url} {workspace}/{repo}'
     if not os.path.exists(f'{workspace}/{repo}'):
