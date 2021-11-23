@@ -22,7 +22,7 @@ def fetch_deps_recursive(repo):
                 if dep:   
                     fetch_deps_recursive(dep)
         except IOError:
-            print('No dependencies file for this repo.')
+            print(f'No dependencies file for {repo}.')
     else:
         print(f'Dependency {repo} already fetched.')
         
