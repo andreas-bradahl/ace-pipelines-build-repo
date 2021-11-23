@@ -2,11 +2,11 @@ import sys
 import os
 import json
 
-def fetch_deps_recursive(repo):
+def fetch_deps_recursive(repo, working_dir):
     url = f'https://github.com/tineikt/{repo}.git'
     workspace = 'common-workspace'
 
-    os.chdir('/workspace/sources')
+    os.chdir(working_dir)
 
     clone = f'git clone -b cicd {url} {workspace}/{repo}'
     if not os.path.exists(f'{workspace}/{repo}'):
@@ -28,8 +28,9 @@ def fetch_deps_recursive(repo):
         
 def main():
     repo = sys.argv[1]
+    working_dir = sys.argv[2]
 
-    fetch_deps_recursive(repo)
+    fetch_deps_recursive(repo, working_dir)
 
 if __name__ == "__main__":
     main()
