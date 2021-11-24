@@ -20,7 +20,7 @@ def fetch_deps_recursive(repo, working_dir):
             dependencies = json.loads(data)
             for dep in dependencies:
                 if dep:   
-                    fetch_deps_recursive(dep)
+                    fetch_deps_recursive(dep, working_dir)
         except IOError:
             print(f'No dependencies file for {repo}.')
     else:
