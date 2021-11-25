@@ -1,11 +1,10 @@
 #!/bin/bash
 
-for dir in common-workspace/*;
+for dir in $1/*/;
 do
-    if [[ $dir == *"Library" || $dir == *"Java" ]];
-    then
+    if [[ ${dir^^} == *"LIB/" || ${dir^^} == *"JAVA/" || $(basename ${dir^^}) == "TIP000"* ]]; then
         continue
     else
-        echo "$dir"
+        echo $(basename "$dir")
     fi
 done
