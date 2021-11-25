@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 TOKEN=$1
 GH_USER=$2
 REPO=$3
