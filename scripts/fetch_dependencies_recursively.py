@@ -20,8 +20,9 @@ def fetch_deps_recursive(repo, branch, repos_working_dir):
             for dep in dependencies:
                 if dep:   
                     fetch_deps_recursive(dep, branch, repos_working_dir)
-        except IOError:
-            print(f'No dependencies file for {repo}.')
+        except:
+            # print(f'No dependencies file for {repo}.')
+            print(f'Error opening dependencies file for {repo}')
     else:
         print(f'Dependency {repo} already fetched.')
         
