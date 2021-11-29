@@ -1,0 +1,54 @@
+
+
+
+CREATE COMPUTE MODULE outgoingMQMessageHeaderHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE xmlRef, mqRef REFERENCE TO OutputRoot;
+		
+		--SET OutputRoot = InputRoot;
+		
+		/* to ensure proper order (it matters) in the message, map each field by name in correct order (current list is not exhaustive, add as needed), ending with the body mapping, ensuring a well-formed message out */
+		--SET OutputRoot.Properties = InputRoot.Properties;
+		--IF InputRoot.MQMD.CodedCharSetId IS NOT NULL THEN
+		SET OutputRoot.Properties = InputRoot.MQMD;
+		--END IF;
+		SET OutputRoot.MQMD = InputRoot.MQMD;
+		SET OutputRoot.MQDLH = InputRoot.MQDLH;
+		SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;
+		--SET OutputRoot.MQMD.CodedCharSetId = 1208;
+		SET OutputRoot.MQRFH2.usr.UUID = Environment.Variables.Logging.UUID;
+		SET OutputRoot.MQRFH2.usr.Source = Environment.Variables.Logging.Source;
+		SET OutputRoot.MQRFH2.usr.MessageId = Environment.Variables.Logging.MessageId;
+		SET OutputRoot.MQRFH2.usr.jobId = Environment.Variables.Logging.jobId;
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		
+		IF EXISTS(Environment.Variables.Message[]) THEN
+		ELSE
+			SET Environment.Variables.Message = InputRoot;
+		END IF;
+
+		IF EXISTS(InputRoot.XMLNSC[]) THEN
+			SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+			RETURN TRUE;
+		END IF;
+		
+		IF EXISTS(InputRoot.JSON[]) THEN
+			SET OutputRoot.JSON = InputRoot.JSON;
+			RETURN TRUE;
+		END IF;
+		
+		IF EXISTS(InputRoot.BLOB[]) THEN
+			SET OutputRoot.BLOB = InputRoot.BLOB;
+			RETURN TRUE;
+		END IF;
+		
+		IF NOT EXISTS(InputRoot.*[]) THEN
+			LOG EVENT SEVERITY 1 VALUES('ROOT DO NOT EXISTS');
+			RETURN TRUE;
+		END IF;
+		
+	END;
+END MODULE;

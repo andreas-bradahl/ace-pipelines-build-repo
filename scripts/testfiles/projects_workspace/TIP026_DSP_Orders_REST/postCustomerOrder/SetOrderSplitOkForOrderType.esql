@@ -1,0 +1,41 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE SetOrderSplitOkForOrderType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderType CHAR Environment.OrderRequest.Data.orderType;
+		DECLARE queryKeyword CHAR 'zMvxOrderTypesWithDelayedDeliveryForSupplyModel';
+		DECLARE sqlQuery CHAR 'select code as orderType from Code code inner join tine_esa.dbo.CodeType codeType on code.typeId=codeType.id where name = ?';
+		
+		CREATE FIELD LocalEnvironment.{queryKeyword};
+		DECLARE replyRef REFERENCE TO LocalEnvironment.{queryKeyword};
+		
+		SET replyRef.Item[] = PASSTHRU(sqlQuery, queryKeyword);
+		/*
+		FOR entry AS replyRef.code[] DO
+		
+			SET entry = FIELDVALUE(entry.code);
+		 	DELETE FIELD entry.code;
+			 	
+		END FOR;
+		*/
+		
+		DECLARE orderSplitOkForOrderType BOOLEAN itemFound(orderType, 'orderType', replyRef);
+		SET  varRef.Global.orderSplitOkForOrderType = orderSplitOkForOrderType;
+		
+		RETURN TRUE;
+	END;
+
+
+CREATE FUNCTION itemFound (IN value CHAR, IN fieldname CHAR, IN list REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE found BOOLEAN EXISTS(SELECT * FROM list.Item[] AS i WHERE i.{fieldname} = value); 
+		RETURN found;
+		
+	END;
+
+
+END MODULE;

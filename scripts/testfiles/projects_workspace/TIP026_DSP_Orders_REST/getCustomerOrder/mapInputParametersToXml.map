@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrder" version="8.0.5.0" xmlns:map="getCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="orderNumber" type="xsd:string"/>  
+    <xsd:element name="companyNumber" type="xsd:string"/>  
+    <xsd:element name="customerNumber" type="xsd:string"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var1"/>
+    <output path="/putCustomerOrder/customerOrder.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputParametersToXml">
+        <input derivedFrom="MB:JSON_operation_name:getCustomerOrder" path="$var/mb:msg(BLOB,assembly,BLOB,Properties,LocalEnvironment)" var="ComIbmMessageAssembly_BLOB">
+            <cast derivedFrom="MB:JSON_path_query_parm:orderNumber" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderNumber" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:companyNumber" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="companyNumber" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:customerNumber" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="customerNumber" ref="var1"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="mb:msg(getOrder,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <move>
+            <input path="$ComIbmMessageAssembly_BLOB/Properties"/>
+            <output path="$MessageAssembly/Properties"/>
+        </move>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/orderNumber" var="orderNumber"/>
+            <output path="$MessageAssembly/getOrder/orderNumber"/>
+            <param name="input" value="$orderNumber"/>
+        </function>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/companyNumber" var="companyNumber"/>
+            <output path="$MessageAssembly/getOrder/companyNumber"/>
+            <param name="input" value="$companyNumber"/>
+        </function>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/customerNumber" var="customerNumber"/>
+            <output path="$MessageAssembly/getOrder/customerNumber"/>
+            <param name="input" value="$customerNumber"/>
+        </function>
+    </mappingDeclaration>
+</mappingRoot>

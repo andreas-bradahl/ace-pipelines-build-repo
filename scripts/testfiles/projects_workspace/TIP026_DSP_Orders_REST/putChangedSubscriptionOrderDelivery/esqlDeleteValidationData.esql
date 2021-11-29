@@ -1,0 +1,13 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlDeleteValidationData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DELETE FIELD Environment.Variables.HTTPResponses;
+		--DELETE FIELD Environment.Variables.SQLQueries;
+
+		RETURN TRUE;
+	END;
+END MODULE;

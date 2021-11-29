@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="swagger_20" definitionFile="swagger.json" implementation="gen/TIP026_DSP_Orders_REST.msgflow" https="false">
+    <ns2:operations>
+        <ns2:operation name="deleteCancellationDate" implementation="deleteCancellationDate.subflow"/>
+        <ns2:operation name="deleteChangedSubscriptionOrderDelivery" implementation="deleteChangedSubscriptionOrderDelivery.subflow"/>
+        <ns2:operation name="deleteCustomerOrder" implementation="deleteCustomerOrder.subflow"/>
+        <ns2:operation name="deleteSubscriptionOrder" implementation="deleteSubscriptionOrder.subflow"/>
+        <ns2:operation name="getCancellationDateList" implementation="getCancellationDateList.subflow"/>
+        <ns2:operation name="getChangedSubscriptionOrderDelivery" implementation="getChangedSubscriptionOrderDelivery.subflow"/>
+        <ns2:operation name="getCustomerOrder" implementation="getCustomerOrder.subflow"/>
+        <ns2:operation name="getCustomerOrderList" implementation="getCustomerOrderList.subflow"/>
+        <ns2:operation name="getProductAvailability" implementation="getProductAvailability.subflow"/>
+        <ns2:operation name="getSubscriptionOrder" implementation="getSubscriptionOrder.subflow"/>
+        <ns2:operation name="getSubscriptionOrderList" implementation="getSubscriptionOrderList.subflow"/>
+        <ns2:operation name="postCancellationDate" implementation="postCancellationDate.subflow"/>
+        <ns2:operation name="postChangedSubscriptionOrderDelivery" implementation="postChangedSubscriptionOrderDelivery.subflow"/>
+        <ns2:operation name="postCustomerOrder" implementation="postCustomerOrder.subflow"/>
+        <ns2:operation name="postSubscriptionOrder" implementation="postSubscriptionOrder.subflow"/>
+        <ns2:operation name="putChangedSubscriptionOrderDelivery" implementation="putChangedSubscriptionOrderDelivery.subflow"/>
+        <ns2:operation name="putCustomerOrder" implementation="putCustomerOrder.subflow"/>
+        <ns2:operation name="putSubscriptionOrder" implementation="putSubscriptionOrder.subflow"/>
+        <ns2:operation name="putSubscriptionOrderStatus" implementation="putSubscriptionOrderStatus.subflow"/>
+    </ns2:operations>
+    <ns2:errorHandlers>
+        <ns2:errorHandler type="CATCH" implementation="TIP026_DSP_Orders_RESTInputCatchHandler.subflow"/>
+    </ns2:errorHandlers>
+</ns2:restapiDescriptor>

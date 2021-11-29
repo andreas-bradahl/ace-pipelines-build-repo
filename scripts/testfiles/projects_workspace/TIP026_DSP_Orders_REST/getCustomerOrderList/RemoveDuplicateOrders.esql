@@ -1,0 +1,43 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE RemoveDuplicateOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.AllItemsLoop.AllOrders;		
+		
+		DECLARE allOrdersRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.AllOrders;
+		DECLARE allOrdersWithDupesCursor REFERENCE TO InputLocalEnvironment.Variables.AllItemsLoop.AllOrdersWithDuplicates;
+		DECLARE allOrdersWithDupesCopyCursor REFERENCE TO InputLocalEnvironment.Variables.AllItemsLoop.AllOrdersWithDuplicates;
+		
+		DECLARE orderORNOOne CHARACTER;
+		DECLARE orderRLDFOne CHARACTER;
+		
+		DECLARE orderORNOTwo CHARACTER;
+		DECLARE orderRLDFTwo CHARACTER;
+		
+		DECLARE sameOrder BOOLEAN;
+		
+		MOVE allOrdersWithDupesCursor FIRSTCHILD NAME 'Item';
+		MOVE allOrdersWithDupesCopyCursor FIRSTCHILD NAME 'Item';
+		
+		WHILE LASTMOVE(allOrdersWithDupesCursor) DO
+
+			SET orderORNOOne = TRIM(GetValueFromNameValueList('ORNO', allOrdersWithDupesCursor.NameValue));
+			SET orderRLDFOne = TRIM(GetValueFromNameValueList('RLDT', allOrdersWithDupesCursor.NameValue));
+
+			SET orderORNOTwo = TRIM(GetValueFromNameValueList('ORNO', allOrdersWithDupesCopyCursor.NameValue));
+			SET orderRLDFTwo = TRIM(GetValueFromNameValueList('RLDT', allOrdersWithDupesCopyCursor.NameValue));
+
+			SET sameOrder = (orderORNOOne = orderORNOTwo AND orderRLDFOne = orderRLDFTwo);
+			
+			IF NOT(sameOrder) THEN
+				CREATE LASTCHILD OF allOrdersRef AS allOrdersWithDupesCursor NAME 'Item';
+			END IF;	
+			
+			MOVE allOrdersWithDupesCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+	END;
+END MODULE;

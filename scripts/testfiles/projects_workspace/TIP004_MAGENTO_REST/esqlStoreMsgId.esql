@@ -1,0 +1,24 @@
+
+
+CREATE COMPUTE MODULE esqlStoreMsgId
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.msgIds;
+		DECLARE msgIdsRef REFERENCE TO Environment.msgIds;
+		DECLARE msgId BLOB InputLocalEnvironment.WrittenDestination.MQ.DestinationData.msgId;
+				
+		CREATE LASTCHILD OF msgIdsRef NAME 'msgId' VALUE msgId;
+		
+--________________________________________________________________________________________________________________
+						
+		DECLARE msgIdChar CHARACTER CAST(msgId AS CHARACTER);
+						
+		FOR request AS InputRoot.JSON.Data.transactions.Item[] DO
+						
+			CREATE LASTCHILD OF Environment.Variables.ITNOCorrespondance.{msgIdChar} NAME 'ITNO' VALUE request.record.ITNO;
+			
+		END FOR;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

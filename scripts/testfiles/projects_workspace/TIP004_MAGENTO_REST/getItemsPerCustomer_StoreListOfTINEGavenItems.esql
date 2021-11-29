@@ -1,0 +1,14 @@
+
+
+CREATE COMPUTE MODULE getItemsPerCustomer_StoreListOfTINEGavenItems
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		
+		SET Environment.Variables.TINEGavenItems.Item[] = SELECT
+			zTGI.itemNumber
+		FROM Database.dbo.zTINEGavenItems AS zTGI;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

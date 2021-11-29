@@ -1,0 +1,19 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckIfQuantityOver0
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DELETE FIELD OutputLocalEnvironment.Destination;
+
+		IF InputLocalEnvironment.Variables.CurrentOrderLine.ns:quantity > 0 OR InputLocalEnvironment.Variables.DPakQuantity > 0 THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

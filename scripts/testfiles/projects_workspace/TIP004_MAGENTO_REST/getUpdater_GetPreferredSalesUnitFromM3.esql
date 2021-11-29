@@ -1,0 +1,36 @@
+
+CREATE DATABASE MODULE getUpdater_GetPreferredSalesUnitFromM3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		LOG EVENT SEVERITY 1 VALUES('prepare getpreferredsalesunit');
+		DECLARE queryParams REFERENCE TO Environment.Variables.ProductList;
+		MOVE queryParams FIRSTCHILD NAME 'Product';
+
+		DECLARE m3Query CHAR '
+		SELECT
+		TRIM(MUITNO) AS ITNO,
+		TRIM(MUALUN) AS ALUN
+		FROM MITAUN
+		WHERE MUCONO=100
+		AND MUAUTP=''1''
+		AND MUITNO = ?
+		';
+		
+		WHILE LASTMOVE(queryParams) DO
+			--SET m3Query = m3Query || ' AND MUITNO = ?';
+			SET Environment.Variables.Units.Item.{queryParams.ITNO}.Preferred.preferredSalesUnit.Unit[] =
+			PASSTHRU(m3Query
+			VALUES (
+			queryParams.ITNO));
+			MOVE queryParams NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		PROPAGATE TO TERMINAL 'out1';
+		--PROPAGATE TO TERMINAL 'out';
+		
+		RETURN TRUE;
+		
+		
+	END;
+
+END MODULE;

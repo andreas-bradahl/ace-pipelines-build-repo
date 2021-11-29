@@ -1,0 +1,30 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateTemporaryOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE dataOutRef, dataOutCursor REFERENCE TO OutputRoot.JSON.Data.orderLines;
+		DECLARE lstBatchLineCursor REFERENCE TO Environment.Variables.HTTPResponses.LstBatchLine.Item;
+		
+		WHILE LASTMOVE(lstBatchLineCursor) DO
+			CREATE LASTCHILD OF dataOutRef AS dataOutCursor NAME 'Item';
+
+				SET dataOutCursor.orderLineNumber = CAST(lstBatchLineCursor.PONR AS INTEGER);
+				SET dataOutCursor.orderLineSuffix = CAST(lstBatchLineCursor.POSX AS INTEGER);
+				SET dataOutCursor.sku = lstBatchLineCursor.ITNO;
+				SET dataOutCursor.itemDescription = lstBatchLineCursor.ITDS;
+				SET dataOutCursor.quantityOrderLineUnit = CAST(CAST(lstBatchLineCursor.ORQT AS DECIMAL) AS INTEGER);
+				SET dataOutCursor.orderLineUnit = lstBatchLineCursor.ALUN;
+				SET dataOutCursor.canIncrease = lstBatchLineCursor.canIncrease;
+				SET dataOutCursor.canDecrease = lstBatchLineCursor.canDecrease;
+				SET dataOutCursor.canDelete = lstBatchLineCursor.canDelete;
+				SET dataOutCursor.addInReview = lstBatchLineCursor.addInReview;
+				
+			MOVE lstBatchLineCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

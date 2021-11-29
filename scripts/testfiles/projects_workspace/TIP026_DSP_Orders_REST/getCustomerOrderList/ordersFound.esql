@@ -1,0 +1,47 @@
+
+
+BROKER SCHEMA getCustomerOrderList
+
+CREATE COMPUTE MODULE ordersFound
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE OrdersFound BOOLEAN EXISTS(Environment.Variables.OIZ102MILstOrdersResponse_JSONArray.Item[]);
+		DECLARE OrderNameParam CHAR COALESCE(Environment.Variables.OriginRequest.DSTX, '');
+		DECLARE OrderStatusLow INTEGER CAST( COALESCE(Environment.Variables.OriginRequest.ORSL, '0') AS INTEGER);
+		DECLARE OrderStatusHigh INTEGER CAST( COALESCE(Environment.Variables.OriginRequest.ORST, '1000') AS INTEGER);
+		DECLARE Resultref REFERENCE TO Environment.Variables.OIZ102MILstOrdersResponse_JSONArray.Item;
+		DECLARE Deleteref REFERENCE TO Environment.Variables.OIZ102MILstOrdersResponse_JSONArray.Item;
+		DECLARE bFilterOut BOOLEAN FALSE;
+		DECLARE temp CHAR;
+		IF OrdersFound THEN
+
+			IF OrderNameParam <> '' OR (OrderStatusLow <>'0' OR OrderStatusHigh <>'1000') THEN
+				WHILE LASTMOVE(Resultref) DO
+					set temp = COALESCE(CAST(Resultref.DSTX AS CHAR),'');
+					IF UPPER(OrderNameParam) <> UPPER(temp) AND OrderNameParam <> '' THEN 
+						SET bFilterOut = TRUE;
+						MOVE Deleteref TO Resultref;
+					END IF;
+					IF OrderStatusLow > CAST(Resultref.ORSL AS INTEGER) OR OrderStatusHigh < CAST(Resultref.ORST AS INTEGER) THEN	
+						SET bFilterOut = TRUE;
+						MOVE Deleteref TO Resultref;
+					END IF;
+					MOVE Resultref NEXTSIBLING;
+					IF bFilterOut THEN
+						DELETE FIELD Deleteref;
+					END IF; 
+					SET bFilterOut = FALSE;
+				END WHILE;				
+			END IF;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			CREATE LASTCHILD OF OutputRoot.JSON IDENTITY(JSON.Array)Data;
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+
+		RETURN FALSE;		
+
+
+	END;
+END MODULE;

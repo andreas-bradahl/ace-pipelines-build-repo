@@ -1,0 +1,36 @@
+BROKER SCHEMA deleteChangedSubscriptionOrderDelivery
+
+  
+
+CREATE COMPUTE MODULE DltInstHeadIntoEnvironment 
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.HTTPResponses.DltInstHeadRecord;
+        DECLARE envRef REFERENCE TO Environment.Variables.HTTPResponses.DltInstHeadRecord; 
+        DECLARE itemRef REFERENCE TO Environment;
+       
+        DECLARE name CHARACTER;
+        DECLARE value CHARACTER;
+       
+        DECLARE entityCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item;
+        WHILE LASTMOVE(entityCursor) DO
+           
+            CREATE LASTCHILD OF envRef AS itemRef NAME 'Item';
+           
+            DECLARE valueCursor REFERENCE TO entityCursor.NameValue.Item;
+            WHILE LASTMOVE(valueCursor) DO
+               
+                SET name = valueCursor.Name;
+                SET value = valueCursor.Value;
+           
+                SET itemRef.{name} = TRIM(value);
+               
+                MOVE valueCursor NEXTSIBLING REPEAT NAME;
+            END WHILE;           
+           
+            MOVE entityCursor NEXTSIBLING REPEAT NAME;
+        END WHILE;
+       
+        RETURN TRUE;
+    	END;	
+END MODULE;

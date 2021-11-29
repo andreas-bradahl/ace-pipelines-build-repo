@@ -1,0 +1,29 @@
+
+
+CREATE DATABASE MODULE getItems_Look_up_M3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN TRUE;
+	END;
+		
+	CREATE PROCEDURE ItemIsInPriceList(IN itemNumber CHAR, IN priceList CHAR, IN currency CHAR)
+	BEGIN
+		IF EXISTS (
+			SELECT 
+				I.ItemNumber
+			FROM
+				Environment.Variables.PriceListAndCurrencyItems.ItemNumber[] AS I
+			WHERE
+				itemNumber = I.ItemNumber
+		) THEN
+			SET Environment.Variables.ItemIsInPriceList = TRUE;
+		ELSE
+			SET Environment.Variables.ItemIsInPriceList = FALSE;
+		END IF;
+	END;
+	
+	CREATE PROCEDURE GetAlternativeConversionFactor(IN ItemNumber CHAR)
+	BEGIN
+		
+	END;
+END MODULE;

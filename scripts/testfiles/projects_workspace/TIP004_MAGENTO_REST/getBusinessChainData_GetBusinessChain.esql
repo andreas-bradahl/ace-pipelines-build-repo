@@ -1,0 +1,25 @@
+
+
+CREATE DATABASE MODULE getBusinessChainData_GetBusinessChain
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+
+		DECLARE businessChainsQuery CHAR
+		'SELECT OSCHL1, OSCHL2, OSCHL3, OSCHL4
+		FROM OCHCUS
+		WHERE OSCONO = 100
+		AND OSLVDT > ?
+		AND OSCUNO = ?';
+
+		SET Environment.Variables.UserInfo.BusinessChains[] =
+		PASSTHRU(businessChainsQuery
+		VALUES (
+		customerRef.CurrentDate,
+		customerRef.OKCUNO));
+		DECLARE count INT CARDINALITY(Environment.Variables.UserInfo.BusinessChains[]);
+		SET Environment.Variables.UserInfo.BusinessChains= count;
+
+	END;
+
+END MODULE;

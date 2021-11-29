@@ -1,0 +1,12 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckConfirmedOrderForTemporaryOrderLines_PrepareMDBREADMILstOXCNTRU1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.customer_number;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

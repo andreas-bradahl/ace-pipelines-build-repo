@@ -1,0 +1,24 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIS320MIGetPriceLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE orderNumber REFERENCE TO InputLocalEnvironment.Variables.OrderNumber;
+		DECLARE originRequest REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE currentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE queryStringRef REFERENCE TO OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		SET queryStringRef.CUNO = originRequest.customerNumber;
+		SET queryStringRef.ITNO = currentOrder.sku;
+		SET queryStringRef.ORQA = currentOrder.quantity;
+		SET queryStringRef.ORTP = originRequest.orderType;
+		SET queryStringRef.DWDT = REPLACE(originRequest.requestedDeliveryDate, '-', '');
+
+		RETURN TRUE;
+	END;
+END MODULE;

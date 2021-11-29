@@ -1,0 +1,67 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlIterateAndFilterOriginRequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF EXISTS(Environment.Variables.Global.OrderSplit[]) OR EXISTS(Environment.Variables.Global.PromoSplit[]) THEN
+			
+			DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+			DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+			DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+			
+			DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder;
+			DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder;
+			DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder;
+			
+			IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+				CALL iterateAndFilterOriginRequest(customerWarehouseOrderRef);
+			END IF;
+				
+			IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+				CALL iterateAndFilterOriginRequest(promotionalOrder);
+			END IF;
+		
+			IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+				CALL iterateAndFilterOriginRequest(normalOrder);	
+			END IF;
+			
+		ELSE
+			
+			DECLARE originRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+			
+			CALL iterateAndFilterOriginRequest(originRequestRef);
+			
+		END IF;
+		
+		PROPAGATE TO TERMINAL 'out3';
+		
+		RETURN FALSE;
+	END;
+	
+CREATE PROCEDURE iterateAndFilterOriginRequest (IN orderRef REFERENCE)
+	BEGIN
+		
+		FOR order AS orderRef.orderLines.Item[] DO
+			
+			DECLARE action CHAR order.action;
+			CREATE FIELD OutputLocalEnvironment.Variables.CurrentOrder;
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrder = order;
+			SET OutputLocalEnvironment.Variables.OrderNumber = orderRef.orderNumber;
+			
+			IF action = 'add' THEN
+				PROPAGATE TO TERMINAL 'out';
+			ELSEIF action = 'upd' THEN		
+				PROPAGATE TO TERMINAL 'out1';		
+			ELSEIF action = 'del' THEN
+				PROPAGATE TO TERMINAL 'out2';				
+			END IF;
+			
+		END FOR;
+		
+	END;
+	
+END MODULE;
+

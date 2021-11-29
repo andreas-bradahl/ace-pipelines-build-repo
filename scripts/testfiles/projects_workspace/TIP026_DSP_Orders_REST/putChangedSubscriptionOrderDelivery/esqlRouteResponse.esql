@@ -1,0 +1,26 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery';
+
+CREATE COMPUTE MODULE esqlRouteResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+				
+		IF InputRoot.XMLNSC.ns:putChangedSubscriptionOrderDeliveryResponseOK.ns:success IS NOT NULL THEN
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSEIF InputRoot.XMLNSC.ns:putChangedSubscriptionOrderDeliveryResponseFailed.ns:success IS NOT NULL THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,10 @@
+
+
+CREATE COMPUTE MODULE AddResultToEnvArray
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+END MODULE;

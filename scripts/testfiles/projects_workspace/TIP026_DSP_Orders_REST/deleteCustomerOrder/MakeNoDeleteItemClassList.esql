@@ -1,0 +1,38 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE DATABASE MODULE MakeNoDeleteItemClassList
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE zNoDeleteItemClass CHAR 'zNoDeleteItemClass';
+		DECLARE sqlQuery CHAR 'SELECT code 
+		FROM tine_esa.dbo.Code code
+		INNER JOIN tine_esa.dbo.CodeType codeType 
+		ON code.typeId=codeType.id
+		WHERE codetype.name = ?';
+		SET LocalEnvironment.tmpNoDeleteItemClassList.Row[] = PASSTHRU(sqlQuery, zNoDeleteItemClass);
+		
+		DECLARE endOfString CHAR '§';
+		
+		DECLARE class CHAR '';
+		DECLARE classCursor REFERENCE TO LocalEnvironment.tmpNoDeleteItemClassList;
+		MOVE classCursor FIRSTCHILD  NAME 'Row';
+		
+		WHILE LASTMOVE(classCursor) DO
+			SET class = class || '''';
+			SET class = class || classCursor.code;
+			SET class = class || '''';
+			SET class = class || ',';
+			MOVE classCursor NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+		
+		SET class = class || endOfString;
+		SET class = SUBSTRING(class BEFORE ',' || endOfString);
+
+		SET Environment.NoDeleteItemClassList = class;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

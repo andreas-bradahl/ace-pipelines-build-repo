@@ -1,0 +1,20 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlIfPromoOrderType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF Environment.OrderRequest.Data.orderType = Environment.Variables.promoProductOrderType THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+		
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

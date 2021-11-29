@@ -1,0 +1,48 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlOrderLineAdded
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		DECLARE response REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE responseCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue.Item;
+		DECLARE responseRef REFERENCE TO Environment;
+		CREATE FIELD OutputLocalEnvironment.Variables.Response.Item AS responseRef;
+		
+		DECLARE Name CHARACTER;
+		DECLARE Value CHARACTER;
+		
+		WHILE LASTMOVE(responseCursor) DO
+			
+			SET Name = responseCursor.Name;
+			SET Value = responseCursor.Value;
+			
+			IF Value IS NULL THEN
+				SET Value = '';
+			END IF;
+			
+			SET responseRef.{Name} = TRIM(Value);
+			
+			MOVE responseCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		-- Route if error or not		
+		IF response."@type" = 'ServerReturnedNOK' OR response."@type" = 'MandatoryInputFieldNotFound' THEN
+			
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF responseRef.STAT IS NULL OR responseRef.STAT = '' OR responseRef.STAT = '90' THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out2';
+		END IF;
+			
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,30 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE DATABASE MODULE dbRouteIfMinimumValue
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE customerNumber INTEGER Environment.Variables.Global.OriginRequest.ns:customerNumber;
+		
+		DECLARE sqlQueryCheckIfMinimumValue CHAR ' 
+			SELECT KZBEKT
+			FROM ZCUMIN
+			WHERE
+					KZCONO = ''100''
+				AND KZCUNO = ?
+		';
+			
+		SET Environment.Variables.SQLQueries.CheckIfMinimumValue = PASSTHRU(sqlQueryCheckIfMinimumValue, customerNumber);
+		
+		IF Environment.Variables.SQLQueries.CheckIfMinimumValue.KZBEKT = '1' THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

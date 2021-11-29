@@ -1,0 +1,43 @@
+
+
+CREATE COMPUTE MODULE discountCheck_makeQueryLists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Start making of list
+		DECLARE KList CHAR '';
+		DECLARE PList CHAR '';
+		DECLARE endOfString CHAR '§';
+		
+		-- Loop throug content for list
+		DECLARE dicountCursor REFERENCE TO Environment.Variables.Discounts;
+		MOVE dicountCursor FIRSTCHILD;
+		WHILE LASTMOVE(dicountCursor) DO
+			MOVE dicountCursor FIRSTCHILD NAME 'Row';
+			WHILE LASTMOVE(dicountCursor) DO
+				IF dicountCursor.type = 'K' THEN
+					SET KList = KList || '''';
+					SET KList = KList || dicountCursor.discountCampaign;
+					SET KList = KList || '''';
+					SET KList = KList || ',';
+				ELSEIF dicountCursor.type = 'P' THEN
+					SET PList = PList || '''';
+					SET PList = PList || dicountCursor.discountCampaign;
+					SET PList = PList || '''';
+					SET PList = PList || ',';
+				END IF;
+				MOVE dicountCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			MOVE dicountCursor NEXTSIBLING;
+		END WHILE;
+		
+		-- End list
+		SET KList = KList || endOfString;
+		SET KList = SUBSTRING(KList BEFORE ',' || endOfString);
+		SET PList = PList || endOfString;
+		SET PList = SUBSTRING(PList BEFORE ',' || endOfString);
+		SET Environment.Variables.DiscountKlist = KList;
+		SET Environment.Variables.DiscountPlist = PList;
+		
+		DELETE FIELD Environment.Variables.Discounts;
+	END;
+END MODULE;

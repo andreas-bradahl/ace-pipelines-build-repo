@@ -1,0 +1,14 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareGetDeadlineExpress
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.customerNumber = orderRequestRef.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.orderType = 'express';
+
+		RETURN TRUE;
+	END;
+END MODULE;

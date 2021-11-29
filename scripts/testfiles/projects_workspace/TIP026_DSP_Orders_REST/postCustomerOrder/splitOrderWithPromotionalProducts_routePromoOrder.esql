@@ -1,0 +1,29 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE splitOrderWithPromotionalProducts_routePromoOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			DECLARE varRef REFERENCE TO Environment.Variables;
+			
+			DECLARE unifiedOrder BOOLEAN varRef.unifiedOrder;
+			DECLARE orderContainsPromotionalProducts BOOLEAN varRef.orderContainsPromotionalProducts;
+			
+			IF unifiedOrder = false THEN
+
+				PROPAGATE TO TERMINAL 'out1';
+				
+			ELSEIF unifiedOrder = true AND orderContainsPromotionalProducts = true THEN
+				
+				DECLARE promoProductOrderType CHAR varRef.promoProductOrderType;
+				
+				SET Environment.NormalOrder.orderType = promoProductOrderType;
+				
+			END IF;
+		
+		SET Environment.OrderRequest.Data = Environment.NormalOrder;
+		
+		RETURN TRUE; -- default to terminal 'out';
+		
+	END;
+END MODULE;

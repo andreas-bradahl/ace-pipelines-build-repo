@@ -1,0 +1,71 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE WriteOutputJSONMsg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE confirmNameValueRef REFERENCE TO Environment.JSONResponse.Confirm.Data.MIRecord.Item.NameValue;
+		DECLARE orderNumber CHAR GetValueFromNameValueList('ORNO', confirmNameValueRef);
+		DECLARE orderPlacementStatus CHAR GetValueFromNameValueList('STAT', confirmNameValueRef);
+		DECLARE isTemporaryOrder BOOLEAN;
+		
+		
+		IF orderPlacementStatus = '90' THEN
+			
+			SET isTemporaryOrder = false;
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out1';
+			SET isTemporaryOrder = true;
+			
+		END IF;
+		
+		
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY(JSON.Array);
+		DECLARE outDataRef, outDataItemCursor REFERENCE TO OutputRoot.JSON.Data;
+		CREATE LASTCHILD of outDataRef AS outDataItemCursor NAME 'Item';
+		
+		SET outDataItemCursor.orderNumber = orderNumber;
+		SET outDataItemCursor.orderPlacementStatus = orderPlacementStatus;
+		SET outDataItemCursor.isTemporaryOrder = isTemporaryOrder;
+		
+		
+		IF isTemporaryOrder THEN
+			
+			DECLARE errorInfoRef, errorOutCursor REFERENCE TO Environment.ErrorInfo;
+			DECLARE errorInfoCount INT CARDINALITY(errorInfoRef.Row[]);
+			
+			IF errorInfoCount > 0 THEN
+				
+				CREATE FIELD outDataItemCursor.errorMessages AS errorOutCursor IDENTITY(JSON.Array);
+				
+			END IF;
+			
+			FOR source AS errorInfoRef.Row[] DO
+				
+				DECLARE errorCode CHAR COALESCE(TRIM(source.EVMSID), '');
+				DECLARE errorMessage CHAR COALESCE(TRIM(source.EVMDTA), '');
+				DECLARE errorInformation CHAR COALESCE(TRIM(source.EVTX60), '');
+				
+				DECLARE errorOutItemCursor REFERENCE TO errorOutCursor;
+				CREATE LASTCHILD OF errorOutCursor AS errorOutItemCursor NAME 'Item';
+				
+				CREATE LASTCHILD OF errorOutItemCursor NAME 'errorCode' VALUE errorCode;
+				CREATE LASTCHILD OF errorOutItemCursor NAME 'errorMessage' VALUE errorMessage;
+				CREATE LASTCHILD OF errorOutItemCursor NAME 'errorInformation' VALUE errorInformation;
+			
+			END FOR;
+			
+		END IF;
+ 
+		IF EXISTS(Environment.Variables.promoOrderResponse[]) THEN 	
+							
+			CREATE LASTCHILD of outDataRef AS outDataItemCursor NAME 'Item';
+			SET outDataItemCursor = Environment.Variables.promoOrderResponse;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,20 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE DATABASE MODULE dbFetchPromotionalCode
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryPromotionalCode CHAR ' 
+			SELECT value 
+			FROM tine_esa.dbo.ApplicationData
+			WHERE
+					[parameter] = ''zPromotionalM3ItemType''
+		';
+		
+		SET Environment.Variables.SQLQueries.PromotionalCode = PASSTHRU(sqlQueryPromotionalCode);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,13 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareCRS105MILstAssmItm
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = 100;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ASCD = Environment.Variables.SQLQueries.PromoAssortment.value;
+
+		RETURN TRUE;
+	END;
+END MODULE;

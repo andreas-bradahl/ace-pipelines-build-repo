@@ -1,0 +1,17 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE FILTER MODULE filterHasALUN
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF Environment.Variables.HTTPResponses.GetBatchLine.ALUN IS NOT NULL THEN
+			PROPAGATE TO TERMINAL 'true';
+		ELSE
+			PROPAGATE TO TERMINAL 'false';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

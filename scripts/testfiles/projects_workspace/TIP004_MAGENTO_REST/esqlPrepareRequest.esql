@@ -1,0 +1,55 @@
+
+
+CREATE COMPUTE MODULE esqlPrepareRequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE transactionsRef REFERENCE TO Environment;
+		DECLARE itemRef REFERENCE TO Environment;
+		
+		DECLARE count INTEGER 0;
+		DECLARE numberOfRequests INTEGER CARDINALITY(InputRoot.JSON.Data.transactions.Item[]);
+		DECLARE lastRequest BOOLEAN FALSE;
+		
+		DECLARE perBatchcount INTEGER 0;
+		DECLARE numberOfRequestsPerBatch INTEGER 25;
+		
+		FOR transaction AS InputRoot.JSON.Data.transactions.Item[] DO
+						
+			SET count = count + 1;
+			
+			IF count = numberOfRequests THEN
+				SET lastRequest = TRUE;
+			END IF;
+						
+			IF perBatchcount = 0 THEN
+				
+				SET OutputRoot.JSON.Data.program = InputRoot.JSON.Data.program;
+				SET OutputRoot.JSON.Data.cono = InputRoot.JSON.Data.cono;
+				SET OutputRoot.JSON.Data.divi = InputRoot.JSON.Data.divi;
+				
+				CREATE LASTCHILD OF OutputRoot.JSON.Data AS transactionsRef IDENTITY(JSON.Array)transactions;
+				
+			END IF;
+			
+			IF perBatchcount < numberOfRequestsPerBatch THEN	
+				
+				SET perBatchcount = perBatchcount + 1;		
+												
+				CREATE LASTCHILD OF transactionsRef AS itemRef NAME 'Item';				
+				SET itemRef = transaction;	
+				
+			END IF;
+			
+			IF perBatchcount = numberOfRequestsPerBatch OR lastRequest THEN
+				
+				SET perBatchcount = 0;
+				PROPAGATE TO TERMINAL 'out';
+				
+			END IF;
+			
+		END FOR;		
+
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,83 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY(JSON.Array);
+		DECLARE outRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE originRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE failedOrderLinesRef REFERENCE TO Environment;
+		DECLARE failedOrderLineRef REFERENCE TO Environment;
+		DECLARE outRefItem REFERENCE TO Environment;
+		
+		SET outRef.Item.orderNumber = originRequestRef.orderNumber; 
+
+		-- FailedOrderLines
+		CREATE LASTCHILD OF outRef.Item AS failedOrderLinesRef IDENTITY(JSON.Array)failedOrderLines;
+		
+		FOR failedOrder AS Environment.Variables.ErrorOrders.Item[] DO
+			
+			CREATE LASTCHILD OF failedOrderLinesRef AS failedOrderLineRef NAME 'Item';
+			
+			IF failedOrder.action = 'add' OR failedOrder.action = 'upd' THEN
+				
+				SET failedOrderLineRef.sku = failedOrder.sku;
+				SET failedOrderLineRef.quantity = failedOrder.quantity;
+				SET failedOrderLineRef.lostSalesWarehouse = failedOrder.lostSalesWarehouse;
+				SET failedOrderLineRef.orderLineUnit = failedOrder.orderLineUnit;
+				SET failedOrderLineRef.discountLine1 = failedOrder.discountLine1;
+				SET failedOrderLineRef.discountLine2 = failedOrder.discountLine2;
+				SET failedOrderLineRef.discountLine3 = failedOrder.discountLine3;
+				SET failedOrderLineRef.discountLine4 = failedOrder.discountLine4;
+				SET failedOrderLineRef.discountLine5 = failedOrder.discountLine5;
+				SET failedOrderLineRef.discountLine6 = failedOrder.discountLine6;
+				SET failedOrderLineRef.isLostSales = failedOrder.isLostSales;
+				SET failedOrderLineRef.action = failedOrder.action;
+				
+				IF failedOrder.action = 'upd' THEN
+					
+					-- orderLineNumber
+					CREATE LASTCHILD OF failedOrderLineRef IDENTITY(JSON.Array)orderLineNumbers;
+					FOR orderLineNumber AS failedOrder.orderLineNumbers.Item[] DO
+				
+						CREATE LASTCHILD OF failedOrderLineRef.orderLineNumbers TYPE NameValue VALUE orderLineNumber;
+				
+					END FOR;
+					
+				END IF;
+				
+			ELSEIF failedOrder.action = 'del' THEN
+				
+				SET failedOrderLineRef.sku = failedOrder.sku;
+				SET failedOrderLineRef.action = failedOrder.action;
+				
+				-- orderLineNumber
+				CREATE LASTCHILD OF failedOrderLineRef IDENTITY(JSON.Array)orderLineNumbers;
+				FOR orderLineNumber AS failedOrder.orderLineNumbers.Item[] DO
+			
+					CREATE LASTCHILD OF failedOrderLineRef.orderLineNumbers TYPE NameValue VALUE orderLineNumber;
+			
+				END FOR;
+				
+			END IF;
+			
+			SET failedOrderLineRef.orderLinePlacementStatus = failedOrder.orderLinePlacementStatus;
+			SET failedOrderLineRef.errorCode = failedOrder.errorCode;
+			SET failedOrderLineRef.errorMessage = failedOrder.errorMessage;
+			SET failedOrderLineRef.errorInformation = failedOrder.errorInformation;
+			
+		END FOR;
+		
+		-- GENERATE OPEX/PROMO RESPONSE		
+		FOR record AS Environment.Variables.APIResponses.Item[] DO
+		
+			CREATE LASTCHILD OF outRef AS outRefItem NAME 'Item';
+			SET outRefItem = record;
+		
+		END FOR;
+	
+		RETURN TRUE;
+	END;
+END MODULE;

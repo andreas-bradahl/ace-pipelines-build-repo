@@ -1,0 +1,31 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfOrderLineExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderLineExists BOOLEAN FALSE;
+				
+		FOR orderLineNumber AS InputLocalEnvironment.Variables.CurrentOrderLine.ns:orderLineNumbers[] DO
+
+			FOR existingOrderLine AS Environment.Variables.HTTPResponses.OIZ163MI_LstLine.Item[] DO
+				
+				IF orderLineNumber = CAST(existingOrderLine.ROLN AS INTEGER) AND existingOrderLine.ALUN = 'D' THEN
+					
+					SET orderLineExists = TRUE;
+					
+				END IF;
+				
+			END FOR;
+			
+		END FOR;
+		
+		IF orderLineExists THEN
+			PROPAGATE TO TERMINAL 'out1';
+		ELSE
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">              
+                                                       <xsd:element name="ALUN" type="xsd:string"/> 
+    <xsd:element name="SQLQueries">     
+    <xsd:complexType>     
+      <xsd:sequence>     
+        <xsd:element name="PromoType">     
+          <xsd:complexType>     
+            <xsd:sequence>     
+              <xsd:element name="value" type="xsd:string"/>     
+            </xsd:sequence>     
+          </xsd:complexType>     
+        </xsd:element>     
+      </xsd:sequence>     
+    </xsd:complexType>     
+  </xsd:element>     
+    <xsd:element name="isPromoItem" type="xsd:boolean"/>     
+    <xsd:element name="CurrentProduct">             
+    <xsd:complexType>             
+      <xsd:sequence>             
+        <xsd:element name="ORQA" type="xsd:string"/>             
+        <xsd:element name="ORPN" type="xsd:string"/>             
+                      <xsd:element name="ALUN" type="xsd:string"/> 
+            </xsd:sequence>             
+    </xsd:complexType>             
+  </xsd:element>             
+    <xsd:element name="PADL" type="xsd:string"/>              
+    <xsd:element name="BCKO" type="xsd:string"/>              
+    <xsd:element name="SPLM" type="xsd:string"/>              
+    <xsd:element name="FACI" type="xsd:string"/>              
+    <xsd:element name="ORQA" type="xsd:string"/>              
+    <xsd:element name="POPN" type="xsd:string"/>              
+    <xsd:element name="ORTP" type="xsd:string"/>              
+    <xsd:element name="DWDZ" type="xsd:string"/>              
+    <xsd:element name="CUNO" type="xsd:string"/>              
+    <xsd:element name="MDBREADMIGetOCUSMA">              
+    <xsd:complexType>              
+      <xsd:sequence>              
+        <xsd:element maxOccurs="unbounded" minOccurs="0" name="Item">              
+          <xsd:complexType>              
+            <xsd:sequence>              
+              <xsd:element name="SPLM" type="xsd:string"/>              
+              <xsd:element name="FACI" type="xsd:string"/>              
+            </xsd:sequence>              
+          </xsd:complexType>              
+        </xsd:element>              
+      </xsd:sequence>              
+    </xsd:complexType>              
+  </xsd:element>              
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input path="/getProductAvailability/getProductAvailabilityRequest.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var5"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareOIZ340MILstSupplSummary">
+        <input path="$var1/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="MDBREADMIGetOCUSMA" ref="var" var="any"/>
+            <cast path="$Environment/Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var2" var="any9"/>
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="isPromoItem" ref="var" var="any13"/>
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="SQLQueries" ref="var" var="any16"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest" path="$var2/mb:msg(getProductAvailabilityRequest,assembly,XMLNSC)" var="MessageAssembly"/>
+        <output path="$var4/mb:env(Environment)" var="Environment1">
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="MDBREADMIGetOCUSMA" ref="var" var="any1"/>
+            <cast path="$Environment1/Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var2" var="any10"/>
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="isPromoItem" ref="var" var="any14"/>
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="SQLQueries" ref="var" var="any17"/>
+        </output>
+        <output path="$var5/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly1">
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="CUNO" ref="var" var="any2"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DWDZ" ref="var" var="any3"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORTP" ref="var" var="any4"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="POPN" ref="var" var="any5"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORQA" ref="var" var="any6"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="FACI" ref="var" var="any7"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="SPLM" ref="var" var="any8"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="BCKO" ref="var" var="any11"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="PADL" ref="var" var="any12"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Variables/any" qualifier="CurrentProduct" ref="var" var="any15"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ALUN" ref="var" var="any19"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates/>
+        </passthrough>
+        <local>
+            <input path="$Environment/Variables/MDBREADMIGetOCUSMA[1]" var="MDBREADMIGetOCUSMA"/>
+            <input path="$MessageAssembly/getProductAvailabilityRequest/products[1]" var="products"/>
+            <input path="$Environment/Variables/getProductAvailabilityRequest[1]" var="getProductAvailabilityRequest"/>
+            <input path="$Environment/Variables/isPromoItem" var="PromoItem"/>
+            <input path="$Environment/Variables/SQLQueries/PromoType" var="PromoType"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString"/>
+            <move>
+                <input path="$getProductAvailabilityRequest/customerNumber"/>
+                <output path="CUNO"/>
+            </move>
+            <move>
+                <input path="$getProductAvailabilityRequest/requestedDeliveryDate"/>
+                <output path="DWDZ"/>
+            </move>
+            <move>
+                <input path="$products/productNumber"/>
+                <output path="POPN"/>
+            </move>
+            <move>
+                <input path="$products/quantity"/>
+                <output path="ORQA"/>
+            </move>
+            <move>
+                <input path="$MDBREADMIGetOCUSMA/Item/FACI"/>
+                <output path="FACI"/>
+            </move>
+            <assign value="2">
+                <output path="BCKO"/>
+            </assign>
+            <assign value="2">
+                <output path="PADL"/>
+            </assign>
+            <move>
+                <input path="$MDBREADMIGetOCUSMA/Item/SPLM"/>
+                <output path="SPLM"/>
+            </move>
+            <condition>
+                <if>
+                    <input path="$getProductAvailabilityRequest/m3OrderType" var="m3OrderType1"/>
+                    <input path="$PromoItem/." var="isPromoItem"/>
+                    <output path="ORTP"/>
+                    <test lang="xpath">$isPromoItem = fn:false()</test>
+                    <move>
+                        <input path="$m3OrderType1/." var="m3OrderType2"/>
+                        <output path="."/>
+                    </move>
+                </if>
+                <else>
+                    <input path="$PromoType/value" var="value"/>
+                    <output path="ORTP"/>
+                    <move>
+                        <input path="$value/." var="value2"/>
+                        <output path="."/>
+                    </move>
+                </else>
+            </condition>
+            <if>
+                <input path="$products/unit" var="unit3"/>
+                <output path="ALUN"/>
+                <test lang="xpath">fn:string-length($unit3) &gt; 0</test>
+                <move>
+                    <input path="$unit3/." var="unit3"/>
+                    <output path="."/>
+                </move>
+            </if>
+        </local>
+        <move>
+            <input path="$MessageAssembly/getProductAvailabilityRequest/products[1]/quantity"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Variables/CurrentProduct/ORQA"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/getProductAvailabilityRequest/products[1]/productNumber"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Variables/CurrentProduct/ORPN"/>
+        </move>
+        <if>
+            <input path="$MessageAssembly/getProductAvailabilityRequest/products[1]/unit" var="unit1"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Variables/CurrentProduct/ALUN"/>
+            <test lang="xpath">fn:string-length($unit1) &gt; 0</test>
+            <move>
+                <input path="$unit1/." var="unit1"/>
+                <output path="."/>
+            </move>
+        </if>
+    </mappingDeclaration>
+</mappingRoot>

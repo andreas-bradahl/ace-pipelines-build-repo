@@ -1,0 +1,19 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE CODTEqualsNULL
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		DECLARE currentProduct REFERENCE TO InputRoot.XMLNSC.OIZ340MILstSupplSummary.Item;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.available TYPE NameValue VALUE FALSE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.partialAvailable TYPE NameValue VALUE FALSE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.warehouse TYPE NameValue VALUE currentProduct.WHLO;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.productNumber TYPE NameValue VALUE Environment.Variables.CurrentProduct.productNumber;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,18 @@
+
+
+CREATE DATABASE MODULE getBusinessChainData_GetESALimitedAssortmentUsers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.Limiteds;
+		DECLARE tineESARef, tineESACursor REFERENCE TO Environment.Variables.Limiteds;
+		DECLARE tineESAQuery CHARACTER '
+		select value as code 
+		from ApplicationData 
+		where parameter like ''zAssortmentChain_%''
+		';
+		SET tineESARef.Row[] = PASSTHRU(tineESAQuery);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

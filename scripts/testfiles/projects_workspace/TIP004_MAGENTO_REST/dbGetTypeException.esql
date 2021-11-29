@@ -1,0 +1,44 @@
+
+
+CREATE DATABASE MODULE dbGetTypeException
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE foundOrderType BOOLEAN FALSE;
+		
+		DECLARE sqlQueryOPEXItemsOrderType CHAR ' 
+			SELECT code
+			FROM Code code
+			INNER JOIN CodeType codeType
+			ON code.typeId = codeType.id
+			WHERE 
+					codeType.name = ''zCantAddOPEXItemsOrderType''
+					';
+			
+		SET Environment.Variables.SQLQueries.OPEXItemsOrderType = PASSTHRU(sqlQueryOPEXItemsOrderType);
+		
+		FOR orderType AS Environment.Variables.SQLQueries.OPEXItemsOrderType[] DO
+		
+			IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.ORTP = orderType.code AND NOT foundOrderType THEN
+			
+				DECLARE sqlQueryCantAddOrderLineUnit CHAR ' 
+					SELECT code
+					FROM Code code
+					INNER JOIN CodeType codeType
+					ON code.typeId = codeType.id
+					WHERE 
+							codeType.name = ''zCantAddOrderLineUnit''
+							';
+					
+				SET Environment.Variables.SQLQueries.CantAddOrderLineUnit = PASSTHRU(sqlQueryCantAddOrderLineUnit);
+				
+				SET foundOrderType = TRUE;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,57 @@
+BROKER SCHEMA getSubscriptionOrder
+
+DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST';
+
+CREATE COMPUTE MODULE esqlConstructCombinedOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD Environment.Variables.ResponseValues.OrderLines;
+		CREATE FIELD OutputRoot.XMLNSC.ns:getSubscriptionOrderResponse.ns:optimizedOrderLines;
+		DECLARE outputRootRef REFERENCE TO OutputRoot.XMLNSC.ns:getSubscriptionOrderResponse.ns:optimizedOrderLines;
+		DECLARE orderLinesRef REFERENCE TO Environment;
+		
+		DECLARE COFA INTEGER;
+		DECLARE ORQT INTEGER;
+		
+		DECLARE orderStatusIs20 BOOLEAN;
+				
+		IF Environment.Variables.HTTPResponses.OIZ163MI_GetHead.Item.STAT = '20' THEN 
+			SET orderStatusIs20 = TRUE;
+		ELSE 
+			SET orderStatusIs20 = FALSE;
+		END IF;
+		
+		FOR order AS Environment.Variables.HTTPResponses.OIZ163MI_LstLine.Item[] DO
+			
+			CREATE LASTCHILD OF outputRootRef AS orderLinesRef NAMESPACE(ns) NAME 'combinedOrderlines';
+			
+			SET orderLinesRef.ns:orderLineNumber = CAST(order.ROLN AS INTEGER);
+			SET orderLinesRef.ns:sku = order.ITNO;
+			
+			IF CONTAINS(order.COFA, '.') THEN
+				SET COFA = SUBSTRING(order.COFA BEFORE '.');
+			ELSE
+				SET COFA = order.COFA;			
+			END IF;
+			
+			IF CONTAINS(order.ORQT, '.') THEN
+				SET ORQT = SUBSTRING(order.ORQT BEFORE '.');
+			ELSE
+				SET ORQT = order.ORQT;
+			END IF;
+			
+			SET orderLinesRef.ns:quantityOrderLineBaseUnit = COFA * ORQT;
+			SET orderLinesRef.ns:quantityOrderLineUnit = ORQT;
+			SET orderLinesRef.ns:orderLineBaseUnit = order.SPUN;
+			SET orderLinesRef.ns:orderLineUnit = order.ALUN;
+			SET orderLinesRef.ns:canIncrease = orderStatusIs20;
+			SET orderLinesRef.ns:canDecrease = orderStatusIs20;
+			SET orderLinesRef.ns:canDelete = orderStatusIs20;
+			SET orderLinesRef.ns:canSendComplaint = FALSE;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

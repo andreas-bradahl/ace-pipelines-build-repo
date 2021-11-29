@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmDatabase.msgnode="ComIbmDatabase.msgnode" xmlns:ComIbmRoute.msgnode="ComIbmRoute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:getAssortmentChainProducts.subflow="getAssortmentChainProducts.subflow" xmlns:getAssortmentCustomerProducts.subflow="getAssortmentCustomerProducts.subflow" xmlns:getBusinessChainData.subflow="getBusinessChainData.subflow" xmlns:getProductWithoutAssortment.subflow="getProductWithoutAssortment.subflow"
+    xmlns:getProductWithoutAssortmentOKCHK1.subflow="getProductWithoutAssortmentOKCHK1.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="getRegularUserItemData.subflow" nsPrefix="getRegularUserItemData.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.cusfdbName" name="cusfdbName" defaultValueLiteral="CUSFDBTST">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="getRegularUserItemData" bundleName="getRegularUserItemData" pluginId="TIP004_MAGENTO_REST"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP004_MAGENTO_REST/icons/full/obj16/getRegularUserItemData.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP004_MAGENTO_REST/icons/full/obj30/getRegularUserItemData.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="getRegularUserItemData" pluginId="TIP004_MAGENTO_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="1845,182">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="getRegularUserItemData" pluginId="TIP004_MAGENTO_REST"/>
+      </nodes>
+      <nodes xmi:type="getBusinessChainData.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="93,20">
+        <translation xmi:type="utility:ConstantString" string="getBusinessChainData"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="250,20">
+        <outTerminals terminalNodeID="Match" dynamic="true" label="Match"/>
+        <translation xmi:type="utility:ConstantString" string="OnlyLimited"/>
+        <filterTable filterPattern=" $Environment/Variables/UserInfo/OnlyLimited = 'YES'" routingOutputTerminal="Match"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="355,20">
+        <outTerminals terminalNodeID="Match" dynamic="true" label="Match"/>
+        <translation xmi:type="utility:ConstantString" string="IsAssortementCustomer"/>
+        <filterTable filterPattern="number( $Environment/Variables/UserInfo/Row/OKACHK)=1" routingOutputTerminal="Match"/>
+      </nodes>
+      <nodes xmi:type="getProductWithoutAssortment.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="525,20">
+        <translation xmi:type="utility:ConstantString" string="getProductWithoutAssortment"/>
+      </nodes>
+      <nodes xmi:type="getAssortmentCustomerProducts.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="731,101">
+        <translation xmi:type="utility:ConstantString" string="getAssortmentCustomerProducts"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="948,20">
+        <outTerminals terminalNodeID="Match" dynamic="true" label="Match"/>
+        <translation xmi:type="utility:ConstantString" string="BusinessChainWithAssortment"/>
+        <filterTable filterPattern="string-length($Environment/Variables/UserInfo/BusinessChains/OSCHL1)>0" routingOutputTerminal="Match"/>
+      </nodes>
+      <nodes xmi:type="getAssortmentChainProducts.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="1150,182">
+        <translation xmi:type="utility:ConstantString" string="getAssortmentChainProducts"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="1346,182">
+        <outTerminals terminalNodeID="511" dynamic="true" label="511"/>
+        <translation xmi:type="utility:ConstantString" string="SalesChannel"/>
+        <filterTable filterPattern="(number( $Environment/Variables/UserInfo/Row/OKCFC4)=511)and(number( $Environment/Variables/UserInfo/Row/OKSTAT)=20)" routingOutputTerminal="511"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="1456,263" dataSource="tine_esa" statement="esql://routine/#getItemsPerCustomer_GetESAPromationalParameters.Main">
+        <translation xmi:type="utility:ConstantString" string="GetESAPromationalParameters"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="1658,263" dataSource="m3_test" statement="esql://routine/#getItemsPerCustomer_GetM3PromationalProducts.Main">
+        <translation xmi:type="utility:ConstantString" string="GetM3PromationalProducts"/>
+      </nodes>
+      <nodes xmi:type="getProductWithoutAssortmentOKCHK1.subflow:FCMComposite_1" xmi:id="FCMComposite_1_11" location="543,186">
+        <translation xmi:type="utility:ConstantString" string="getProductWithoutAssortmentOKCHK1"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_2" sourceTerminalName="Match" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="Match" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="511" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_3" sourceTerminalName="Match" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.cusfdbName">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.cusfdbName" bundleName="getRegularUserItemData" pluginId="TIP004_MAGENTO_REST"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

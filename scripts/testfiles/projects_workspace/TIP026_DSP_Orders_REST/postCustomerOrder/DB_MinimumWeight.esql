@@ -1,0 +1,47 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE DB_MinimumWeight
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sqlQuery CHAR 'SELECT minweight.minimumWeight, item.weight FROM zMinimumWeight minweight
+								INNER JOIN Item item ON item.id=minweight.itemId
+								WHERE itemnumber = ?';
+		DECLARE minimumWeightCheck BOOLEAN TRUE;
+		DECLARE productNumber CHAR '';
+		DECLARE zero DECIMAL 0;
+		
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			IF minimumWeightCheck THEN
+				SET productNumber = orderLine.sku;
+				SET orderLine.minimumWeight = PASSTHRU(sqlQuery, productNumber);
+				SET orderLine.minimumWeight = CAST(COALESCE(FIELDVALUE(orderLine.minimumWeight.minimumWeight), 0) AS DECIMAL);
+				SET orderLine.unitWeight = COALESCE(FIELDVALUE(orderLine.minimumWeight.weight), zero);
+				DECLARE totalWt DECIMAL CAST(FIELDVALUE(orderLine.quantity) AS DECIMAL) * FIELDVALUE(orderLine.unitWeight);
+				
+				IF orderLine.minimumWeight > totalWt THEN
+					SET minimumWeightCheck = FALSE;
+					
+				END IF;
+				
+				DELETE FIELD orderLine.minimumWeight.minimumWeight;
+				DELETE FIELD orderLine.minimumWeight.weight;
+				
+			END IF;
+		END FOR;
+		
+		IF minimumWeightCheck THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'MINIMUM_WEIGHT';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,15 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareConfirm
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE addBatchHeadNameValueList REFERENCE TO Environment.JSONResponse.AddBatchHead.Data.MIRecord.Item.NameValue;
+		DECLARE ORNO CHAR GetValueFromNameValueList('ORNO', addBatchHeadNameValueList);
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

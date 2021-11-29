@@ -1,0 +1,20 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckOrderExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF TRIM(Environment.Variables.HTTPResponses.OIZ163MI_GetInstHead.Item.RORD) = '' THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'ORDER_NOT_EXIST';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

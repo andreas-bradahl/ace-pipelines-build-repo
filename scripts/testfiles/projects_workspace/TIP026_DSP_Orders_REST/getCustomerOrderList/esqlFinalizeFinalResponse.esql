@@ -1,0 +1,35 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE esqlFinalizeFinalResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputRoot = InputRoot;
+		
+		DECLARE netOrderValueString CHARACTER;
+		DECLARE afterDot CHARACTER;
+		
+		FOR order AS OutputRoot.JSON.Data.Item[] DO
+			
+			SET netOrderValueString = CAST(order.netOrderValue AS CHARACTER);
+			
+			IF order.netOrderValue = 0 OR order.netOrderValue IS NULL THEN
+				SET order.netOrderValue = 0.00;
+			ELSEIF NOT CONTAINS(netOrderValueString, '.') THEN
+				SET order.netOrderValue = CAST(netOrderValueString || '.00' AS DECIMAL);
+			ELSE
+				
+				SET afterDot = SUBSTRING(netOrderValueString AFTER '.');
+				
+				IF LENGTH(afterDot) = 1 THEN
+					SET order.netOrderValue = CAST(netOrderValueString || '0' AS DECIMAL);					
+				END IF;
+				
+			END IF;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,21 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckOrderExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF TRIM(InputRoot.JSON.Data.Message) = 'XIM0003' THEN
+			
+			SET OutputRoot.JSON.Data.success = FALSE;
+			SET OutputRoot.JSON.Data.errorMessage = 'NO_SUBSCRIPTION_ORDER_FOUND';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		SET OutputRoot = InputRoot;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,29 @@
+
+
+CREATE COMPUTE MODULE outgoingHTTPMessageHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		SET OutputRoot.HTTPInputHeader.Logging.UUID = Environment.Variables.Logging.UUID;
+		SET OutputRoot.HTTPInputHeader.Logging.Source = Environment.Variables.Logging.Source;
+		SET OutputRoot.HTTPInputHeader.Logging.MessageId = Environment.Variables.Logging.MessageId;
+		
+		IF EXISTS(InputRoot.XMLNSC[]) THEN
+			SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+			RETURN TRUE;
+		ELSEIF EXISTS(InputRoot.JSON[]) THEN
+			SET OutputRoot.JSON = InputRoot.JSON;
+			RETURN TRUE;
+		ELSEIF EXISTS(InputRoot.BLOB[]) THEN
+			SET OutputRoot.BLOB = InputRoot.BLOB;
+			RETURN TRUE;
+		ELSEIF NOT EXISTS(InputRoot.*[]) THEN
+			RETURN TRUE;
+		ELSE 
+			SET OutputRoot.{Fieldname(InputBody)} = InputBody;
+			RETURN TRUE;
+		END IF;
+	END;
+END MODULE;

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:Q1="http://www.ibm.com/iib/msl/json">   
+    <xsd:import namespace="http://www.ibm.com/iib/msl/json" schemaLocation="/swagger.json"/>   
+    <xsd:element name="AllItemsLoop">   
+    <xsd:complexType>   
+      <xsd:sequence>   
+        <xsd:element name="AllOrders">   
+          <xsd:complexType>   
+            <xsd:sequence>   
+              <xsd:element maxOccurs="unbounded" minOccurs="0" name="Item" type="Q1:MIRecord_MIRecord_Item"/>   
+            </xsd:sequence>   
+          </xsd:complexType>   
+        </xsd:element>   
+      </xsd:sequence>   
+    </xsd:complexType>   
+  </xsd:element>   
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var3"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="AllItemsLoopIntoJSON">
+        <input path="$var3/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Variables/any" qualifier="AllItemsLoop" ref="var2"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+        </output>
+        <foreach>
+            <input path="$MessageAssembly/LocalEnvironment/Variables/AllItemsLoop/AllOrders/Item"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/MIRecord/Item"/>
+            <foreach>
+                <input path="NameValue/Item"/>
+                <output path="NameValue/Item"/>
+                <move>
+                    <input path="Name"/>
+                    <output path="Name"/>
+                </move>
+                <move>
+                    <input path="Value"/>
+                    <output path="Value"/>
+                </move>
+            </foreach>
+        </foreach>
+    </mappingDeclaration>
+</mappingRoot>

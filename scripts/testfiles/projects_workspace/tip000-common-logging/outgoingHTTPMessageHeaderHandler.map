@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="default" version="8.0.5.0" xmlns:map="default">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">       
+                                                                    <xsd:element name="Logging">      
+    <xsd:complexType>      
+      <xsd:sequence>      
+        <xsd:element name="UUID" type="xsd:string"/>      
+                                                                                    <xsd:element name="Source" type="xsd:string"/>    
+                            <xsd:element name="MessageId" type="xsd:string"/> 
+            </xsd:sequence>      
+    </xsd:complexType>      
+  </xsd:element>      
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var5"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var6"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var7"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var8"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var9"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="outgoingHTTPMessageHeaderHandler">
+        <input path="$var5/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Logging" ref="var4" var="any3"/>
+        </input>
+        <input path="$var6/mb:msg(BLOB,assembly,BLOB,Properties,HTTPInputHeader)" var="MessageAssembly"/>
+        <output path="$var8/mb:env(Environment)" var="Environment1"/>
+        <output path="$var9/mb:msg(BLOB,assembly,BLOB,Properties,HTTPInputHeader)" var="MessageAssembly1">
+            <cast castType="userDefined" path="$MessageAssembly1/HTTPInputHeader/any" qualifier="Logging" ref="var4" var="any4"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates/>
+        </passthrough>
+        <move>
+            <input path="$MessageAssembly/BLOB"/>
+            <output path="$MessageAssembly1/BLOB"/>
+        </move>
+        <move>
+            <input path="$Environment/Variables/Logging"/>
+            <output path="$MessageAssembly1/HTTPInputHeader/Logging"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

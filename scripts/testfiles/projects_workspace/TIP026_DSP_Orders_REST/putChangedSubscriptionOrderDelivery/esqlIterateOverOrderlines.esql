@@ -1,0 +1,34 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlIterateOverOrderlines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.FailedVariables.OrderLinesFailed = FALSE;
+
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd[] DO
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine = orderLine;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END FOR;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesUpd[] DO
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine = orderLine;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END FOR;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesDel[] DO
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine = orderLine;
+			PROPAGATE TO TERMINAL 'out2';
+			
+		END FOR;
+		
+		PROPAGATE TO TERMINAL 'out3';
+
+		RETURN FALSE;
+	END;
+END MODULE;

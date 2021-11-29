@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="http://tine.no/tip/dsp/ProductInformationList" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:Q1="http://tine.no/tip/dsp/ProductInformationList">
+    <xsd:element name="productInformationList"
+    	type="Q1:ProductInformationListType">
+    </xsd:element>
+    
+    <xsd:complexType name="ProductInformationListType">
+    	<xsd:sequence>
+    		<xsd:element name="productInformation"
+    			type="Q1:ProductInformationType" maxOccurs="unbounded"
+    			minOccurs="1">
+    		</xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="ProductInformationType">
+    	<xsd:sequence>
+    		<xsd:element name="productNumber" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="promotionalItem" type="xsd:boolean"></xsd:element>
+
+    		<xsd:element name="visible" type="xsd:boolean"></xsd:element>
+
+    		<xsd:element name="weight" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="unspsc" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="type" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="buyableInBaseUnit" type="xsd:boolean"></xsd:element>
+
+    		<xsd:element name="productClass" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="baseUnit" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="buyableInSalesUnit" type="xsd:boolean"></xsd:element>
+
+    		<xsd:element name="variableWeight" type="xsd:boolean"></xsd:element>
+
+    		<xsd:element name="conversionFactor" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="comparativeUnit" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="epdNumber" type="xsd:string"></xsd:element>
+
+
+    		<xsd:element name="name_en_m3" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="description_no_m3" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="description_en_m3" type="xsd:string"></xsd:element>
+
+
+    		<xsd:element name="recyclingCharge" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="eanCode" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="unit" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="maxQty" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="minWeight" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="leadTimeMinWeight" type="xsd:decimal"></xsd:element>
+
+    		<xsd:element name="allergens_no" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="allergens_en" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="preservable" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="ingredients_no" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="ingredients_en" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="productGroup" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="productNumber" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="productType" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="packaging_no" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="packaging_en" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="similarProducts" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+
+    		<xsd:element name="newUntilDate" type="xsd:date"></xsd:element>
+
+    		<xsd:element name="storage_no" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="storage_en" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="expiredUntilDate_rs" type="xsd:date"></xsd:element>
+
+    		<xsd:element name="brand" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="name_no_m3" type="xsd:string"></xsd:element>
+
+
+    		<xsd:element name="name_no_rs" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="name_en_rs" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="description_en_rs" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="description_no_rs" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="certifications" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="categoryLevel1" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="categoryLevel2" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="categoryLevel3" type="xsd:string"></xsd:element>
+
+    		<xsd:element name="searchWord" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+
+
+    		<xsd:element name="nutritions_no" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="nutritions_en" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+
+
+    		<xsd:element name="visibleInStore" type="xsd:string"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+
+    		<xsd:element name="expiredUntilDate_m3" type="xsd:date"></xsd:element>
+    		<xsd:element name="expiredUntilDate_rs" type="xsd:date"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

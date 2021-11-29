@@ -1,0 +1,31 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE getOrderLines_getExtraText
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE lstLine2Cursor REFERENCE TO Environment.Variables.HTTPResponses.LstLine2.Item;
+		
+		
+		WHILE LASTMOVE(lstLine2Cursor) DO
+			SET lstLine2Cursor.CODT = CAST(lstLine2Cursor.CODT AS DATE FORMAT 'yyyyMMdd');
+			IF lstLine2Cursor.CODT > Environment.Variables.Global.requestedDeliveryDate THEN
+				
+				DECLARE sqlQuery CHAR '
+										select * from tine_esa..PageText pt
+										inner join PageTextText ptt on ptt.pageTextId=pt.pageTextId
+										where pt.sitePageName=''TIP'' and pt.name=''delayedDeliveryText'' and languageCode = ''no''';
+				SET lstLine2Cursor.extraText = PASSTHRU(sqlQuery);
+			ELSE
+				LOG EVENT SEVERITY 1 VALUES('NOT DELAYED');
+			END IF;
+			
+			
+			MOVE lstLine2Cursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

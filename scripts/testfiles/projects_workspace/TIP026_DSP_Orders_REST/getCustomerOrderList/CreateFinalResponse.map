@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema targetNamespace="http://www.ibm.com/iib/msl/json"><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/iib/msl/json" xmlns:Q1="http://www.ibm.com/iib/msl/json">            
+                       <xsd:complexType block="#all" name="JSONArray_2">        
+    <xsd:sequence>        
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="Item" nillable="true">        
+        <xsd:complexType>        
+          <xsd:sequence>        
+            <xsd:element name="orderNumber" nillable="true" type="xsd:string"/>        
+            <xsd:element name="containsTempLines" nillable="true" type="xsd:boolean"/>        
+            <xsd:element name="isTemporaryOrder" nillable="true" type="xsd:boolean"/>        
+            <xsd:element name="customerNumber" nillable="true" type="xsd:string"/>        
+            <xsd:element name="deliveryDate" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="orderName" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="orderStatusLowest" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="orderStatusHighest" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="orderType" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="typeOfOrder" nillable="true" type="xsd:string"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="netOrderValue" nillable="true" type="xsd:decimal"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" name="invoiceLink" nillable="true" type="xsd:string"/>        
+                                                      </xsd:sequence>        
+        </xsd:complexType>        
+      </xsd:element>        
+    </xsd:sequence>        
+  </xsd:complexType>        
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var7"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var6"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var8"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" targetNamespace="http://www.ibm.com/iib/msl/json" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var9"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var11"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <imports>
+        <import kind="esql" namespace="/Common.esql"/>
+    </imports>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="extension" prefix="xs" uri="http://www.w3.org/2001/XMLSchema"/>
+        <namespace kind="extension" prefix="Common" uri="/Common.esql"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="CreateFinalResponse">
+        <input path="$var7/mb:env(Environment)">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="Variables/any" qualifier="{http://www.ibm.com/iib/msl/json}getCustomerOrderListResponseOrderHead_JSONArray" ref="var6" var="any"/>
+        </input>
+        <output path="$var9/mb:env(Environment)" var="Environment">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$Environment/Variables/any" qualifier="{http://www.ibm.com/iib/msl/json}getCustomerOrderListResponseOrderHead_JSONArray" ref="var11" var="any1"/>
+        </output>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}JSONArray_2" ref="var3" var="anyType"/>
+        </output>
+        <passthrough>
+            <input path="."/>
+            <output path="$Environment/."/>
+            <updates/>
+        </passthrough>
+        <foreach>
+            <input path="Variables/getCustomerOrderListResponseOrderHead_JSONArray/Item" var="Item"/>
+            <output path="$MessageAssembly/JSON/spath('Data',2)/Item"/>
+            <move automap="true">
+                <input path="$Item/orderNumber"/>
+                <output path="orderNumber"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/isTemporaryOrder"/>
+                <output path="isTemporaryOrder"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/customerNumber"/>
+                <output path="customerNumber"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/deliveryDate"/>
+                <output path="deliveryDate"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/orderName"/>
+                <output path="orderName"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/orderStatusLowest"/>
+                <output path="orderStatusLowest"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/orderStatusHighest"/>
+                <output path="orderStatusHighest"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/orderType"/>
+                <output path="orderType"/>
+            </move>
+            <move automap="true">
+                <input path="$Item/typeOfOrder"/>
+                <output path="typeOfOrder"/>
+            </move>
+            <condition>
+                <if>
+                    <input path="$Item/netOrderValue" var="netOrderValue"/>
+                    <output path="netOrderValue"/>
+                    <test lang="xpath">fn:string($netOrderValue) = "0E+0" or fn:string($netOrderValue) = "0"</test>
+                    <assign value="0.00">
+                        <output path="."/>
+                    </assign>
+                </if>
+                <else>
+                    <input path="$Item/netOrderValue"/>
+                    <output path="netOrderValue"/>
+                    <customFunction lang="esql" ref="Common:castFloatToDecimal">
+                        <input path="." var="netOrderValue2"/>
+                        <output path="."/>
+                        <param name="valueToCast" value="$netOrderValue2"/>
+                    </customFunction>
+                </else>
+            </condition>
+            <move automap="true">
+                <input path="$Item/invoiceLink"/>
+                <output path="invoiceLink"/>
+            </move>
+            <move>
+                <input path="$Item/containsTempLines"/>
+                <output path="containsTempLines"/>
+            </move>
+        </foreach>
+    </mappingDeclaration>
+</mappingRoot>

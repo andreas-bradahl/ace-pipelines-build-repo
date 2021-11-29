@@ -1,0 +1,113 @@
+
+
+CREATE DATABASE MODULE getItems_GetDataForLookupFromM3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE variablesRef REFERENCE TO Environment.Variables;
+		
+		CREATE FIELD variablesRef.PriceListAndCurrencyItems;
+		CALL GetItemsInPriceListAndCurrency(variablesRef.PriceList, variablesRef.Currency, variablesRef.PriceListAndCurrencyItems);
+		
+		CREATE FIELD variablesRef.AllAlternativeConversionFactors;
+		CALL GetAllAlternativeConversionFactors(variablesRef.AllAlternativeConversionFactors);
+		
+		CREATE FIELD variablesRef.EANList;
+		CALL GetAllEanItems(variablesRef.EANList);
+		
+		RETURN TRUE;
+	END;
+	
+	
+	CREATE PROCEDURE GetItemsInPriceListAndCurrency(IN priceList CHAR, IN currency CHAR, IN storeIn REFERENCE)
+	BEGIN
+		DECLARE m3DateFormat CHAR 'YYYYMMDD';
+		
+		
+		DECLARE sqlQuery CHARACTER;
+		SET sqlQuery = 
+		 	'SELECT TRIM(OD.ODITNO) '
+			|| 'FROM OPRBAS OD '
+			|| 'WHERE '
+			|| 'OD.ODPRRF = ''FPK'' '
+				|| 'AND OD.ODCUCD = ''NOK'' '
+				|| 'AND OD.ODFVDT <= VARCHAR_FORMAT(CURRENT TIMESTAMP, ''YYYYMMDD'') '
+				|| 'AND OD.ODLVDT >= VARCHAR_FORMAT(CURRENT TIMESTAMP, ''YYYYMMDD'') ';
+				
+				
+			SET Environment.Variables.PriceListAndCurrencyItems.ItemNumber = 
+				PASSTHRU(sqlQuery);
+				
+				
+			/* SET storeIn.ItemNumber[] =
+			SELECT ITEM
+				TRIM(OD.ODITNO)
+			FROM
+				Database.OPRBAS AS OD
+			WHERE
+				OD.ODPRRF = Environment.Variables.tine_esa.ApplicationData.zPriceListOnlyDpak AND
+				OD.ODCUCD = Environment.Variables.tine_esa.ApplicationData.zCurrencyOnlyDpak AND
+				OD.ODFVDT <= CAST(CURRENT_DATE AS CHAR FORMAT m3DateFormat) AND
+				OD.ODLVDT >= CAST(CURRENT_DATE AS CHAR FORMAT m3DateFormat); */ 
+	END;
+	
+	CREATE PROCEDURE GetAllAlternativeConversionFactors(IN storeIn REFERENCE)
+	BEGIN
+		DECLARE query CHAR '
+			SELECT DISTINCT
+				TRIM(MMITNO) AS ITNO,
+				MUCOFA AS COFA
+			FROM
+				MITMAS
+			INNER JOIN MITAUN ON
+				MUITNO = MMITNO
+				AND MMCONO = MUCONO
+			WHERE
+				MMUNMS <> ''STK''
+				AND MUALUN = ''STK''
+				AND MUCONO = 100
+		';
+		
+		-- SET storeIn.Item[] = PASSTHRU(query);
+		CREATE FIELD Environment.dbResult;
+		SET Environment.db.dbResult[] = PASSTHRU(query);
+		
+		DECLARE currentDbResultRef REFERENCE TO Environment.dbResult;
+		FOR dbResultCursor AS  Environment.db.dbResult[] DO
+			CREATE LASTCHILD OF storeIn AS currentDbResultRef NAME 'Item';
+			SET currentDbResultRef = dbResultCursor;
+		END FOR;
+		
+		DELETE FIELD Environment.db;
+		
+	END;
+	
+	CREATE PROCEDURE GetAllEanItems(IN storeIn REFERENCE)
+	BEGIN
+		DECLARE sqlQuery CHAR '
+			SELECT DISTINCT
+				TRIM(MPITNO) AS ITNO,
+				TRIM(MPPOPN) AS POPN,
+				TRIM(MPALUN) AS ALUN
+			FROM
+				MITPOP
+			WHERE
+				MPALWT = ''2''
+				AND (MPALWQ = ''EA13''
+				OR MPALWQ = ''EA08'')
+				AND MPCONO=100
+		';
+		
+		CREATE FIELD Environment.db;
+		SET Environment.db.dbResult[] = PASSTHRU(sqlQuery);
+		
+		DECLARE newItemRef REFERENCE TO Environment.dbResult;
+		FOR dbResultCursor AS  Environment.db.dbResult[] DO
+			CREATE LASTCHILD OF storeIn AS newItemRef NAME 'Item';
+			SET newItemRef = dbResultCursor;
+		END FOR;
+		
+		DELETE FIELD Environment.db;
+		
+	END;
+END MODULE;
+

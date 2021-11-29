@@ -1,0 +1,47 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE IterateThroughProducts
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest';
+		
+		DECLARE isPromoOrder BOOLEAN;
+
+		FOR product AS Environment.Variables.ns:getProductAvailabilityRequest.products[] DO
+			
+			SET isPromoOrder = FALSE;
+			
+			FOR PromoItem AS Environment.Variables.HTTPResponses.LstAssmItem.Item[] DO
+				
+				IF NOT isPromoOrder THEN
+				
+					IF product.productNumber = PromoItem.ITNO THEN
+						
+						SET isPromoOrder = TRUE;
+						
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+			
+			IF isPromoOrder THEN
+				SET Environment.Variables.isPromoItem = TRUE;				
+			ELSE
+				SET Environment.Variables.isPromoItem = FALSE;					
+			END IF;
+			
+			SET Environment.Variables.CurrentProduct = product;
+			SET OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products = product;
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+			DELETE FIELD Environment.Variables.CurrentProduct;
+		END FOR;
+
+		PROPAGATE TO TERMINAL 'out1';
+
+		RETURN FALSE;
+	END;
+END MODULE;

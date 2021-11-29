@@ -1,0 +1,14 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlThrowErrorS
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+		SET OutputRoot.JSON.Data.Response = 'FAILED';
+		SET OutputRoot.JSON.Data.Error_Code = 'ORDER_CANCELLED';
+
+		RETURN TRUE;
+	END;
+END MODULE;

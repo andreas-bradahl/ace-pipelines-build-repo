@@ -1,0 +1,2720 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "title" : "TIP026_DSP_Orders_REST",
+    "version" : "1.0.0",
+    "description" : "TIP026_DSP_Orders_REST"
+  },
+  "paths" : {
+    "/customerOrder" : {
+      "get" : {
+        "operationId" : "getCustomerOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/OrderHeader"
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve a customerOrder",
+        "parameters" : [ {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Company number"
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Customer number"
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Customer order number"
+        } ]
+      },
+      "post" : {
+        "operationId" : "postCustomerOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/postCostumerOrderResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Insert a customerOrder",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/NewOrder"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean",
+          "format" : "",
+          "description" : "default: false"
+        }, {
+          "name" : "noExtraOrderCharge",
+          "in" : "query",
+          "type" : "boolean",
+          "description" : "default: false"
+        } ]
+      },
+      "delete" : {
+        "operationId" : "deleteCustomerOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/DeleteCustomerOrderResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Remove a customerOrder",
+        "parameters" : [ {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Company Number (M3: CONO)"
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Customer Number (M3: CUNO)"
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Order Number  (M3: ORNO)"
+        } ]
+      },
+      "put" : {
+        "operationId" : "putCustomerOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/putCustomerOrderResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad Request.",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update customerOrder",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/PutCustomerOrderRequest"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean",
+          "description" : "default : false"
+        } ]
+      }
+    },
+    "/customerOrderList" : {
+      "get" : {
+        "operationId" : "getCustomerOrderList",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getCustomerOrderListResponseOrderHead"
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "schema" : {
+              "$ref" : "#/definitions/getCustomerOrderListResponseOrderHead"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve customerOrderList",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "type" : "string",
+          "required" : false
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "orderName",
+          "in" : "query",
+          "type" : "string",
+          "required" : false
+        }, {
+          "name" : "toStatus",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "typeOfOrder",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "fromStatus",
+          "in" : "query",
+          "type" : "string"
+        } ]
+      }
+    },
+    "/productAvailability" : {
+      "get" : {
+        "operationId" : "getProductAvailability",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getProductAvailabilityResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve productAvailability",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "description" : "Customer Number"
+        }, {
+          "name" : "requestedDeliveryDate",
+          "in" : "query",
+          "type" : "string",
+          "description" : "Requested Delivery Date",
+          "required" : true
+        }, {
+          "name" : "products",
+          "in" : "query",
+          "type" : "string",
+          "description" : "",
+          "required" : true
+        }, {
+          "name" : "m3OrderType",
+          "in" : "query",
+          "type" : "string",
+          "description" : "M3 OrderType",
+          "required" : true
+        }, {
+          "name" : "unit",
+          "in" : "query",
+          "type" : "string"
+        } ]
+      }
+    },
+    "/subscriptionOrder" : {
+      "delete" : {
+        "operationId" : "deleteSubscriptionOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/DeleteSubscriptionOrder"
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Delete subscription order",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "description" : "Customer number (M3: CUNO)",
+          "required" : true
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "description" : "Order Number (M3: RORD)",
+          "required" : true
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "description" : "Company number (M3: CONO)",
+          "required" : true
+        } ]
+      },
+      "get" : {
+        "operationId" : "getSubscriptionOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getSubscriptionOrderResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve subscriptionOrder",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "requestedDeliveryDate",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string"
+        } ]
+      },
+      "post" : {
+        "operationId" : "postSubscriptionOrder",
+        "responses" : {
+          "400" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/postSubscriptionOrderResponseOK"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Insert a subscriptionOrder",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/postSubscriptionOrderRequest"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean",
+          "required" : false
+        } ]
+      },
+      "put" : {
+        "operationId" : "putSubscriptionOrder",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful."
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update subscriptionOrder",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/putSubscriptionOrderRequest"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean"
+        }, {
+          "name" : "keepInstances",
+          "in" : "query",
+          "type" : "boolean"
+        } ]
+      }
+    },
+    "/subscriptionOrderList" : {
+      "get" : {
+        "operationId" : "getSubscriptionOrderList",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getSubscriptionOrderListResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve subscriptionOrderList",
+        "parameters" : [ {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        } ]
+      }
+    },
+    "/changedSubscriptionOrderDelivery" : {
+      "post" : {
+        "operationId" : "postChangedSubscriptionOrderDelivery",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful."
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Insert a changedSubscriptionOrderDelivery",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/postChangedSubscriptionOrderDeliveryRequest"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean"
+        } ]
+      },
+      "delete" : {
+        "operationId" : "deleteChangedSubscriptionOrderDelivery",
+        "responses" : {
+          "400" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          },
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/deleteChangedSubscriptionOrderDeliveryResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Remove from changedSubscriptionOrderDelivery",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "deliveryDate",
+          "in" : "query",
+          "type" : "string",
+          "format" : "yyyyMMdd",
+          "required" : true
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        } ]
+      },
+      "get" : {
+        "operationId" : "getChangedSubscriptionOrderDelivery",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getChangedSubscriptionOrderDeliveryResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve changedSubscriptionOrderDelivery",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "requestedDeliveryDate",
+          "in" : "query",
+          "type" : "string",
+          "required" : true,
+          "format" : "yyyyMMdd"
+        }, {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        } ]
+      },
+      "put" : {
+        "operationId" : "putChangedSubscriptionOrderDelivery",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/putChangedSubscriptionOrderDeliveryResponseOK"
+            }
+          },
+          "400" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/putChangedSubscriptionOrderDeliveryResponseFailed"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update changedSubscriptionOrderDelivery",
+        "parameters" : [ {
+          "name" : "body",
+          "in" : "body",
+          "schema" : {
+            "$ref" : "#/definitions/putChangedSubscriptionOrderDeliveryRequest"
+          },
+          "description" : "The request body for the operation",
+          "required" : true
+        }, {
+          "name" : "optimizeOrderLines",
+          "in" : "query",
+          "type" : "boolean"
+        } ]
+      }
+    },
+    "/subscriptionOrderStatus" : {
+      "put" : {
+        "operationId" : "putSubscriptionOrderStatus",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/putSubscriptionOrderStatusResponseOK"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Update subscriptionOrderStatus",
+        "parameters" : [ {
+          "name" : "orderNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "activate",
+          "in" : "query",
+          "type" : "boolean",
+          "required" : true
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        } ]
+      }
+    },
+    "/cancellationDate" : {
+      "post" : {
+        "operationId" : "postCancellationDate",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/postCancellationDateResponseOK"
+            }
+          }
+        },
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "description" : "Insert a cancellationDate",
+        "parameters" : [ {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string"
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "type" : "string"
+        } ]
+      },
+      "delete" : {
+        "operationId" : "deleteCancellationDate",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/deleteCancellationDateResponseOK"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Remove from cancellationDate",
+        "parameters" : [ {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        } ]
+      }
+    },
+    "/cancellationDateList" : {
+      "get" : {
+        "operationId" : "getCancellationDateList",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/getCancellationDateListResponse"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve cancellationDateList",
+        "parameters" : [ {
+          "name" : "companyNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "customerNumber",
+          "in" : "query",
+          "type" : "string",
+          "required" : true
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "type" : "string"
+        } ]
+      }
+    }
+  },
+  "basePath" : "/API",
+  "definitions" : {
+    "OrderHeader" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "containsTempLines" : {
+          "type" : "boolean"
+        },
+        "isTemporaryOrder" : {
+          "type" : "boolean"
+        },
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "customerOrderNumber" : {
+          "type" : "string"
+        },
+        "customerReference" : {
+          "type" : "string"
+        },
+        "orderName" : {
+          "type" : "string"
+        },
+        "TINEReference" : {
+          "type" : "string"
+        },
+        "orderStatusLowest" : {
+          "type" : "string"
+        },
+        "orderStatusHighest" : {
+          "type" : "string"
+        },
+        "orderType" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "canUpdate" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canAddOpexProducts" : {
+          "type" : "boolean"
+        },
+        "canCopyOrder" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "canAddOrderline" : {
+          "type" : "boolean"
+        },
+        "orderComment" : {
+          "type" : "string"
+        },
+        "grossOrderValue" : {
+          "type" : "number"
+        },
+        "netOrderValue" : {
+          "type" : "number"
+        },
+        "orderDiscount" : {
+          "type" : "number"
+        },
+        "handlingCharge" : {
+          "type" : "number"
+        },
+        "amountToPay" : {
+          "type" : "number"
+        },
+        "vatAmount" : {
+          "type" : "number"
+        },
+        "orderRecyclingCharge" : {
+          "type" : "number"
+        },
+        "termsOfPayment" : {
+          "type" : "string"
+        },
+        "deadline" : {
+          "type" : "string"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/OrderLine"
+          }
+        },
+        "optimizedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/optimizedOrderLine"
+          }
+        }
+      },
+      "required" : [ "orderNumber", "containsTempLines", "isTemporaryOrder", "companyNumber", "customerNumber", "customerOrderNumber", "customerReference", "TINEReference", "orderStatusLowest", "orderStatusHighest", "orderType", "requestedDeliveryDate", "canUpdate", "canDelete", "orderLines", "canAddOpexProducts", "canSendComplaint", "canCopyOrder", "canAddOrderline" ]
+    },
+    "TemporaryOrderline" : {
+      "type" : "object",
+      "properties" : {
+        "orderlineNumber" : {
+          "type" : "integer"
+        },
+        "orderLineSuffix" : {
+          "type" : "integer"
+        },
+        "sku" : {
+          "type" : "string"
+        },
+        "itemDescription" : {
+          "type" : "string"
+        },
+        "quantitySalesPriceUnit" : {
+          "type" : "integer"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "addInReview" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderlineNumber", "orderLineSuffix", "sku", "itemDescription", "quantitySalesPriceUnit", "canIncrease", "canDecrease", "canDelete" ]
+    },
+    "ConfirmedOrderline" : {
+      "type" : "object",
+      "properties" : {
+        "orderLineNumber" : {
+          "type" : "integer"
+        },
+        "orderLineSuffix" : {
+          "type" : "integer"
+        },
+        "sku" : {
+          "type" : "string"
+        },
+        "itemDescription" : {
+          "type" : "string"
+        },
+        "quantitySalesPriceUnit" : {
+          "type" : "integer"
+        },
+        "quantityAlternateUnit" : {
+          "type" : "integer"
+        },
+        "salesPriceUnit" : {
+          "type" : "string"
+        },
+        "alternateUnit" : {
+          "type" : "string"
+        },
+        "deliveryDate" : {
+          "type" : "string"
+        },
+        "discountAmount1" : {
+          "type" : "number"
+        },
+        "discountAmount2" : {
+          "type" : "number"
+        },
+        "discountAmount3" : {
+          "type" : "number"
+        },
+        "discountAmount4" : {
+          "type" : "number"
+        },
+        "discountAmount5" : {
+          "type" : "number"
+        },
+        "discountAmount6" : {
+          "type" : "number"
+        },
+        "lineAmount" : {
+          "type" : "number"
+        },
+        "lineAmountWithoutDiscount" : {
+          "type" : "number"
+        },
+        "lineRecyclingCharge" : {
+          "type" : "number"
+        },
+        "status" : {
+          "type" : "string"
+        },
+        "refOrderCategory" : {
+          "type" : "string"
+        },
+        "refOrderNumber" : {
+          "type" : "string"
+        },
+        "refOrderLine" : {
+          "type" : "string"
+        },
+        "salesPrice" : {
+          "type" : "number"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "updateInReview" : {
+          "type" : "boolean"
+        },
+        "newQuantity" : {
+          "type" : "integer"
+        },
+        "deleteInReview" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "invoicedQuantity" : {
+          "type" : "integer"
+        }
+      },
+      "required" : [ "orderLineNumber", "orderLineSuffix", "sku", "itemDescription", "quantitySalesPriceUnit", "quantityAlternateUnit", "salesPriceUnit", "alternateUnit", "deliveryDate", "discountAmount1", "discountAmount2", "discountAmount3", "discountAmount4", "discountAmount5", "discountAmount6", "lineAmount", "lineAmountWithoutDiscount", "lineRecyclingCharge", "status", "refOrderCategory", "refOrderNumber", "refOrderLine", "salesPrice", "canIncrease", "canDecrease", "canDelete", "canSendComplaint", "invoicedQuantity" ]
+    },
+    "OrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "confirmedOrderline" : {
+          "$ref" : "#/definitions/ConfirmedOrderline"
+        },
+        "temporaryOrderline" : {
+          "$ref" : "#/definitions/TemporaryOrderline"
+        }
+      }
+    },
+    "ErrorMessage" : {
+      "type" : "object",
+      "properties" : {
+        "Response" : {
+          "type" : "string"
+        },
+        "Error_Code" : {
+          "$ref" : "#/definitions/Error_Code"
+        }
+      },
+      "required" : [ "Response", "Error_Code" ]
+    },
+    "Error_Code" : {
+      "type" : "object",
+      "properties" : {
+        "Error_Code" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "Error_Code" ]
+    },
+    "NewOrder" : {
+      "type" : "object",
+      "properties" : {
+        "prevOrderType" : {
+          "type" : [ "string", "null" ]
+        },
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "customerWarehouse" : {
+          "type" : [ "string", "null" ]
+        },
+        "orderType" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "customerOrderNumber" : {
+          "type" : [ "string", "null" ]
+        },
+        "customerReference" : {
+          "type" : [ "string", "null" ]
+        },
+        "orderName" : {
+          "type" : [ "string", "null" ]
+        },
+        "TINEReference" : {
+          "type" : [ "string", "null" ]
+        },
+        "orderComment" : {
+          "type" : [ "string", "null" ]
+        },
+        "clipCard" : {
+          "type" : "string"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/NewOrderLine"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "orderType", "requestedDeliveryDate", "estimatedOrderAmount" ]
+    },
+    "NewOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "lostSalesWarehouse" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : [ "string", "null" ]
+        },
+        "discountLine1" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine2" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine3" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine4" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine5" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine6" : {
+          "type" : [ "number", "null" ]
+        },
+        "isLostSales" : {
+          "type" : [ "boolean", "null" ]
+        }
+      },
+      "required" : [ "sku", "quantity", "lostSalesWarehouse" ]
+    },
+    "DeleteCustomerOrderResponse" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "boolean"
+        },
+        "statusText" : {
+          "type" : [ "string", "null" ]
+        }
+      },
+      "required" : [ "status", "statusText" ]
+    },
+    "DeleteCustomerOrderRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "typeOfOrder" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "orderNumber", "typeOfOrder" ]
+    },
+    "PutCustomerOrderRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "orderType" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "defaultM3OrderType" : {
+          "type" : "string"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/PutCustomerOrderRequestOrderLine"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "orderNumber", "estimatedOrderAmount" ]
+    },
+    "PutCustomerOrderRequestOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "lostSalesWarehouse" : {
+          "type" : [ "string", "null" ]
+        },
+        "orderLineUnit" : {
+          "type" : [ "string", "null" ]
+        },
+        "discountLine1" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine2" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine3" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine4" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine5" : {
+          "type" : [ "number", "null" ]
+        },
+        "discountLine6" : {
+          "type" : [ "number", "null" ]
+        },
+        "isLostSales" : {
+          "type" : [ "boolean", "null" ]
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "lostSalesUniqueId" : {
+          "type" : [ "string", "null" ]
+        },
+        "orderLineNumber" : {
+          "type" : "array",
+          "items" : {
+            "type" : [ "string", "null" ]
+          }
+        }
+      },
+      "required" : [ "sku", "action", "quantity" ]
+    },
+    "getCustomerOrderListResponse" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/getCustomerOrderListResponseOrderHead"
+      }
+    },
+    "getCustomerOrderListResponseOrderHead" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "containsTempLines" : {
+          "type" : "boolean"
+        },
+        "isTemporaryOrder" : {
+          "type" : "boolean"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "deliveryDate" : {
+          "type" : "string"
+        },
+        "orderName" : {
+          "type" : "string"
+        },
+        "orderStatusLowest" : {
+          "type" : "string"
+        },
+        "orderStatusHighest" : {
+          "type" : "string"
+        },
+        "orderType" : {
+          "type" : "string"
+        },
+        "typeOfOrder" : {
+          "type" : "string"
+        },
+        "netOrderValue" : {
+          "type" : "number"
+        },
+        "invoiceLink" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "orderNumber", "containsTempLines", "isTemporaryOrder", "customerNumber", "deliveryDate" ]
+    },
+    "getCustomerOrderListRequest" : {
+      "type" : "object",
+      "properties" : {
+        "fromDate" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "toStatus" : {
+          "type" : "string"
+        },
+        "fromStatus" : {
+          "type" : "string"
+        },
+        "toDate" : {
+          "type" : "string"
+        },
+        "typeOfOrder" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderName" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "customerNumber" ]
+    },
+    "MDBREADMILstOXCNTRU1Response" : {
+      "type" : "object",
+      "properties" : {
+        "CUNO" : {
+          "type" : "string",
+          "description" : "Kunde(10)"
+        },
+        "STAT" : {
+          "type" : "string",
+          "description" : "Status(2)"
+        },
+        "ORNO" : {
+          "type" : "string",
+          "description" : "KO-nr(10)"
+        },
+        "PONR" : {
+          "type" : "number",
+          "description" : "Ordrelinjenr(5)"
+        },
+        "POSX" : {
+          "type" : "number",
+          "description" : "Linje suffix(3)"
+        },
+        "ORNR" : {
+          "type" : "string",
+          "description" : "KO-nr(10)"
+        },
+        "OPT1" : {
+          "type" : "string",
+          "description" : "Alternativ(1)"
+        }
+      }
+    },
+    "OIZ102MILstOrdersResponse" : {
+      "type" : "object",
+      "properties" : {
+        "ORNO" : {
+          "type" : "string",
+          "description" : "Order number(10)"
+        },
+        "DSTX" : {
+          "type" : "string",
+          "description" : "Order name/Deliveryspec.(36)"
+        },
+        "WCON" : {
+          "type" : "string",
+          "description" : "Contact method(3)"
+        },
+        "WCTX" : {
+          "type" : "string",
+          "description" : "Contact method text(40)"
+        },
+        "RLDT" : {
+          "type" : "string",
+          "description" : "Wanted deliverydate(10)"
+        },
+        "ORDT" : {
+          "type" : "string",
+          "description" : "Order date(10)"
+        },
+        "ORSL" : {
+          "type" : "string",
+          "description" : "Order status - lowest(2)"
+        },
+        "ORST" : {
+          "type" : "string",
+          "description" : "Order status - highest(2)"
+        },
+        "STTX" : {
+          "type" : "string",
+          "description" : "Highest status text(35)"
+        },
+        "NTAM" : {
+          "type" : "number",
+          "description" : "Order amount net(17)"
+        },
+        "SRCO" : {
+          "type" : "string",
+          "description" : "Soure code (K/L/F/I/B/S)(1)"
+        },
+        "WDAY" : {
+          "type" : "string",
+          "description" : "Weekday deliverydate(7)"
+        },
+        "OBLC" : {
+          "type" : "number",
+          "description" : "Customer order stop code(1)"
+        },
+        "LINT" : {
+          "type" : "string",
+          "description" : "Line counter(4)"
+        },
+        "BLCD" : {
+          "type" : "number",
+          "description" : "Customer stop code(1)"
+        },
+        "ORTP" : {
+          "type" : "string",
+          "description" : "Order type(3)"
+        },
+        "CUNO" : {
+          "type" : "string",
+          "description" : "Customer no(10)"
+        }
+      }
+    },
+    "OIZ100MIGetBatchHeadResponse" : {
+      "type" : "object",
+      "properties" : {
+        "ORNO" : {
+          "type" : "string",
+          "description" : "Order number(10)"
+        },
+        "DSTX" : {
+          "type" : "string",
+          "description" : "Order name/Deliveryspec.(36)"
+        },
+        "WCON" : {
+          "type" : "string",
+          "description" : "Contact method(3)"
+        },
+        "WCTX" : {
+          "type" : "string",
+          "description" : "Contact method text(40)"
+        },
+        "RLDT" : {
+          "type" : "string",
+          "description" : "Wanted deliverydate(10)"
+        },
+        "ORDT" : {
+          "type" : "string",
+          "description" : "Order date(10)"
+        },
+        "ORSL" : {
+          "type" : "string",
+          "description" : "Order status - lowest(2)"
+        },
+        "ORST" : {
+          "type" : "string",
+          "description" : "Order status - highest(2)"
+        },
+        "STTX" : {
+          "type" : "string",
+          "description" : "Highest status text(35)"
+        },
+        "NTAM" : {
+          "type" : "number",
+          "description" : "Order amount net(17)"
+        },
+        "SRCO" : {
+          "type" : "string",
+          "description" : "Soure code (K/L/F/I/B/S)(1)"
+        },
+        "WDAY" : {
+          "type" : "string",
+          "description" : "Weekday deliverydate(7)"
+        },
+        "OBLC" : {
+          "type" : "number",
+          "description" : "Customer order stop code(1)"
+        },
+        "LINT" : {
+          "type" : "string",
+          "description" : "Line counter(4)"
+        },
+        "BLCD" : {
+          "type" : "number",
+          "description" : "Customer stop code(1)"
+        },
+        "ORTP" : {
+          "type" : "string",
+          "description" : "Order type(3)"
+        },
+        "CUNO" : {
+          "type" : "string",
+          "description" : "Customer no(10)"
+        }
+      }
+    },
+    "MIRecord" : {
+      "type" : "object",
+      "properties" : {
+        "MIRecord" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "RowIndex" : {
+                "type" : "string"
+              },
+              "NameValue" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "Name" : {
+                      "type" : "string"
+                    },
+                    "Value" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "InternalErrorMessage" : {
+      "type" : "object",
+      "properties" : {
+        "Error_Code" : {
+          "type" : "string"
+        },
+        "Response" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ErrorMessageResponse" : {
+      "type" : "object",
+      "properties" : {
+        "Error_Code" : {
+          "type" : "string"
+        },
+        "Response" : {
+          "type" : "string"
+        }
+      }
+    },
+    "optimizedOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "itemDescription" : {
+          "type" : "string"
+        },
+        "combinedOrderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "totalQuantity" : {
+          "type" : "integer"
+        },
+        "totalQuantityUnit" : {
+          "type" : "string"
+        },
+        "totalLineAmount" : {
+          "type" : "number"
+        },
+        "totalLineAmountWithoutDiscount" : {
+          "type" : "number"
+        },
+        "totalLineDiscountAmount" : {
+          "type" : "number"
+        },
+        "totalLineRecyclingCharge" : {
+          "type" : "number"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "updateInReview" : {
+          "type" : "boolean"
+        },
+        "newTotalQuantity" : {
+          "type" : "integer"
+        },
+        "deleteInReview" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "combinedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/combinedOrderLine"
+          }
+        }
+      },
+      "required" : [ "sku", "itemDescription", "combinedOrderLineNumbers", "totalQuantity", "totalQuantityUnit", "totalLineAmount", "totalLineAmountWithoutDiscount", "totalLineDiscountAmount", "totalLineRecyclingCharge", "canIncrease", "canDecrease", "canDelete", "updateInReview", "newTotalQuantity", "deleteInReview", "canSendComplaint" ]
+    },
+    "combinedOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "orderLineNumber" : {
+          "type" : "integer"
+        },
+        "orderLineSuffix" : {
+          "type" : "integer"
+        },
+        "sku" : {
+          "type" : "string"
+        },
+        "quantityOrderLineBaseUnit" : {
+          "type" : "integer"
+        },
+        "quantityOrderLineUnit" : {
+          "type" : "integer"
+        },
+        "orderLineBaseUnit" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "deliveryDate" : {
+          "type" : "string"
+        },
+        "discountAmount1" : {
+          "type" : "number"
+        },
+        "discountAmount2" : {
+          "type" : "number"
+        },
+        "discountAmount3" : {
+          "type" : "number"
+        },
+        "discountAmount4" : {
+          "type" : "number"
+        },
+        "discountAmount5" : {
+          "type" : "number"
+        },
+        "discountAmount6" : {
+          "type" : "number"
+        },
+        "lineAmount" : {
+          "type" : "number"
+        },
+        "lineAmountWithoutDiscount" : {
+          "type" : "number"
+        },
+        "lineRecyclingCharge" : {
+          "type" : "number"
+        },
+        "status" : {
+          "type" : "string"
+        },
+        "refOrderCategory" : {
+          "type" : "string"
+        },
+        "refOrderNumber" : {
+          "type" : "string"
+        },
+        "refOrderLine" : {
+          "type" : "string"
+        },
+        "salesPrice" : {
+          "type" : "string"
+        },
+        "updateInReview" : {
+          "type" : "string"
+        },
+        "newQuantity" : {
+          "type" : "integer"
+        },
+        "deleteInReview" : {
+          "type" : "boolean"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "invoicedQuantity" : {
+          "type" : "integer"
+        }
+      },
+      "required" : [ "orderLineNumber", "orderLineSuffix", "sku", "quantityOrderLineBaseUnit", "quantityOrderLineUnit", "orderLineBaseUnit", "orderLineUnit", "deliveryDate", "discountAmount1", "discountAmount2", "discountAmount3", "discountAmount4", "discountAmount5", "discountAmount6", "lineAmount", "lineAmountWithoutDiscount", "lineRecyclingCharge", "refOrderCategory", "refOrderNumber", "refOrderLine", "salesPrice", "updateInReview", "newQuantity", "deleteInReview", "canIncrease", "canDecrease", "canDelete", "status", "canSendComplaint", "invoicedQuantity" ]
+    },
+    "postCostumerOrderResponseObject" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "orderPlacementStatus" : {
+          "type" : "string"
+        },
+        "isTemporaryOrder" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderNumber", "orderPlacementStatus", "isTemporaryOrder" ]
+    },
+    "putCustomerOrderResponse" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "failedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/putCustomerOrderResponseOrderLine"
+          }
+        }
+      },
+      "required" : [ "orderNumber" ]
+    },
+    "putCustomerOrderResponseAddOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "lostSalesWarehouse" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "discountLine1" : {
+          "type" : "number"
+        },
+        "discountLine2" : {
+          "type" : "number"
+        },
+        "discountLine3" : {
+          "type" : "number"
+        },
+        "discountLine4" : {
+          "type" : "number"
+        },
+        "discountLine5" : {
+          "type" : "number"
+        },
+        "discountLine6" : {
+          "type" : "number"
+        },
+        "isLostSales" : {
+          "type" : "boolean"
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "orderPlacementStatus" : {
+          "type" : "string"
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        },
+        "errorInformation" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "quantity", "lostSalesWarehouse", "orderLineUnit", "discountLine1", "discountLine2", "discountLine3", "discountLine4", "discountLine5", "discountLine6", "isLostSales", "action", "orderPlacementStatus", "errorCode", "errorMessage", "errorInformation" ]
+    },
+    "putCustomerOrderResponseDelOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "orderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "orderLinePlacementStatus" : {
+          "type" : "string"
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        },
+        "errorInformation" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "action", "orderLinePlacementStatus", "orderLineNumbers", "errorCode", "errorMessage", "errorInformation" ]
+    },
+    "putCustomerOrderResponseOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "addOrderLine" : {
+          "$ref" : "#/definitions/putCustomerOrderResponseAddOrderLine"
+        },
+        "delOrderLine" : {
+          "$ref" : "#/definitions/putCustomerOrderResponseDelOrderLine"
+        },
+        "updOrderLine" : {
+          "$ref" : "#/definitions/putCustomerOrderResponseUpdOrderLine"
+        }
+      }
+    },
+    "putCustomerOrderResponseUpdOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "lostSalesWarehouse" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "discountLine1" : {
+          "type" : "number"
+        },
+        "discountLine2" : {
+          "type" : "number"
+        },
+        "discountLine3" : {
+          "type" : "number"
+        },
+        "discountLine4" : {
+          "type" : "number"
+        },
+        "discountLine5" : {
+          "type" : "number"
+        },
+        "discountLine6" : {
+          "type" : "number"
+        },
+        "isLostSales" : {
+          "type" : "boolean"
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "orderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "orderLinePlacementStatus" : {
+          "type" : "string"
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        },
+        "errorInformation" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "errorInformation", "errorMessage", "errorCode", "orderLinePlacementStatus", "orderLineNumbers", "isLostSales", "action", "discountLine6", "discountLine5", "discountLine4", "discountLine3", "discountLine2", "discountLine1", "orderLineUnit", "lostSalesWarehouse", "sku", "quantity" ]
+    },
+    "getProductAvailabilityRequest" : {
+      "type" : "object",
+      "properties" : {
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "m3OrderType" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "products" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/getProductAvailabilityOrderLine"
+          }
+        }
+      },
+      "required" : [ "customerNumber", "m3OrderType", "requestedDeliveryDate", "products" ]
+    },
+    "getProductAvailabilityOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "productNumber" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "integer"
+        }
+      },
+      "required" : [ "productNumber", "quantity" ]
+    },
+    "getProductAvailabilityResponseObject" : {
+      "type" : "object",
+      "properties" : {
+        "productNumber" : {
+          "type" : "string"
+        },
+        "plannedAvailableDate" : {
+          "type" : "string"
+        },
+        "delayedDeliveryDate" : {
+          "type" : "string"
+        },
+        "availableQuantity" : {
+          "type" : "integer"
+        },
+        "customerWarehouse" : {
+          "type" : "string"
+        },
+        "warehouse" : {
+          "type" : "string"
+        },
+        "unit" : {
+          "type" : "string"
+        },
+        "available" : {
+          "type" : "boolean"
+        },
+        "partialAvailable" : {
+          "type" : "boolean"
+        },
+        "supplyingWarehouse" : {
+          "type" : "string"
+        },
+        "atCustomersWarehouse" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "productNumber", "plannedAvailableDate", "delayedDeliveryDate", "availableQuantity", "warehouse", "available", "partialAvailable", "supplyingWarehouse", "atCustomersWarehouse" ]
+    },
+    "getProductAvailabilityResponse" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/getProductAvailabilityResponseObject"
+      }
+    },
+    "postCostumerOrderResponse" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/postCostumerOrderResponseObject"
+      }
+    },
+    "DeleteSubscriptionOrder" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "boolean"
+        },
+        "statusText" : {
+          "type" : [ "string", "null" ]
+        }
+      },
+      "required" : [ "status", "statusText" ]
+    },
+    "deleteChangedSubscriptionOrderDeliveryResponse" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "boolean"
+        },
+        "statusText" : {
+          "type" : [ "string", "null" ]
+        }
+      },
+      "required" : [ "status", "statusText" ]
+    },
+    "getSubscriptionOrderResponse" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "customerReference" : {
+          "type" : "string"
+        },
+        "orderStatus" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "firstDeliveryDate" : {
+          "type" : "string"
+        },
+        "validFromDate" : {
+          "type" : "string"
+        },
+        "validToDate" : {
+          "type" : "string"
+        },
+        "deliveryWeekdayNumber" : {
+          "type" : "string"
+        },
+        "deliveryIntervalDays" : {
+          "type" : "string"
+        },
+        "canUpdate" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canAddOrderlines" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "canAddPromotionalProducts" : {
+          "type" : "boolean"
+        },
+        "canCopyOrder" : {
+          "type" : "boolean"
+        },
+        "optimizedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/getSubscriptionOrderOptimizedOrderLines"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "orderNumber", "customerNumber", "customerReference", "orderStatus", "requestedDeliveryDate", "firstDeliveryDate", "validFromDate", "validToDate", "deliveryWeekdayNumber", "deliveryIntervalDays", "canUpdate", "canDelete", "canAddOrderlines", "canSendComplaint", "canAddPromotionalProducts", "canCopyOrder", "canCopyOrder", "optimizedOrderLines" ]
+    },
+    "getSubscriptionOrderOptimizedOrderLines" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "itemDescription" : {
+          "type" : "string"
+        },
+        "combinedOrderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "totalQuantity" : {
+          "type" : "integer"
+        },
+        "totalQuantityUnit" : {
+          "type" : "string"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "combinedOrderlines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/getSubscriptionOrderCombinedOrderlines"
+          }
+        }
+      },
+      "required" : [ "sku", "itemDescription", "combinedOrderLineNumbers", "totalQuantity", "totalQuantityUnit", "canIncrease", "canDecrease", "canDelete", "canSendComplaint", "combinedOrderlines" ]
+    },
+    "getSubscriptionOrderCombinedOrderlines" : {
+      "type" : "object",
+      "properties" : {
+        "orderLineNumber" : {
+          "type" : "integer"
+        },
+        "sku" : {
+          "type" : "string"
+        },
+        "quantityOrderLineBaseUnit" : {
+          "type" : "integer"
+        },
+        "quantityOrderLineUnit" : {
+          "type" : "integer"
+        },
+        "orderLineBaseUnit" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderLineNumber", "sku", "quantityOrderLineBaseUnit", "quantityOrderLineUnit", "orderLineBaseUnit", "orderLineUnit", "canDecrease", "canIncrease", "canDelete", "canSendComplaint" ]
+    },
+    "postSubscriptionOrderRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "customerReference" : {
+          "type" : "string"
+        },
+        "firstDeliveryDate" : {
+          "type" : "string"
+        },
+        "validFromDate" : {
+          "type" : "string"
+        },
+        "validToDate" : {
+          "type" : "string"
+        },
+        "deliveryWeekdayNumber" : {
+          "type" : "string"
+        },
+        "deliveryIntervalDays" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/postSubscriptionOrderRequestOrderLine"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "customerReference", "firstDeliveryDate", "validFromDate", "validToDate", "deliveryWeekdayNumber", "deliveryIntervalDays", "estimatedOrderAmount", "orderLines" ]
+    },
+    "postSubscriptionOrderRequestOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "integer"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "quantity", "orderLineUnit" ]
+    },
+    "postSubscriptionOrderResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderNumber", "success" ]
+    },
+    "postSubscriptionOrderResponseFailed" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        },
+        "failedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/postSubscriptionOrderResponseFailedOrderLine"
+          }
+        }
+      },
+      "required" : [ "orderNumber", "success", "failedOrderLines" ]
+    },
+    "postSubscriptionOrderResponseError" : {
+      "type" : "object",
+      "properties" : {
+        "success" : {
+          "type" : "boolean"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "success", "errorMessage" ]
+    },
+    "postSubscriptionOrderResponseFailedOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "quantity", "orderLineUnit", "errorCode", "errorMessage" ]
+    },
+    "getSubscriptionOrderListResponse" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "companyNumber" : {
+            "type" : "string"
+          },
+          "customerNumber" : {
+            "type" : "string"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "validFromDate" : {
+            "type" : "string"
+          },
+          "validToDate" : {
+            "type" : "string"
+          },
+          "firstDeliveryDate" : {
+            "type" : "string"
+          },
+          "deliveryWeekdayNumber" : {
+            "type" : "string"
+          },
+          "deliveryIntervalDays" : {
+            "type" : "string"
+          },
+          "orderStatus" : {
+            "type" : "string"
+          },
+          "customerReference" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "companyNumber", "customerNumber", "orderNumber", "validFromDate", "validToDate", "firstDeliveryDate", "deliveryWeekdayNumber", "orderStatus", "customerReference", "deliveryIntervalDays" ]
+      }
+    },
+    "postChangedSubscriptionOrderDeliveryRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "validFromDate" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/postChangedSubscriptionOrderDeliveryRequestOrderLine"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "validFromDate", "estimatedOrderAmount", "orderLines" ]
+    },
+    "postChangedSubscriptionOrderDeliveryRequestOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "integer"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "quantity", "orderLineUnit" ]
+    },
+    "postChangedSubscriptionOrderDeliveryResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderNumber", "success" ]
+    },
+    "postChangedSubscriptionOrderDeliveryResponseFailed" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        },
+        "failedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/postChangedSubscriptionOrderDeliveryResponseFailedOrderLine"
+          }
+        }
+      },
+      "required" : [ "orderNumber", "success", "failedOrderLines" ]
+    },
+    "postChangedSubscriptionOrderDeliveryResponseFailedOrderLine" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "sku", "quantity", "orderLineUnit", "errorCode", "errorMessage" ]
+    },
+    "postChangedSubscriptionOrderDeliveryResponseError" : {
+      "type" : "object",
+      "properties" : {
+        "success" : {
+          "type" : "boolean"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "success", "errorMessage" ]
+    },
+    "putSubscriptionOrderRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/putSubscriptionOrderRequestOrderLines"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "orderNumber", "estimatedOrderAmount", "orderLines" ]
+    },
+    "putSubscriptionOrderRequestOrderLines" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "integer"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "orderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        }
+      },
+      "required" : [ "action", "sku" ]
+    },
+    "putSubscriptionOrderResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderNumber", "success" ]
+    },
+    "putSubscriptionOrderResponseFailed" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "boolean"
+        },
+        "failedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/putSubscriptionOrderResponseFailedOrderLines"
+          }
+        }
+      },
+      "required" : [ "orderNumber", "success", "failedOrderLines" ]
+    },
+    "putSubscriptionOrderResponseFailedOrderLines" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "quantity" : {
+          "type" : "integer"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "action" : {
+          "type" : "string"
+        },
+        "orderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "errorCode" : {
+          "type" : "string"
+        },
+        "errorMessage" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "action", "sku", "errorCode", "errorMessage" ]
+    },
+    "getChangedSubscriptionOrderDeliveryResponse" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "customerReference" : {
+          "type" : "string"
+        },
+        "orderStatus" : {
+          "type" : "string"
+        },
+        "requestedDeliveryDate" : {
+          "type" : "string"
+        },
+        "firstDeliveryDate" : {
+          "type" : "string"
+        },
+        "validFromDate" : {
+          "type" : "string"
+        },
+        "validToDate" : {
+          "type" : "string"
+        },
+        "deliveryWeekdayNumber" : {
+          "type" : "string"
+        },
+        "deliveryIntervalDays" : {
+          "type" : "string"
+        },
+        "canUpdate" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canAddOrderlines" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "canAddPromotionalProducts" : {
+          "type" : "boolean"
+        },
+        "canCopyOrder" : {
+          "type" : "boolean"
+        },
+        "optimizedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/getChangedSubscriptionOrderDeliveryOptimizedOrderLines"
+          }
+        }
+      },
+      "required" : [ "companyNumber", "orderNumber", "customerNumber", "customerReference", "orderStatus", "requestedDeliveryDate", "firstDeliveryDate", "validFromDate", "validToDate", "deliveryWeekdayNumber", "deliveryIntervalDays", "canUpdate", "canDelete", "canSendComplaint", "canAddOrderlines", "canAddPromotionalProducts", "canCopyOrder" ]
+    },
+    "getChangedSubscriptionOrderDeliveryOptimizedOrderLines" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "itemDescription" : {
+          "type" : "string"
+        },
+        "combinedOrderLineNumbers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "integer"
+          }
+        },
+        "totalQuantity" : {
+          "type" : "integer"
+        },
+        "totalQuantityUnit" : {
+          "type" : "string"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        },
+        "combinedOrderlines" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/getChangedSubscriptionOrderDeliveryCombinedOrderlines"
+          }
+        }
+      },
+      "required" : [ "sku", "itemDescription", "combinedOrderLineNumbers", "totalQuantity", "totalQuantityUnit", "canIncrease", "canDecrease", "canDelete", "canSendComplaint" ]
+    },
+    "getChangedSubscriptionOrderDeliveryCombinedOrderlines" : {
+      "type" : "object",
+      "properties" : {
+        "orderLineNumber" : {
+          "type" : "integer"
+        },
+        "sku" : {
+          "type" : "string"
+        },
+        "quantityOrderLineBaseUnit" : {
+          "type" : "integer"
+        },
+        "quantityOrderLineUnit" : {
+          "type" : "integer"
+        },
+        "orderLineBaseUnit" : {
+          "type" : "string"
+        },
+        "orderLineUnit" : {
+          "type" : "string"
+        },
+        "canIncrease" : {
+          "type" : "boolean"
+        },
+        "canDecrease" : {
+          "type" : "boolean"
+        },
+        "canDelete" : {
+          "type" : "boolean"
+        },
+        "canSendComplaint" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "orderLineNumber", "sku", "quantityOrderLineUnit", "quantityOrderLineBaseUnit", "orderLineBaseUnit", "orderLineUnit", "canIncrease", "canDecrease", "canDelete", "canSendComplaint" ]
+    },
+    "putChangedSubscriptionOrderDeliveryRequest" : {
+      "type" : "object",
+      "properties" : {
+        "companyNumber" : {
+          "type" : "string"
+        },
+        "customerNumber" : {
+          "type" : "string"
+        },
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "deliveryDate" : {
+          "type" : "string"
+        },
+        "estimatedOrderAmount" : {
+          "type" : "number"
+        },
+        "orderLines" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "sku" : {
+                "type" : "string"
+              },
+              "quantity" : {
+                "type" : "integer"
+              },
+              "orderLineUnit" : {
+                "type" : "string"
+              },
+              "action" : {
+                "type" : "string"
+              },
+              "orderLineNumbers" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "integer"
+                }
+              }
+            },
+            "required" : [ "sku", "action" ]
+          }
+        }
+      },
+      "required" : [ "companyNumber", "customerNumber", "orderNumber", "deliveryDate", "estimatedOrderAmount" ]
+    },
+    "putChangedSubscriptionOrderDeliveryResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "string"
+        }
+      }
+    },
+    "putChangedSubscriptionOrderDeliveryResponseFailed" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "string",
+          "format" : ""
+        },
+        "failedOrderLines" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "sku" : {
+                "type" : "string"
+              },
+              "quantity" : {
+                "type" : "integer"
+              },
+              "orderLineUnit" : {
+                "type" : "string"
+              },
+              "action" : {
+                "type" : "string"
+              },
+              "orderLineNumbers" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "integer"
+                }
+              },
+              "errorCode" : {
+                "type" : "string"
+              },
+              "errorMessage" : {
+                "type" : "string"
+              }
+            },
+            "required" : [ "sku", "action", "errorMessage", "errorCode" ]
+          }
+        }
+      },
+      "required" : [ "orderNumber", "success" ]
+    },
+    "putSubscriptionOrderStatusResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "orderNumber" : {
+          "type" : "string"
+        },
+        "success" : {
+          "type" : "string",
+          "format" : ""
+        }
+      },
+      "required" : [ "orderNumber", "success" ]
+    },
+    "postCancellationDateResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "success" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "success" ]
+    },
+    "getCancellationDateListResponse" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "cancelledByCustomer" : {
+            "type" : "boolean"
+          },
+          "cancelledByTINE" : {
+            "type" : "boolean"
+          },
+          "date" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cancelledByCustomer", "cancelledByTINE", "date" ]
+      }
+    },
+    "deleteCancellationDateResponseOK" : {
+      "type" : "object",
+      "properties" : {
+        "success" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "success" ]
+    }
+  }
+}

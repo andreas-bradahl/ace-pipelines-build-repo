@@ -1,0 +1,103 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreatePromotionalOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		
+		CREATE FIELD Environment.Variables.Global.PromoSplit.promotionalOrder;
+		CREATE FIELD Environment.Variables.Global.PromoSplit.normalOrder;
+		
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder;
+		
+		SET promotionalOrder = Environment.OrderRequest.Data;
+		SET normalOrder = Environment.OrderRequest.Data;
+		
+		DELETE FIELD Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DELETE FIELD Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		CREATE FIELD Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		CREATE FIELD Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		SET promotionalOrder.orderType = Environment.Variables.SQLQueries.PromotionalType.value;
+		SET normalOrder.orderType = Environment.Variables.SQLQueries.DefaultM3OrderType.value; -- TODO: OrderType = 'WEB' as a hardcoded value, get from somewhere else?
+		
+		DECLARE arrayIndex INTEGER;
+		DECLARE notExists BOOLEAN;
+		DECLARE itemRef REFERENCE TO Environment;
+				
+		IF OPEXFlag THEN
+			
+			FOR promoRecord AS Environment.Variables.PromotionalSkus.orderLines[] DO
+				
+				SET arrayIndex = 1;
+				SET notExists = TRUE;
+			
+				FOR otherWarehouseRecord AS Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines.Item[] DO
+					
+					IF notExists THEN
+					
+						IF otherWarehouseRecord.sku = promoRecord.sku 
+						AND otherWarehouseRecord.action = promoRecord.action 
+						AND otherWarehouseRecord.quantity = promoRecord.quantity 
+						AND otherWarehouseRecord.orderLineUnit = promoRecord.orderLineUnit 
+						THEN
+							
+							CREATE LASTCHILD OF promotionalOrder.orderLines AS itemRef NAME 'Item';
+							SET itemRef = promoRecord;
+							
+							DELETE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines.Item[arrayIndex];
+							SET notExists = FALSE;
+						
+						END IF;
+						
+						SET arrayIndex = arrayIndex + 1;
+						
+					END IF;
+					
+				END FOR;
+				
+			END FOR;
+			
+		ELSE
+			
+			FOR record AS Environment.Variables.PromotionalSkus.orderLines[] DO
+				
+				CREATE LASTCHILD OF promotionalOrder.orderLines AS itemRef NAME 'Item';
+				SET itemRef = record;
+				
+			END FOR;			
+			
+			FOR record AS Environment.Variables.NotPromotionalSkus.orderLines[] DO
+				
+				CREATE LASTCHILD OF normalOrder.orderLines AS itemRef NAME 'Item';
+				SET itemRef = record;
+				
+			END FOR;
+			
+		END IF;
+		
+		
+		/*
+		
+		IF record.sku = promotionalSku.sku 
+			AND record.action = promotionalSku.action 
+			AND record.quantity = promotionalSku.quantity 
+			AND record.orderLineUnit = promotionalSku.orderLineUnit 
+			THEN
+			
+			CREATE LASTCHILD OF promotionalOrder.orderLines AS itemRef NAME 'Item';
+			SET itemRef = record;
+			SET alreadyExistsPromo = TRUE;
+			
+			DELETE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines.Item[arrayIndex];
+			
+		END IF;
+		*/
+
+		RETURN TRUE;
+	END;
+END MODULE;

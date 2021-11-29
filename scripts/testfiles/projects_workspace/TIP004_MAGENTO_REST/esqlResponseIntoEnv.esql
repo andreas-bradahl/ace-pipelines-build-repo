@@ -1,0 +1,51 @@
+
+
+CREATE COMPUTE MODULE esqlResponseIntoEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE currentMsgId BLOB InputLocalEnvironment.Variables.CurrentMsgId;
+		DECLARE msgIdChar CHAR CAST(InputLocalEnvironment.Variables.CurrentMsgId AS CHARACTER);
+		DECLARE arrayCount INTEGER 0;
+				
+		FOR msgId AS Environment.msgIds.msgId[] DO
+			
+			SET arrayCount = arrayCount + 1;
+			
+			IF msgId = currentMsgId THEN
+				DELETE FIELD Environment.msgIds.msgId[arrayCount];
+			END IF;	
+			
+		END FOR;
+		
+		IF NOT EXISTS(Environment.Variables.Response.results[]) THEN
+			CREATE FIELD Environment.Variables.Response.results;
+		END IF;
+		
+		DECLARE resultRef REFERENCE TO Environment;
+		
+		DECLARE count INTEGER 0;
+		
+		DECLARE priceUnit CHAR Environment.Variables.Unit || 'price';
+		
+		FOR result AS InputRoot.JSON.Data.results.Item[] DO
+			
+			CREATE LASTCHILD OF Environment.Variables.ItemPrices.{priceUnit} AS resultRef NAME 'Item';
+			SET resultRef = result;
+			
+			FOR itno AS Environment.Variables.ITNOCorrespondance.{msgIdChar}.ITNO[] DO
+				
+				IF count = 0 THEN
+					CREATE FIRSTCHILD OF resultRef.records.Item NAME 'ITNO' VALUE itno;
+					DELETE FIELD Environment.Variables.ITNOCorrespondance.{msgIdChar}.ITNO[1];
+				END IF;
+				
+			END FOR;
+			
+		END FOR;
+		
+		DELETE FIELD Environment.Variables.ITNOCorrespondance.{msgIdChar};
+
+		RETURN FALSE;
+	END;
+END MODULE;

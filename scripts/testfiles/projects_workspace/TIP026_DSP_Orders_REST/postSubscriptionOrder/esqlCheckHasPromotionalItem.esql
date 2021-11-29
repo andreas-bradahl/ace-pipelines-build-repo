@@ -1,0 +1,38 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckHasPromotionalItem
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE OriginRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE promotionalCode CHARACTER Environment.Variables.SQLQueries.PromotionalCode.value;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines[] DO
+		
+			DECLARE sqlQueryIsPromotionalItem CHAR ' 
+				SELECT MMITNO 
+				FROM MITMAS
+				WHERE 
+						MMCONO = ''100'' 
+					AND MMITTY = ?
+					AND MMITNO = ?
+			';
+				
+			SET Environment.Variables.SQLQueries.IsPromotionalItem = PASSTHRU(sqlQueryIsPromotionalItem, promotionalCode, orderLine.ns:sku);
+		
+			IF EXISTS(Environment.Variables.SQLQueries.IsPromotionalItem[]) THEN
+				
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				SET OutputRoot.JSON.Data.Response = 'FAILED';
+				SET OutputRoot.JSON.Data.Error_Code = 'PROMOTIONAL_PRODUCT';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

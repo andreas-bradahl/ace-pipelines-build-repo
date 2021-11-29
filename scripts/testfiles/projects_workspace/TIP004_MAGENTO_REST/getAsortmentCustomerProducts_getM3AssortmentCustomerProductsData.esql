@@ -1,0 +1,9 @@
+
+
+CREATE DATABASE MODULE getAsortmentCustomerProducts_getM3AssortmentCustomerProductsData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN TRUE;
+	END;
+
+END MODULE;

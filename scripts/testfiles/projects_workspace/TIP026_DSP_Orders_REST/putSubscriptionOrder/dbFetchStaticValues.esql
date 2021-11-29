@@ -1,0 +1,35 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE DATABASE MODULE dbFetchStaticValues
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryPriceList CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zPriceListOnlyDpak''
+		';
+			
+		SET Environment.Variables.SQLQueries.PriceList = PASSTHRU(sqlQueryPriceList);	
+				
+		DECLARE sqlQueryCurrency CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zCurrencyOnlyDpak''
+		';
+			
+		SET Environment.Variables.SQLQueries.Currency = PASSTHRU(sqlQueryCurrency);
+				
+		DECLARE sqlQueryItemClass CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zProductClassbasicUnit''
+		';
+			
+		SET Environment.Variables.SQLQueries.ItemClass = PASSTHRU(sqlQueryItemClass);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

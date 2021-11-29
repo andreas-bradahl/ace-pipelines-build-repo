@@ -1,0 +1,22 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE DB_gatherErrorInformation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestDataRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE confirmResponseDataRef REFERENCE TO Environment.JSONResponse.Confirm.Data;
+		DECLARE confirmResponseNameValueRef REFERENCE TO confirmResponseDataRef.MIRecord.Item.NameValue;		
+		
+		DECLARE companyNumber CHAR orderRequestDataRef.companyNumber; -- EVCONO
+		DECLARE orderNumber CHAR GetValueFromNameValueList('ORNO', confirmResponseNameValueRef); -- EVID03
+		DECLARE programName CHAR confirmResponseDataRef.Program; -- EVID05
+		
+		DECLARE sqlQuery CHAR 'SELECT EVMSID, EVMDTA, EVTX60 FROM TCERRM WHERE EVCONO = ? AND EVID03 = ? AND EVID05 = ?';
+		
+		SET Environment.ErrorInfo.Row[] = PASSTHRU(sqlQuery, companyNumber, orderNumber, programName);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

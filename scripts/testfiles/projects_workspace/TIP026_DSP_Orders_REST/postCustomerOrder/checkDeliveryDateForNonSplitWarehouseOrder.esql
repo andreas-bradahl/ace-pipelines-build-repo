@@ -1,0 +1,12 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE checkDeliveryDateForNonSplitWarehouseOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,22 @@
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026*
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004*
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111*
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111*
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111*
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026*
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004*
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026*
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004*
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026_DSP_Orders_REST
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004_MAGENTO_REST
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026_DSP_Orders_REST
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004_MAGENTO_REST
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111*
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111*
+mqsipackagebar -a ../bars/TIP026.bar -k TIP026_DSP_Orders_REST
+mqsipackagebar -a ../bars/TIP004.bar -k TIP004_MAGENTO_REST
+mqsipackagebar -a ../bars/TIP111.bar -k TIP111-ace-m3-kartong-rapportering
+mqsipackagebar -a ../bars/tip111-ace-m3-kartong-rapportering-service.bar -k [tT][iI][pP]111*
+mqsipackagebar -a ../bars/tip111-ace-m3-kartong-rapportering-service.bar -k tip111-ace-m3-kartong-rapportering tip111-ace-to-dip-service
+mqsipackagebar -a ../bars/tip026-ace-orders-rest-esql-java.bar -k TIP026_DSP_Orders_REST
+mqsipackagebar -a ../bars/tip004-ace-assortements-rest.bar -k TIP004_MAGENTO_REST

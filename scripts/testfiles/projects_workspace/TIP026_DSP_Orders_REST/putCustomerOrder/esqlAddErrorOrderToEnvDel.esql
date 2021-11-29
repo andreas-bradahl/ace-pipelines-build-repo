@@ -1,0 +1,52 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddErrorOrderToEnvDel
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DELETE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		DECLARE order REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE dPakQuantity REFERENCE TO InputLocalEnvironment.Variables.DPakQuantity;
+		DECLARE errorOrder REFERENCE TO Environment;
+		
+		CREATE FIELD Environment.Variables.ErrorOrders;
+		CREATE LASTCHILD OF Environment.Variables.ErrorOrders AS errorOrder NAME 'Item';
+		
+		SET errorOrder.sku = order.sku;
+		SET errorOrder.action = order.action;
+		SET errorOrder.orderLineNumbers = order.orderLineNumbers;
+
+		IF EXISTS(InputLocalEnvironment.Variables.HTTPResponses.getErrorDetails.Item[]) THEN
+			
+			DECLARE errorDetails REFERENCE TO InputLocalEnvironment.Variables.HTTPResponses.getErrorDetails.Item;
+			
+			SET errorOrder.orderLinePlacementStatus = InputLocalEnvironment.Variables.Response.Item.STAT;			
+			SET errorOrder.errorCode = errorDetails.MSID;
+			SET errorOrder.errorMessage = errorDetails.MDTA;
+			SET errorOrder.errorInformation = errorDetails.TX60;
+			
+			DELETE FIELD OutputLocalEnvironment.Variables.HTTPResponses.getErrorDetails;
+			
+		ELSE		
+			
+			DECLARE errorCode CHARACTER InputRoot.JSON.Data."@code";
+			DECLARE errorMessage CHARACTER InputRoot.JSON.Data.Message;
+	
+			SET errorOrder.orderLinePlacementStatus = '';
+			SET errorOrder.errorCode = errorCode;
+			
+			IF CONTAINS(errorMessage, '               ') THEN
+				SET errorOrder.errorMessage = TRIM(SUBSTRING(TRIM(errorMessage) BEFORE '               '));				
+			ELSE
+				SET errorOrder.errorMessage = TRIM(errorMessage);
+			END IF;
+			
+			SET errorOrder.errorInformation = '';
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

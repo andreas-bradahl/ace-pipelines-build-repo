@@ -1,0 +1,26 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE StoreReplyInEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse';
+		
+		DECLARE resultRef REFERENCE TO InputLocalEnvironment.Variables.Result;
+		
+		
+		IF CONTAINS(resultRef.availableQuantity, '.') THEN
+			SET resultRef.availableQuantity = SUBSTRING(resultRef.availableQuantity BEFORE '.');
+		END IF;
+		
+		CREATE FIELD Environment.Variables.ns:getProductAvailabilityResponse;
+		
+		DECLARE productArray REFERENCE TO Environment.Variables.ns:getProductAvailabilityResponse;
+		DECLARE productCursor REFERENCE TO Environment;
+		
+		CREATE LASTCHILD OF productArray AS productCursor NAME 'product';
+		SET productCursor = resultRef;
+				
+		RETURN FALSE;
+	END;
+END MODULE;

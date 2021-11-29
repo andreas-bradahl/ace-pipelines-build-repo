@@ -1,0 +1,19 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqPrepareOIZ163MIDltLine_Del
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ163MI/DltLine';
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.ns:companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RORD = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ROLN = InputLocalEnvironment.Variables.CurrentOrderLine.ns:orderLineNumbers;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,25 @@
+
+
+CREATE COMPUTE MODULE esqlGetErrorInfo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        DECLARE inRef REFERENCE TO InputRoot;
+        DECLARE expRef REFERENCE TO InputExceptionList;
+        DECLARE outRef REFERENCE TO OutputRoot;
+        
+        -- Create a folder "ExceptionList" in the LocalEnvironment tree. This Folder will hold the BLOB representation of the ExceptionList
+        SET OutputLocalEnvironment.Variables.BitStream.Info = 'exceptionList'; 
+         -- Define a XML parser element to be used to serialize the ExceptionList into bitstream
+        CREATE LASTCHILD OF OutputLocalEnvironment.Variables.BitStream DOMAIN('XMLNSC') NAME 'XMLNSC';
+        -- Attach or create the tree that has to be serialized under the XML parser element. here it is the ExceptionList
+        SET OutputLocalEnvironment.Variables.BitStream.XMLNSC.ExceptionList = InputExceptionList;
+        -- Create the BLOB representation of the ExceptinList using the function ASBITSTREAM
+        SET OutputLocalEnvironment.Variables.BitStream.BLOB = 
+        ASBITSTREAM(OutputLocalEnvironment.Variables.BitStream.XMLNSC.ExceptionList OPTIONS FolderBitStream); 
+        
+        DECLARE excChar CHAR CAST(OutputLocalEnvironment.Variables.BitStream.BLOB AS CHAR CCSID 1208);
+        LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Error occurred, full exception is:', COALESCE(excChar, 'N/A'));
+        
+        RETURN TRUE;
+    END;
+END MODULE;

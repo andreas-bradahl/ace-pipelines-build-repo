@@ -1,0 +1,49 @@
+
+
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE ConfirmeTypeStatusDeadline
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.ChkDelDateRecord = InputRoot.JSON.Data.MIRecord;
+		DECLARE orderRequestRef, orderLineCursor REFERENCE TO Environment.OrderRequest;
+		DECLARE DCHK CHARACTER GetValueFromNameValueList('DCHK', Environment.ChkDelDateRecord.Item.NameValue);
+		DECLARE ORTP CHARACTER GetValueFromNameValueList('ORTP', Environment.GetHeadRecord.Item.NameValue);
+
+		IF CheckValueFromNoChangeOrderType(ORTP,Environment.NoChangeOrderType) is not NULL THEN
+			Call setErrorMessage (400, 'FAILED','CANT_CHANGE_ORDERTYPE', Environment);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF ORTP in ('EXP','EXL','HPN') THEN
+			Call setErrorMessage (400, 'FAILED','CANT_DELETE_ORDERTYPE', Environment);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF DCHK = 1 THEN
+			Call setErrorMessage (400, 'FAILED','AFTER_DEADLINE', Environment);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+
+		RETURN FALSE;
+	END;
+END MODULE;
+
+CREATE FUNCTION CheckValueFromNoChangeOrderType(IN itemName CHAR, IN nameValueListRef REFERENCE) RETURNS CHAR
+BEGIN
+	DECLARE bolFound BOOLEAN FALSE;
+	MOVE nameValueListRef FIRSTCHILD NAME 'Row';
+	WHILE LASTMOVE(nameValueListRef) IS TRUE AND bolFound IS FALSE DO
+		IF nameValueListRef.code = itemName THEN
+			SET bolFound = TRUE;
+			RETURN nameValueListRef.code;
+		END IF;
+
+		MOVE nameValueListRef NEXTSIBLING REPEAT NAME;
+	END WHILE;
+	RETURN NULL; -- When not found
+END;

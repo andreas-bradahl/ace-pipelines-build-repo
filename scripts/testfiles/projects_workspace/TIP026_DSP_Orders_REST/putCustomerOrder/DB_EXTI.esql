@@ -1,0 +1,102 @@
+BROKER SCHEMA putCustomerOrder
+
+CREATE DATABASE MODULE DB_EXTI
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE lostSalesWarehouse CHAR '';
+		
+		SET Environment.Variables.DeadLineCheckPass = true;
+		DECLARE deadLineCheckPass REFERENCE TO Environment.Variables.DeadLineCheckPass;
+		
+		
+		DECLARE orderLineCursor REFERENCE TO Environment.OrderRequest.Data.orderLines.Item;
+		WHILE LASTMOVE(orderLineCursor) AND deadLineCheckPass DO
+			
+			SET lostSalesWarehouse = COALESCE(orderLineCursor.lostSalesWarehouse, '');
+			SET Environment.Variables.EXTI = getEXTIvalue (lostSalesWarehouse);
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		IF NOT deadLineCheckPass THEN
+			DECLARE envRef REFERENCE TO Environment;
+			
+			CALL setErrorMessage(400, 'FAILED', 'AFTER_DEADLINE', envRef);
+			CALL cleanUpEnv();
+			
+			PROPAGATE TO TERMINAL 'out2';
+			RETURN FALSE;
+			
+		ELSE 
+			CALL cleanUpEnv();
+			
+			RETURN TRUE;
+		END IF;
+	END;
+		
+CREATE FUNCTION getEXTIvalue (IN warehouse CHAR) RETURNS INT
+BEGIN
+	
+	DECLARE EXTIvalue INT getEXTIvalueFromEnvList(warehouse);
+	IF NOT EXTIvalue IS NULL THEN
+		RETURN EXTIvalue;
+	END IF; 
+	
+	DECLARE zDeadlineMinutes CHAR 'zDeadlineMinutes_';
+	DECLARE sqlQuery CHAR 'SELECT value FROM ApplicationData WHERE parameter = CONCAT(?,?)';
+	
+	CREATE FIELD Environment.Tine_esa;
+	DECLARE tine_esaRef, tine_esaRowCursor REFERENCE TO Environment.Tine_esa;
+	SET tine_esaRef.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, warehouse);
+	MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+	
+	IF LASTMOVE(tine_esaRowCursor) THEN	
+		SET EXTIvalue = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+	
+	ELSE
+		SET Environment.Tine_esa.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, 'All');
+		MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+		SET EXTIvalue = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+	
+	END IF;
+	
+	CALL insertEXTIvalueToEnvList(warehouse, EXTIvalue);
+	
+	
+	DELETE FIELD tine_esaRef;
+	RETURN EXTIvalue;
+END;
+
+CREATE FUNCTION getEXTIvalueFromEnvList (IN warehouse CHAR) RETURNS INT
+BEGIN
+	-- RETURNS NULL if not found in list;
+	DECLARE EXTIvalueListCursor REFERENCE TO Environment.Variables.EXTIvalueList;
+	MOVE EXTIvalueListCursor FIRSTCHILD NAME warehouse;
+	
+	
+	RETURN FIELDVALUE(EXTIvalueListCursor);
+END;
+
+CREATE PROCEDURE insertEXTIvalueToEnvList (IN warehouse CHAR, IN EXTIvalue INT) 
+BEGIN
+	DECLARE EXTIvalueListRef REFERENCE TO Environment.Variables.EXTIvalueList;
+	
+	IF NOT LASTMOVE(EXTIvalueListRef) THEN
+		CREATE FIELD Environment.Variables.EXTIvalueList AS EXTIvalueListRef;
+	END IF;
+	
+	IF getEXTIvalueFromEnvList(warehouse) IS NULL THEN
+		CREATE LASTCHILD OF EXTIvalueListRef NAME warehouse VALUE EXTIvalue;
+	END IF;
+END;
+
+CREATE PROCEDURE cleanUpEnv()
+BEGIN
+	DELETE FIELD Environment.Variables.EXTIvalueList;
+	DELETE FIELD Environment.Variables.EXTI;
+	DELETE FIELD Environment.Variables.DeadLineCheckPass;
+END;
+
+END MODULE;

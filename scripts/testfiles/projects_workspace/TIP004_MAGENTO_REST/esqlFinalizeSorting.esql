@@ -1,0 +1,95 @@
+
+
+CREATE COMPUTE MODULE esqlFinalizeSorting
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+				
+		DECLARE cPricesRef REFERENCE TO Environment.Variables.ItemPrices.Cprice;
+		DECLARE dPricesRef REFERENCE TO Environment.Variables.ItemPrices.Dprice;
+		DECLARE fPricesRef REFERENCE TO Environment.Variables.ItemPrices.Fprice;
+		
+		MOVE cPricesRef FIRSTCHILD;
+		MOVE dPricesRef FIRSTCHILD;
+		MOVE fPricesRef FIRSTCHILD;
+		
+		DECLARE itemInfoRef REFERENCE TO Environment;
+		
+		DECLARE cPriceItnoFound BOOLEAN;
+		DECLARE dPriceItnoFound BOOLEAN;
+		DECLARE fPriceItnoFound BOOLEAN;
+		
+		WHILE LASTMOVE(cPricesRef) DO
+			
+			SET cPriceItnoFound = FALSE;
+			
+			MOVE itemInfoRef TO Environment.Variables.FullItemsList;
+			MOVE itemInfoRef FIRSTCHILD;
+						
+			WHILE LASTMOVE(itemInfoRef) AND NOT cPriceItnoFound DO
+				
+				IF cPricesRef.records.Item.ITNO = itemInfoRef.ITNO THEN
+				
+					CREATE FIELD itemInfoRef.Cprice; 
+					SET itemInfoRef.Cprice = cPricesRef.records.Item;
+					
+					SET cPriceItnoFound = TRUE;
+					
+				END IF;
+				
+				MOVE itemInfoRef NEXTSIBLING;
+			END WHILE;
+			
+			MOVE cPricesRef NEXTSIBLING;
+		END WHILE;
+				
+		WHILE LASTMOVE(dPricesRef) DO
+			
+			SET dPriceItnoFound = FALSE;
+						
+			MOVE itemInfoRef TO Environment.Variables.FullItemsList;
+			MOVE itemInfoRef FIRSTCHILD;
+			
+			WHILE LASTMOVE(itemInfoRef) AND NOT dPriceItnoFound DO
+				
+				IF dPricesRef.records.Item.ITNO = itemInfoRef.ITNO THEN
+				
+					CREATE FIELD itemInfoRef.Dprice; 
+					SET itemInfoRef.Dprice = dPricesRef.records.Item;
+					
+					SET dPriceItnoFound = TRUE;
+					
+				END IF;
+				
+				MOVE itemInfoRef NEXTSIBLING;
+			END WHILE;
+			
+			MOVE dPricesRef NEXTSIBLING;
+		END WHILE;
+				
+		WHILE LASTMOVE(fPricesRef) DO
+			
+			SET dPriceItnoFound = FALSE;
+						
+			MOVE itemInfoRef TO Environment.Variables.FullItemsList;
+			MOVE itemInfoRef FIRSTCHILD;
+			
+			WHILE LASTMOVE(itemInfoRef) AND NOT dPriceItnoFound DO
+				
+				IF fPricesRef.records.Item.ITNO = itemInfoRef.ITNO THEN
+				
+					CREATE FIELD itemInfoRef.Fprice; 
+					SET itemInfoRef.Fprice = fPricesRef.records.Item;
+					
+					SET dPriceItnoFound = TRUE;
+					
+				END IF;
+				
+				MOVE itemInfoRef NEXTSIBLING;
+			END WHILE;
+			
+			MOVE fPricesRef NEXTSIBLING;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,22 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfEmptyResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF EXISTS(InputRoot.JSON.Data.MIRecord[]) THEN
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 404;
+			SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'NOT_FOUND';
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

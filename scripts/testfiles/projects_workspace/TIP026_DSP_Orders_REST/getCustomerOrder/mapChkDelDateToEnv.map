@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrder" version="8.0.5.0" xmlns:map="getCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="HTTPResponses">  
+    <xsd:complexType>  
+      <xsd:sequence>  
+        <xsd:element name="ChkDelDate">  
+          <xsd:complexType>  
+            <xsd:sequence>  
+              <xsd:element name="RLDT" type="xsd:string"/>  
+              <xsd:element name="LMDT" type="xsd:string"/>  
+              <xsd:element name="LMTM" type="xsd:string"/>  
+              <xsd:element name="DCHK" type="xsd:string"/>  
+            </xsd:sequence>  
+          </xsd:complexType>  
+        </xsd:element>  
+      </xsd:sequence>  
+    </xsd:complexType>  
+  </xsd:element>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var6"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapChkDelDateToEnv">
+        <input path="$var3/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="HTTPResponses" ref="var2" var="any"/>
+        </input>
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1" var="anyType"/>
+        </input>
+        <output path="$var6/mb:env(Environment)" var="Environment1">
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="HTTPResponses" ref="var2" var="any1"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates>
+                <foreach>
+                    <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item" var="Item1"/>
+                    <output path="$Environment1/Variables/HTTPResponses/ChkDelDate"/>
+                    <foreach>
+                        <input path="$Item1/NameValue/Item" var="Item"/>
+                        <output path="RLDT" var="RLDT"/>
+                        <output path="LMDT" var="LMDT"/>
+                        <output path="LMTM" var="LMTM"/>
+                        <output path="DCHK" var="DCHK"/>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name"/>
+                            <output path="$RLDT/."/>
+                            <param name="input" value="$Value"/>
+                            <test lang="xpath">$Name = "RLDT"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value1"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name1"/>
+                            <output path="$LMDT/."/>
+                            <param name="input" value="$Value1"/>
+                            <test lang="xpath">$Name1 = "LMDT"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value2"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name2"/>
+                            <output path="$LMTM/."/>
+                            <param name="input" value="$Value2"/>
+                            <test lang="xpath">$Name2 = "LMTM"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value3"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name3"/>
+                            <output path="$DCHK/."/>
+                            <param name="input" value="$Value3"/>
+                            <test lang="xpath">$Name3 = "DCHK"</test>
+                        </function>
+                    </foreach>
+                </foreach>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

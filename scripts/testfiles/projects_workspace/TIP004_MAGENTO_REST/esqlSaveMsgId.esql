@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE esqlSaveMsgId
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+
+		SET Environment.MsgId = InputRoot.MQMD.MsgId;		
+
+		RETURN TRUE;
+	END;
+END MODULE;

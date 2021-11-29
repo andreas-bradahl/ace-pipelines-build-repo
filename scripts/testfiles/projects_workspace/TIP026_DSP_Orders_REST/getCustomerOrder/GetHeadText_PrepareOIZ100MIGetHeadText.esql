@@ -1,0 +1,15 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE GetHeadText_PrepareOIZ100MIGetHeadText
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- prepare arguments
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.company_number; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = Environment.Variables.Global.order_number;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.TYTR= '2';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

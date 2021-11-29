@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putChangedSubscriptionOrderDelivery" version="8.0.5.0" xmlns:map="putChangedSubscriptionOrderDelivery">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:Q1="http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery">  
+        <xsd:import namespace="http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery" schemaLocation="/changedSubscriptionOrderDelivery.xsd"/> 
+    <xsd:element name="Global"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="OriginRequest" type="Q1:putChangedSubscriptionOrderDeliveryRequest"/> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element>  
+     </xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var6"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input path="/changedSubscriptionOrderDelivery.xsd" var="var7"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var5"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var8"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputXmlToEnvironment">
+        <input path="$var6/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var5"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery" path="$var7/mb:msg(putChangedSubscriptionOrderDeliveryRequest,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var5"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$MessageAssembly/putChangedSubscriptionOrderDeliveryRequest"/>
+                    <output path="Variables/Global/OriginRequest"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

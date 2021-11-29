@@ -1,0 +1,20 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlIterateOverOrderlines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.FailedVariables.OrderLinesFailed = FALSE;
+
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines[] DO
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine = orderLine;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END FOR;
+		
+		PROPAGATE TO TERMINAL 'out1';
+
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,21 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE DefaultSupplyModelCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		IF NOT(EXISTS(Environment.Variables.SQLQueries.defaultSupply[])) THEN				
+			DECLARE sqlQueryOrders CHAR '
+				SELECT zVal1
+				FROM tine_esa.dbo.zM3Parameters
+				WHERE zType = ''zSupplyModel''
+			';		
+		
+			SET Environment.Variables.SQLQueries.DefaultSupply[] = PASSTHRU(sqlQueryOrders);
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

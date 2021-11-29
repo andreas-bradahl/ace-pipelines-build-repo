@@ -1,0 +1,41 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE setDiscountPercentage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE inputDataRef REFERENCE TO InputRoot.JSON.Data; 
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		
+		CREATE FIELD varRef.CRM;
+		DECLARE crmRef REFERENCE TO varRef.CRM;
+		
+		DECLARE discount FLOAT inputDataRef.discount;
+		DECLARE clipamountleft INT inputDataRef.clipamountleft;
+		DECLARE clipamounttotal INT inputDataRef.clipamounttotal;
+		
+		
+		IF clipamountleft > 0 THEN
+			
+			SET crmRef.discount =  discount;
+		
+		ELSE
+			
+			SET crmRef.discount =  CAST(0 AS FLOAT);
+			
+		END IF;
+		
+		SET crmRef.clipamountleft =  clipamountleft;
+		SET crmRef.clipamounttotal =  clipamounttotal;
+		
+		SET crmRef.discountIs100 = false;
+		
+		IF crmRef.discount = 100 THEN
+			SET crmRef.discountIs100 = true;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

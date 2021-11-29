@@ -1,0 +1,20 @@
+BROKER SCHEMA deleteChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE ConfirmDelete
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		IF EXISTS(Environment.Variables.HTTPResponses.DltInstHeadRecord.Item.RETV[]) THEN   
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 200;
+			SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+			CREATE FIELD OutputRoot.JSON.Data.status VALUE true;
+			CREATE FIELD OutputRoot.JSON.Data.statusText VALUE null;
+			PROPAGATE TO TERMINAL 'out'; 
+		ELSE
+			Call setErrorMessage (400, 'FAILED','DELETE_FAILED', Environment);			
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		RETURN FALSE;
+	END;	
+	
+END MODULE;

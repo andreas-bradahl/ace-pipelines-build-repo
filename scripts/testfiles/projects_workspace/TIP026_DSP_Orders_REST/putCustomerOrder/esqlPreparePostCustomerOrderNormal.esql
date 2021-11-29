@@ -1,0 +1,17 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPreparePostCustomerOrderNormal
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE optimizeOrderLines CHARACTER Environment.Variables.Global.optimizeOrderLines;
+		DELETE FIELD Environment.Variables.Global.PromoSplit.normalOrder.orderNumber;
+		
+		SET OutputRoot.JSON.Data = Environment.Variables.Global.PromoSplit.normalOrder;
+
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.optimizeOrderLines = optimizeOrderLines;
+
+		RETURN TRUE;
+	END;
+END MODULE;

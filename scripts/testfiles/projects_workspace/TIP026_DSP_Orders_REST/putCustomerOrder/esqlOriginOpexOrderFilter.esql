@@ -1,0 +1,29 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlOriginOpexOrderFilter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderType CHARACTER Environment.OrderRequest.Data.orderType;
+		
+		IF orderType = Environment.Variables.SQLQueries.Express.value THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF orderType = Environment.Variables.SQLQueries.Extra.value THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF orderType = Environment.Variables.SQLQueries.Pickup.value THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

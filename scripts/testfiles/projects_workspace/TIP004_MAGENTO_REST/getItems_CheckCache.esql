@@ -1,0 +1,94 @@
+DECLARE CACHE SHARED ROW;
+--DECLARE CACHEALL SHARED ROW;
+--DECLARE CACHESTATUS SHARED ROW;
+CREATE COMPUTE MODULE getItems_CheckCache
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Cache.Response = 'FALSE';
+		--SET OutputRoot=InputRoot;
+	--	SET OutputLocalEnvironment=InputLocalEnvironment;
+	IF CACHE.Valid IS NULL THEN
+		SET Environment.Cache.Valid = 'NOK';
+		SET CACHE.Valid = 'Updating';
+		IF InputLocalEnvironment.REST.Input.Method <> '' THEN
+			SET OutputRoot.JSON.Data.Status = 'GetItems Cache has started updating';
+			SET Environment.Cache.Response = 'TRUE';
+			RETURN TRUE;
+		ELSE
+			RETURN TRUE;
+		END IF;
+
+		RETURN FALSE;
+	ELSEIF CACHE.Valid ='OK' THEN
+		SET Environment.Cache.Valid = 'OK';
+		--forced update
+		IF InputLocalEnvironment.REST.Input.Method <> '' THEN
+			SET OutputRoot.JSON.Data.Status = 'GetItems Cache has started a forced update of cache';
+			--from method forced update
+			SET CACHE.Valid = 'Updating';
+			SET Environment.Cache.Response = 'TRUE';
+			RETURN TRUE;
+		ELSE
+			--from timer, ignore
+			RETURN FALSE;
+		END IF;
+	 	
+	ELSEIF  CACHE.Valid ='Updating' OR CACHE.Valid ='UpdateInProgress' THEN
+		SET Environment.Cache.Valid = 'Updating';
+		IF InputLocalEnvironment.REST.Input.Method <> '' THEN
+			SET OutputRoot.JSON.Data.Status = 'GetItems Cache is already updating'; 
+			SET Environment.Cache.Response = 'TRUE';
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+		
+		
+	END IF;
+		RETURN FALSE;
+	END;
+		
+--	CREATE PROCEDURE checkCache ()
+--	BEGIN
+--		DECLARE DateNow TIMESTAMP;
+--		SET DateNow  =  CURRENT_TIMESTAMP;
+--	 -- v01: "standard" cache
+--	 
+--	 IF CACHESTATUS.CacheFromDateTime IS NULL THEN
+--	 -- load a date probobly new cache needed...
+--	 	SET CACHESTATUS.RequestDateTime  =  CURRENT_TIMESTAMP;
+--	 	SET CACHESTATUS.Valid  =  'NOK';
+--	 	SET Environment.Cache.Valid = 'NOK';
+--	 	
+--	 	SET OutputRoot = InputRoot;
+--	 ELSEIF CACHE.Data.Item.sku IS NULL THEN
+--	 	SET CACHESTATUS.Valid  =  'NOK';
+--	 	SET Environment.Cache.Valid = 'NOK';
+--	 	
+--	 	
+--	 	SET CACHESTATUS.RequestDateTime  =  CURRENT_TIMESTAMP;
+--	 ELSE 
+--	 	--make cache time a udp to be changed by configuration
+--	 	DECLARE CacheInMinutes DECIMAL CAST(30 AS DECIMAL);
+--		DECLARE minInterval INTERVAL CAST(CacheInMinutes AS INTERVAL MINUTE);
+--		DECLARE dateToChar CHAR CAST(CACHESTATUS.CacheFromDateTime + minInterval AS CHAR);
+--	    DECLARE charToDate TIMESTAMP CAST(dateToChar AS TIMESTAMP);
+--	    SET Environment.Cache.Valid = 'NOK';
+--	    
+--	    
+--	    	IF DateNow < charToDate THEN
+--	 			--Cache is fresh
+--	 			SET OutputRoot = InputRoot;
+--	 			SET CACHESTATUS.Valid  =  'OK';
+--	 			CREATE FIELD OutputRoot.JSON.Data IDENTITY(JSON.Array);
+--	 			SET OutputRoot.JSON.Data = CACHE.Data;
+--	 			SET Environment.Cache.Valid = 'OK';
+--	    	Else
+--	    		SET CACHESTATUS.Valid  =  'NOK';
+--	    		SET Environment.Cache.Valid = 'NOK';
+--	 	    END IF;
+--	 
+--	  END IF;
+--	END;
+
+END MODULE;

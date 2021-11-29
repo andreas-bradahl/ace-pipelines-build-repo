@@ -1,0 +1,62 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE DB_OrderCanBeChanged
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE errorTerminal CHAR 'out1';
+		DECLARE sqlQuery CHAR '
+							SELECT DISTINCT code FROM tine_esa.dbo.Code code 
+							INNER JOIN tine_esa.dbo.CodeType codeType 
+							ON code.typeId=codeType.id 
+							WHERE codetype.name = ?
+							';
+							
+		SET Environment.NoChangeOrderCodes.Row[] = PASSTHRU(sqlQuery, 'zNoChangeOrderType');
+		SET Environment.NoDeleteOrderCodes.Row[] = PASSTHRU(sqlQuery, 'zNoChangeOrderTypeTIP');
+		
+		DECLARE noChangeOrderCodesRowRef REFERENCE TO Environment.NoChangeOrderCodes.Row[1];
+		DECLARE noDeleteOrderCodesRowRef REFERENCE TO Environment.NoDeleteOrderCodes.Row[1];
+		IF NOT LASTMOVE(noChangeOrderCodesRowRef) AND NOT LASTMOVE(noDeleteOrderCodesRowRef) THEN
+			RETURN TRUE;
+		END IF;
+		
+		DECLARE getHeadNameValueRef REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue;
+		DECLARE orderCode CHAR TRIM(GetValueFromNameValueList('ORTP', getHeadNameValueRef));
+		
+		DECLARE changeAllowed BOOLEAN true;
+		DECLARE deleteAllowed BOOLEAN true;
+		
+		WHILE LASTMOVE(noChangeOrderCodesRowRef) AND changeAllowed DO
+			IF noChangeOrderCodesRowRef.code = orderCode THEN
+				SET changeAllowed = false;
+			END IF;
+			
+			MOVE noChangeOrderCodesRowRef NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+		
+		WHILE LASTMOVE(noDeleteOrderCodesRowRef) AND deleteAllowed DO
+			IF noDeleteOrderCodesRowRef.code = orderCode THEN
+				SET deleteAllowed = false;
+			END IF;
+			
+			MOVE noDeleteOrderCodesRowRef NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+		
+		IF changeAllowed AND deleteAllowed THEN
+			RETURN TRUE;
+			
+		ELSE
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'CANT_CHANGE_ORDERTYPE', envRef);
+			PROPAGATE TO TERMINAL errorTerminal;
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+

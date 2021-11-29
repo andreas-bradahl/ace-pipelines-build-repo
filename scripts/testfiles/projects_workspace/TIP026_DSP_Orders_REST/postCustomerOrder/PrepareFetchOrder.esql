@@ -1,0 +1,20 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareFetchOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE confirmNameValueList REFERENCE TO Environment.JSONResponse.Confirm.Data.MIRecord.Item.NameValue;
+		DECLARE companyNumber CHAR orderRef.companyNumber;
+		DECLARE customerNumber CHAR orderRef.customerNumber;
+		DECLARE orderNumber CHAR GetValueFromNameValueList('ORNO', confirmNameValueList);
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.companyNumber = companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.customerNumber = customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.orderNumber = orderNumber;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

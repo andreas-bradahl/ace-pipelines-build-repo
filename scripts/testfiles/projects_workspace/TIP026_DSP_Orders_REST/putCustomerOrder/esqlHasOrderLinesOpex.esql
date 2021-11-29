@@ -1,0 +1,20 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlHasOrderLinesOpex
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF EXISTS(Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines.Item[]) THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

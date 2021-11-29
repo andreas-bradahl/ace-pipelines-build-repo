@@ -1,0 +1,441 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CalculateAndPrepareResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL buildConfirmedOrderResponse(Environment.JSONResponse, Environment.RecyclingChargeCodes);
+		RETURN TRUE;
+	END;
+
+CREATE PROCEDURE buildConfirmedOrderResponse (IN JSONResponseRef REFERENCE, IN chargeCodesRef REFERENCE)
+BEGIN
+	DECLARE headRef REFERENCE TO JSONResponseRef.GetHead;
+	DECLARE headTextRef REFERENCE TO JSONResponseRef.GetHeadText;
+	DECLARE orderValueRef REFERENCE TO JSONResponseRef.GetOrderValue;
+	DECLARE lstLine2Ref REFERENCE TO JSONResponseRef.LstLine2;
+	DECLARE chkDelDateRef REFERENCE TO Environment.JSONResponse.ChkDelDate;
+	DECLARE lstLineChargeCursor REFERENCE TO JSONResponseRef;
+	CREATE FIELD OutputRoot.JSON.Data;
+	DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data; -- orderHead
+	DECLARE varRef REFERENCE TO Environment.Variables;
+	DECLARE orderHeadLock BOOLEAN false;
+	
+	SET dataOutRef.orderNumber = varRef.order_number;
+	SET dataOutRef.containsTempLines = false;
+	SET dataOutRef.isTemporaryOrder = false;
+	SET dataOutRef.companyNumber = varRef.company_number;
+	SET dataOutRef.customerNumber = varRef.customer_number;
+	SET dataOutRef.customerOrderNumber = TRIM(GetValueFromNameValueList('CUOR', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.customerReference = TRIM(GetValueFromNameValueList('YREF', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.orderName = TRIM(GetValueFromNameValueList('DSTX', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.TINEReference = TRIM(GetValueFromNameValueList('OREF', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.orderStatusLowest = TRIM(GetValueFromNameValueList('ORSL', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.orderStatusHighest = TRIM(GetValueFromNameValueList('ORST', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.orderType = TRIM(GetValueFromNameValueList('ORTP', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.requestedDeliveryDate = CAST(TRIM(GetValueFromNameValueList('RLDT', headRef.Data.MIRecord.Item.NameValue)) AS DATE FORMAT 'yyyyMMdd');
+	
+	DECLARE orderLinesCanChange BOOLEAN setOrderheadCanUpdateCanDelete(headRef, lstLine2Ref, chkDelDateRef, dataOutRef);
+	
+	SET dataOutRef.orderComment = getOrderText(headTextRef.Data.MIRecord);
+	SET dataOutRef.grossOrderValue = CAST(GetValueFromNameValueList('BRAM', orderValueRef.Data.MIRecord.Item.NameValue) AS DECIMAL);
+	SET dataOutRef.netOrderValue = CAST(GetValueFromNameValueList('ONET', orderValueRef.Data.MIRecord.Item.NameValue) AS DECIMAL);
+	SET dataOutRef.orderDiscount = CAST(dataOutRef.grossOrderValue AS DECIMAL) - CAST(dataOutRef.netOrderValue AS DECIMAL);
+	SET dataOutRef.handlingCharge = CAST(GetValueFromNameValueList('EXAM', orderValueRef.Data.MIRecord.Item.NameValue) AS DECIMAL);
+	SET dataOutRef.amountToPay = CAST(GetValueFromNameValueList('TOPY', orderValueRef.Data.MIRecord.Item.NameValue) AS DECIMAL);
+	SET dataOutRef.vatAmount = CAST(GetValueFromNameValueList('VTAM', orderValueRef.Data.MIRecord.Item.NameValue) AS DECIMAL);
+	SET dataOutRef.orderRecyclingCharge = CAST(0 AS DECIMAL);
+	SET dataOutRef.termsOfPayment = TRIM(GetValueFromNameValueList('TEPY', headRef.Data.MIRecord.Item.NameValue));
+	SET dataOutRef.deadline = castTimestampToIsoString(getDeadline(chkDelDateRef));
+
+	-- Do orderlines
+	DECLARE orderLinesCursor REFERENCE TO dataOutRef;
+	DECLARE lstLine2ItemCursor REFERENCE TO lstLine2Ref.Data.MIRecord;
+	CREATE LASTCHILD OF dataOutRef AS orderLinesCursor IDENTITY(JSON.Array)orderLines;
+	DECLARE orderLinesRef REFERENCE TO orderLinesCursor;
+
+	MOVE lstLine2ItemCursor FIRSTCHILD NAME 'Item';
+	MOVE lstLineChargeCursor FIRSTCHILD NAME 'LstLineCharge';
+	
+	WHILE LASTMOVE(lstLineChargeCursor) DO
+		CREATE LASTCHILD OF orderLinesRef AS orderLinesCursor NAME 'Item';
+		
+		SET orderHeadLock = logicalOR(orderHeadLock, buildOrderLine(orderLinesCursor, JSONResponseRef, chargeCodesRef, lstLine2ItemCursor, lstLineChargeCursor, orderLinesCanChange));
+		SET dataOutRef.containsTempLines = logicalOR(dataOutRef.containsTempLines, orderLinesCursor.updateInReview);
+		SET dataOutRef.containsTempLines = logicalOR(dataOutRef.containsTempLines, orderLinesCursor.deleteInReview);
+		
+		MOVE lstLine2ItemCursor NEXTSIBLING REPEAT NAME;
+		MOVE lstLineChargeCursor NEXTSIBLING REPEAT NAME;
+		
+	END WHILE;
+	
+	-- calculate recycling
+	SET dataOutRef.orderRecyclingCharge = calculateTotalOrderRecyclingCharge(dataOutRef);
+	
+	-- do temporary orders
+	DECLARE lstBatchLineCursor REFERENCE TO Environment.JSONResponse.LstBatchLine;
+	
+	WHILE LASTMOVE(lstBatchLineCursor) DO
+		CREATE LASTCHILD OF orderLinesRef AS orderLinesCursor NAME 'Item';
+		SET orderHeadLock = writeTemporaryOrderLine(lstBatchLineCursor.Data.MIRecord.Item.NameValue, orderLinesCursor);
+		SET dataOutRef.containsTempLines = logicalOR(dataOutRef.containsTempLines, orderLinesCursor.addInReview);
+		MOVE lstBatchLineCursor NEXTSIBLING REPEAT NAME;
+		
+	END WHILE;
+	
+	IF orderHeadLock THEN
+		SET dataOutRef.canUpdate = false;
+		SET dataOutRef.canDelete = false;
+		CALL lockAllOrderLines(dataOutRef);
+		
+	END IF;
+	
+	-- do optimized orderLines
+	DECLARE optimizedOrderLinesRef REFERENCE TO dataOutRef; -- Moving this once in next line
+	CREATE LASTCHILD OF optimizedOrderLinesRef AS optimizedOrderLinesRef IDENTITY(JSON.Array)optimizedOrderLines;
+	 
+	CALL buildOptimizedOrderLines(optimizedOrderLinesRef, orderLinesRef);
+	
+END;
+
+CREATE PROCEDURE buildOptimizedOrderLines(IN optimizedOrderLinesRef REFERENCE, IN orderLinesRef REFERENCE)
+BEGIN -- TODO: implement -- kontroller, styrer hva som er gjort, velger neste som skal gjøres
+	CREATE FIELD Environment.Variables.ProcessedItemList;
+	DECLARE processedItemListRef REFERENCE TO Environment.Variables.ProcessedItemList;
+	
+	FOR orderLine AS orderLinesRef.Item[] DO
+		IF NOT EXISTS(SELECT F.* FROM processedItemListRef.Item[] AS F WHERE F = orderLine.sku) THEN
+			CREATE LASTCHILD OF processedItemListRef NAME 'Item' VALUE buildOptimizedOrderLine(optimizedOrderLinesRef, orderLine, orderLinesRef);
+			-- TODO: build combinedOrderLines, remember to update combined orderLineNumbers, totalLineDiscountAmount, newTotalQuantity
+			DECLARE testVar BOOLEAN true; -- TODO remove this
+		END IF;
+	END FOR;
+	
+	DELETE FIELD processedItemListRef;
+END;
+
+CREATE FUNCTION buildOptimizedOrderLine(IN optimizedOrderLinesRef REFERENCE, IN orderLineRef REFERENCE, IN orderLinesRef REFERENCE) RETURNS CHAR
+BEGIN -- TODO: implement  -- utfører blindt, lag felter, skriv combinedOrderlines, fyll inn data.
+	DECLARE optimizedOrderLineCursor REFERENCE TO optimizedOrderLinesRef;
+	CREATE LASTCHILD OF optimizedOrderLineCursor AS optimizedOrderLineCursor NAME 'Item';
+	
+	SET optimizedOrderLineCursor.sku = orderLineRef.sku;
+	SET optimizedOrderLineCursor.itemDescription = orderLineRef.itemDescription;
+	CREATE LASTCHILD OF optimizedOrderLineCursor IDENTITY(JSON.Array)combinedOrderLineNumbers;
+	SET optimizedOrderLineCursor.totalQuantity = orderLineRef.quantitySalesPriceUnit;
+	SET optimizedOrderLineCursor.totalQuantityUnit = orderLineRef.salesPriceUnit;
+	SET optimizedOrderLineCursor.totalLineAmount = orderLineRef.lineAmount;
+	SET optimizedOrderLineCursor.totalLineAmountWithoutDiscount = orderLineRef.lineAmountWithDiscount;
+	SET optimizedOrderLineCursor.totalLineDiscountAmount = 0.0;
+	SET optimizedOrderLineCursor.totalLineRecyclingCharge = orderLineRef.lineRecyclingCharge;
+	SET optimizedOrderLineCursor.canIncrease = orderLineRef.canIncrease;
+	SET optimizedOrderLineCursor.canDecrease = orderLineRef.canDecrease;
+	SET optimizedOrderLineCursor.canDelete = orderLineRef.canDelete;
+	SET optimizedOrderLineCursor.updateInReview = orderLineRef.updateInReview;
+	SET optimizedOrderLineCursor.newTotalQuantity = 0;
+	SET optimizedOrderLineCursor.deleteInReview = orderLinesRef.deleteInReview;
+	CREATE LASTCHILD OF optimizedOrderLineCursor IDENTITY(JSON.Array)combinedOrderLines;
+	
+	CALL buildCombinedOrderLines(	optimizedOrderLineCursor.combinedOrderLines, 
+									optimizedOrderLineCursor.combinedOrderLineNumbers,
+									orderLinesRef,
+									orderLineRef.sku
+								);
+	
+	
+	RETURN orderLineRef.sku;
+END;
+
+CREATE PROCEDURE buildCombinedOrderLines(IN optimizedOrderLineRef REFERENCE, IN combinedOrderLineNumbersRef REFERENCE, IN orderLinesRef REFERENCE, IN sku CHAR)
+BEGIN -- TODO: kontroller 
+	FOR orderLine AS orderLinesRef.Item[] DO
+		IF orderLine.sku = sku THEN
+			CREATE LASTCHILD OF combinedOrderLineNumbersRef NAME 'Item' VALUE buildCombinedOrderLine(optimizedOrderLineRef, orderLine);
+		END IF;
+	END FOR;
+END;
+
+CREATE FUNCTION buildCombinedOrderLine(IN optimizedOrderLineRef REFERENCE, IN orderLineRef REFERENCE) RETURNS INT
+BEGIN -- TODO : bygg en combinedOrdreLinje
+	DECLARE optimizedOrderLineCursor REFERENCE TO optimizedOrderLineRef;
+	CREATE LASTCHILD OF optimizedOrderLineCursor AS optimizedOrderLineCursor NAME 'Item';
+	
+	SET optimizedOrderLineCursor.orderLineNumber = orderLineRef.orderLineNumber;
+	SET optimizedOrderLineCursor.orderLineSuffix = orderLineRef.orderLineSuffix;
+	SET optimizedOrderLineCursor.sku = orderLineRef.sku;
+	SET optimizedOrderLineCursor.quantityOrderLineBaseUnit = orderLineRef.quantitySalesPriceUnit;
+	SET optimizedOrderLineCursor.quantityOrderLineUnit = orderLineRef.quantityAlternateUnit;
+	SET optimizedOrderLineCursor.orderLineBaseUnit = orderLineRef.salesPriceUnit;
+	SET optimizedOrderLineCursor.orderLineUnit = orderLineRef.alternateUnit;
+	SET optimizedOrderLineCursor.deliveryDate = orderLineRef.deliveryDate;
+	SET optimizedOrderLineCursor.discountAmount1 = orderLineRef.discountAmount1;
+	SET optimizedOrderLineCursor.discountAmount2 = orderLineRef.discountAmount2;
+	SET optimizedOrderLineCursor.discountAmount3 = orderLineRef.discountAmount3;
+	SET optimizedOrderLineCursor.discountAmount4 = orderLineRef.discountAmount4;
+	SET optimizedOrderLineCursor.discountAmount5 = orderLineRef.discountAmount5;
+	SET optimizedOrderLineCursor.discountAmount6 = orderLineRef.discountAmount6;
+	SET optimizedOrderLineCursor.lineAmount = orderLineRef.lineAmount;
+	SET optimizedOrderLineCursor.lineAmountWithoutDiscount = orderLineRef.lineAmountWithoutDiscount;
+	SET optimizedOrderLineCursor.lineRecyclingCharge = orderLineRef.lineRecyclingCharge;
+	SET optimizedOrderLineCursor.status = orderLineRef.status;
+	SET optimizedOrderLineCursor.refOrderCategory = orderLineRef.refOrderCategory;
+	SET optimizedOrderLineCursor.refOrderNumber = orderLineRef.refOrderNumber;
+	SET optimizedOrderLineCursor.refOrderLine = orderLineRef.refOrderLine;
+	SET optimizedOrderLineCursor.salesPrice = orderLineRef.salesPrice;
+	SET optimizedOrderLineCursor.updateInReview = orderLineRef.updateInReview;
+	SET optimizedOrderLineCursor.newQuantity = orderLineRef.newQuantity;
+	SET optimizedOrderLineCursor.deleteInReview = orderLineRef.deleteInReview;
+	SET optimizedOrderLineCursor.canIncrease = orderLineRef.canIncrease;
+	SET optimizedOrderLineCursor.canDecrease = orderLineRef.canDecrease;
+	SET optimizedOrderLineCursor.canDelete = orderLineRef.canDelete;
+	
+	RETURN optimizedOrderLineCursor.orderLineNumber;
+END; 
+
+CREATE FUNCTION buildOrderLine(IN orderLinesRef REFERENCE, IN JSONResponseRef REFERENCE, IN chargeCodesRef REFERENCE, IN itemRef REFERENCE, IN chargeRef REFERENCE, IN canUpdate BOOLEAN) RETURNS BOOLEAN
+BEGIN
+	DECLARE orderHeadLock BOOLEAN false;
+	
+	SET orderLinesRef.orderLineNumber = CAST(GetValueFromNameValueList('PONR', itemRef.NameValue) AS INTEGER);
+	SET orderLinesRef.orderLineSuffix = CAST(GetValueFromNameValueList('POSX', itemRef.NameValue) AS INTEGER);
+	SET orderLinesRef.sku = TRIM(GetValueFromNameValueList('ITNO', itemRef.NameValue));
+	SET orderLinesRef.itemDescription = TRIM(GetValueFromNameValueList('ITDS', itemRef.NameValue));
+	SET orderLinesRef.quantitySalesPriceUnit = CAST(CAST(GetValueFromNameValueList('ORQT', itemRef.NameValue)AS DECIMAL) AS INTEGER);
+	SET orderLinesRef.quantityAlternateUnit = CAST(GetValueFromNameValueList('ORQA', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.salesPriceUnit = TRIM(GetValueFromNameValueList('SPUN', itemRef.NameValue));
+	SET orderLinesRef.alternateUnit = TRIM(GetValueFromNameValueList('ALUN', itemRef.NameValue));
+	SET orderLinesRef.deliveryDate = CAST(TRIM(GetValueFromNameValueList('CODT', itemRef.NameValue)) AS DATE FORMAT 'yyyyMMdd');
+	SET orderLinesRef.discountAmount1 = CAST(GetValueFromNameValueList('DIA1', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.discountAmount2 = CAST(GetValueFromNameValueList('DIA2', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.discountAmount3 = CAST(GetValueFromNameValueList('DIA3', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.discountAmount4 = CAST(GetValueFromNameValueList('DIA4', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.discountAmount5 = CAST(GetValueFromNameValueList('DIA5', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.discountAmount6 = CAST(GetValueFromNameValueList('DIA6', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.lineAmount = CAST(GetValueFromNameValueList('NLAM', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.lineAmountWithoutDiscount = orderLinesRef.discountAmount1 + orderLinesRef.discountAmount2 + orderLinesRef.discountAmount3 +
+													orderLinesRef.discountAmount4 + orderLinesRef.discountAmount5 + orderLinesRef.discountAmount6 +
+													orderLinesRef.lineAmount;
+	SET orderLinesRef.lineRecyclingCharge = CAST(calculateLineRecyclingCharge(itemRef, chargeRef, chargeCodesRef) AS DECIMAL);
+	SET orderLinesRef.status = TRIM(GetValueFromNameValueList('ORST', itemRef.NameValue));
+	SET orderLinesRef.refOrderCategory = TRIM(GetValueFromNameValueList('RORC', itemRef.NameValue));
+	SET orderLinesRef.refOrderNumber = TRIM(GetValueFromNameValueList('RORN', itemRef.NameValue));
+	SET orderLinesRef.refOrderLine = TRIM(GetValueFromNameValueList('RORL', itemRef.NameValue));
+	SET orderLinesRef.salesPrice = CAST(GetValueFromNameValueList('SAPR', itemRef.NameValue) AS DECIMAL);
+	SET orderLinesRef.canIncrease = canUpdateOrderLine(itemRef, canUpdate);
+	SET orderLinesRef.canDecrease = orderLinesRef.canIncrease;
+	SET orderLinesRef.canDelete = canUpdateOrderLine(itemRef, canUpdate);
+	
+	-- add supplementary info
+	DECLARE lstBatchLineCursor REFERENCE TO JSONResponseRef;
+	DECLARE foundMatch BOOLEAN false;
+	MOVE lstBatchLineCursor FIRSTCHILD NAME 'LstBatchLine';
+	
+	WHILE LASTMOVE(lstBatchLineCursor) AND NOT foundMatch DO
+		SET foundMatch = temporaryOrderOrderLineNumberMatch(lstBatchLineCursor, orderLinesRef.orderLineNumber);
+		
+		IF foundMatch THEN
+			
+			IF lstBatchLineCursor.Data.OPT1 LIKE '2' THEN
+				SET orderLinesRef.updateInReview = true;				
+				SET orderLinesRef.newQuantity = CAST(CAST(getValueFromNameValueList('ORQT', lstBatchLineCursor.Data.MIRecord.Item.NameValue) AS DECIMAL) AS INTEGER);
+				SET orderLinesRef.deleteInReview = false;
+				SET orderHeadLock = true;
+				
+			ELSEIF lstBatchLineCursor.Data.OPT1 LIKE '4' THEN
+				SET orderLinesRef.updateInReview = false;
+				SET orderLinesRef.newQuantity = 0;
+				SET orderLinesRef.deleteInReview = true;
+				SET orderHeadLock = true;
+				
+			END IF;
+			
+			DELETE FIELD lstBatchLineCursor;
+		ELSE
+			MOVE lstBatchLineCursor NEXTSIBLING REPEAT NAME;
+			
+		END IF;
+	END WHILE;
+	
+	IF GetValueFromNameValueList('OPT1', itemRef.NameValue) = '4' THEN
+		SET orderLinesRef.deleteInReview = true;
+		SET orderHeadLock = true;
+		
+	END IF;
+	
+	RETURN orderHeadLock;
+END;
+
+CREATE FUNCTION temporaryOrderOrderLineNumberMatch (IN lstBatchLineRef REFERENCE, IN orderLineNumber INT) RETURNS BOOLEAN
+BEGIN
+	IF orderLineNumber = CAST(GetValueFromNameValueList('PONR',lstBatchLineRef.Data.MIRecord.Item.NameValue) AS INTEGER) THEN
+		RETURN TRUE;
+	ELSE
+		RETURN FALSE;
+	END IF;
+END;
+
+CREATE FUNCTION calculateLineRecyclingCharge(IN itemRef REFERENCE, IN chargeRef REFERENCE, IN chargeCodesRef REFERENCE) RETURNS DECIMAL
+BEGIN
+	DECLARE chargeCursor REFERENCE TO chargeRef;
+	
+	MOVE chargeCursor FIRSTCHILD NAME 'Data';
+	MOVE chargeCursor FIRSTCHILD NAME 'MIRecord';
+	MOVE chargeCursor FIRSTCHILD NAME 'Item';
+	
+	IF NOT(LASTMOVE(chargeCursor)) THEN
+		RETURN CAST(0 AS DECIMAL);
+	END IF;
+	
+	DECLARE chargecode CHAR TRIM(GetValueFromNameValueList('CRID', chargeCursor.NameValue));
+	
+	IF NOT validRecyclingChargeCode(chargecode, chargeCodesRef) THEN
+		RETURN CAST(0 AS DECIMAL);
+	END IF;
+	
+	DECLARE pbam DECIMAL CAST(TRIM(GetValueFromNameValueList('PBAM', chargeCursor.NameValue)) AS DECIMAL);
+	DECLARE quantity DECIMAL CAST(TRIM(GetValueFromNameValueList('ORQT', itemRef.NameValue)) AS DECIMAL);
+	
+	
+	RETURN pbam;
+END;
+
+CREATE FUNCTION calculateTotalOrderRecyclingCharge (IN orderRef REFERENCE) RETURNS DECIMAL
+BEGIN
+	DECLARE totalRecyclingCharge DECIMAL 0;
+	DECLARE orderLineCursor REFERENCE TO orderRef;
+	MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+	MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+	
+	WHILE LASTMOVE(orderLineCursor) DO
+		SET totalRecyclingCharge = totalRecyclingCharge + orderLineCursor.lineRecyclingCharge;
+		MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+		
+	END WHILE;
+	
+	
+	RETURN totalRecyclingCharge;
+END;
+
+CREATE FUNCTION castTimestampToIsoString (IN deadline TIMESTAMP) RETURNS CHAR
+BEGIN
+	DECLARE pattern CHAR 'yyyy-MM-dd''T''HH:mmZZZ';
+	RETURN CAST(deadline AS CHAR FORMAT pattern);
+END;
+
+CREATE FUNCTION canUpdateOrderLine (IN  lstLine2itemRef REFERENCE, IN canChange BOOLEAN) RETURNS BOOLEAN
+BEGIN
+	IF NOT canChange THEN
+		RETURN canChange;
+	END IF;
+	
+	DECLARE rorc INT CAST(GetValueFromNameValueList('RORC', lstLine2itemRef.NameValue) AS INTEGER);
+	DECLARE rorn CHAR GetValueFromNameValueList('RORN', lstLine2itemRef.NameValue);
+	
+	IF (rorc = 1 OR rorc = 5) AND (rorn <> '??????????' AND rorn <> '￮￮￮￮￮￮￮￮￮￮') THEN
+		RETURN false;
+	ELSE
+		RETURN true;
+	END IF;
+END;
+
+CREATE FUNCTION stillWithinDeadLine(IN getHeadRef REFERENCE, IN chkDelDateRef REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE canUpdate BOOLEAN TRUE;
+	DECLARE orst INT GetValueFromNameValueList('ORST', getHeadRef.Data.MIRecord.Item.NameValue);
+	DECLARE deadlineDate CHAR TRIM(GetValueFromNameValueList('LMDT', chkDelDateRef.Data.MIRecord.Item.NameValue));
+	DECLARE deadlineTime CHAR TRIM(GetValueFromNameValueList('LMTM', chkDelDateRef.Data.MIRecord.Item.NameValue));
+	
+	SET deadlineTime = fixTime(deadlineTime);
+	
+	DECLARE pattern CHAR 'yyyyMMddHHmm';
+	DECLARE deadline TIMESTAMP CAST(deadlineDate||deadlineTime AS TIMESTAMP FORMAT pattern);
+	DECLARE currentTime TIMESTAMP CURRENT_TIME;
+	
+	IF (orst > 33) OR (deadline < currentTime) THEN
+		SET canUpdate = FALSE;
+	END IF;
+	
+	
+	RETURN canUpdate;
+END;
+
+CREATE FUNCTION setOrderheadCanUpdateCanDelete (IN headRef REFERENCE, IN lstLine2Ref REFERENCE,IN chkDelDateRef REFERENCE, IN parent REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE orderLinesCanChange BOOLEAN true;
+	
+	IF stillWithinDeadLine(headRef, chkDelDateRef)  THEN
+		SET parent.canUpdate = true;
+		SET parent.canDelete = true;
+		
+	ELSE
+		SET parent.canUpdate = false;
+		SET parent.canDelete = false;
+		SET orderLinesCanChange = false;
+		
+		RETURN orderLinesCanChange;
+		
+	END IF;
+	
+	DECLARE lstLine2ItemCursor REFERENCE TO lstLine2Ref;
+	DECLARE rorc INT 0;
+	DECLARE rorn CHAR '';
+	DECLARE canUpdateRef REFERENCE TO parent.canUpdate;
+	DECLARE canDeleteRef REFERENCE TO parent.canDelete;
+	MOVE lstLine2ItemCursor TO lstLine2ItemCursor.Data.MIRecord;
+	MOVE lstLine2ItemCursor FIRSTCHILD NAME 'Item';
+	
+	WHILE LASTMOVE(lstLine2ItemCursor) AND (canUpdateRef OR canDeleteRef) DO
+		SET rorn = GetValueFromNameValueList('RORN', lstLine2ItemCursor.NameValue);
+		
+		IF (rorn <> '??????????' AND rorn <> '￮￮￮￮￮￮￮￮￮￮') THEN
+			SET rorc = CAST(GetValueFromNameValueList('RORC', lstLine2ItemCursor.NameValue) AS INTEGER);
+			 
+			IF rorc = 2 THEN
+				SET canUpdateRef = false;
+				SET canDeleteRef = false;
+				SET orderLinesCanChange = false;
+			ELSEIF rorc = 5 OR rorc = 1 THEN
+				SET canDeleteRef = false;
+			END IF;
+			
+		END IF;
+		
+		MOVE lstLine2ItemCursor NEXTSIBLING REPEAT NAME;
+		
+	END WHILE;
+	
+	
+	RETURN orderLinesCanChange;
+END;
+	
+CREATE PROCEDURE lockAllOrderLines(IN orderHeadRef REFERENCE)
+BEGIN
+	DECLARE orderLineCursor REFERENCE TO orderHeadRef;
+	MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+	MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+	
+	WHILE LASTMOVE(orderLineCursor) DO
+		SET orderLineCursor.canIncrease = false;
+		SET orderLineCursor.canDecrease = false;
+		SET orderLineCursor.canDelete = false;
+		MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+		
+	END WHILE;
+END;
+
+CREATE FUNCTION validRecyclingChargeCode (IN chargeCode CHAR, IN recyclingCodeList REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE chargeCodeCursor REFERENCE TO recyclingCodeList;
+	DECLARE foundMatch BOOLEAN false;
+	MOVE chargeCodeCursor FIRSTCHILD NAME 'ChargeCode';
+	
+	WHILE LASTMOVE(chargeCodeCursor) AND NOT(foundMatch) DO
+		IF TRIM(chargeCodeCursor.val) = chargeCode THEN
+			SET foundMatch = true;
+		END IF;
+		MOVE chargeCodeCursor NEXTSIBLING REPEAT NAME;
+	END WHILE;
+	
+	RETURN foundMatch;
+END;
+END MODULE;

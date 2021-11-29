@@ -1,0 +1,45 @@
+BROKER SCHEMA getSubscriptionOrderList
+
+
+CREATE COMPUTE MODULE esqlCreateResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF EXISTS(Environment.Variables.Response.customerOrder[]) THEN
+			
+			DECLARE getSubscriptionOrderListResponseObjectRef REFERENCE TO Environment;
+			CREATE FIELD OutputRoot.XMLNSC.ns:getSubscriptionOrderListResponse;
+			
+			FOR order AS Environment.Variables.Response.customerOrder[] DO
+				
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getSubscriptionOrderListResponse AS getSubscriptionOrderListResponseObjectRef NAMESPACE(ns) NAME 'getSubscriptionOrderListResponseObject';
+				
+				SET getSubscriptionOrderListResponseObjectRef.ns:companyNumber = 100;
+				SET getSubscriptionOrderListResponseObjectRef.ns:customerNumber = order.CUNO;
+				SET getSubscriptionOrderListResponseObjectRef.ns:orderNumber = order.RORD;
+				SET getSubscriptionOrderListResponseObjectRef.ns:validFromDate = CAST(CAST(order.FDAT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+				
+				IF order.TDAT = '99999999' THEN
+					SET getSubscriptionOrderListResponseObjectRef.ns:validToDate = '';
+				ELSE
+					SET getSubscriptionOrderListResponseObjectRef.ns:validToDate = CAST(CAST(order.TDAT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+				END IF;
+				
+				SET getSubscriptionOrderListResponseObjectRef.ns:firstDeliveryDate = CAST(CAST(order.RAST AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+				SET getSubscriptionOrderListResponseObjectRef.ns:deliveryWeekdayNumber = order.DEWD;
+				SET getSubscriptionOrderListResponseObjectRef.ns:deliveryIntervalDays = order.RADD;
+				SET getSubscriptionOrderListResponseObjectRef.ns:orderStatus = order.STAT;
+				SET getSubscriptionOrderListResponseObjectRef.ns:customerReference = order.YREF;
+				
+			END FOR;
+			
+		ELSE
+			
+			CREATE LASTCHILD OF OutputRoot.JSON IDENTITY(JSON.Array)Data;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

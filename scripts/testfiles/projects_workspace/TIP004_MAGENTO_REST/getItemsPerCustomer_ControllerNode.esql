@@ -1,0 +1,538 @@
+
+
+CREATE COMPUTE MODULE getItemsPerCustomer_ControllerNode
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+/*
+Creates a list of all children items of the parameter 'itemsParentRef'.
+*/
+CREATE FUNCTION PutItemsInList(
+	IN itemsParentRef REFERENCE, 
+	IN environmentRef REFERENCE
+)
+BEGIN
+	DECLARE itemRef REFERENCE TO itemsParentRef;
+	DECLARE tempListRef REFERENCE TO environmentRef.TempListOfItems;
+	DECLARE tineGavenRef REFERENCE TO environmentRef.TINEGavenItems;
+	DECLARE fullListRef REFERENCE TO environmentRef.FullItemsList;
+	
+	MOVE itemRef FIRSTCHILD NAME 'Item';
+	WHILE LASTMOVE(itemRef) DO
+		
+		MOVE fullListRef TO environmentRef.FullItemsList;
+		
+		DECLARE isDuplicate BOOLEAN;
+		SET isDuplicate = CheckIfDuplicate(itemRef, tempListRef);
+		
+		DECLARE isInTineGaven BOOLEAN;
+		SET isInTineGaven = CheckIfInTINEGaven(itemRef, tineGavenRef);
+		
+		IF isDuplicate = FALSE AND isInTineGaven = FALSE THEN
+			
+			CREATE LASTCHILD OF tempListRef TYPE NameValue NAME 'ItemNumber' VALUE itemRef.ITNO;
+			CREATE LASTCHILD OF fullListRef AS fullListRef TYPE NameValue NAME 'Item';
+			
+			SET fullListRef = itemRef;
+			
+		END IF;
+		
+		MOVE itemRef NEXTSIBLING REPEAT NAME;
+	END WHILE;	
+END;
+----- tmpSupply list for R11 only , inhouse only check ----	
+CREATE FUNCTION PutItemsInSupplyList(
+	IN itemsParentRef REFERENCE, 
+	IN environmentRef REFERENCE
+)
+BEGIN
+	DECLARE itemRef REFERENCE TO itemsParentRef;
+	DECLARE tempListRef REFERENCE TO environmentRef.SupplyModelItems;
+	DECLARE tineGavenRef REFERENCE TO environmentRef.TINEGavenItems;
+	MOVE itemRef FIRSTCHILD NAME 'Item';
+	WHILE LASTMOVE(itemRef) DO
+		MOVE tempListRef TO environmentRef.SupplyModelItems;
+			CREATE LASTCHILD OF tempListRef AS tempListRef TYPE NameValue NAME 'Item';
+			SET tempListRef = itemRef;
+		MOVE itemRef NEXTSIBLING REPEAT NAME;
+	END WHILE;	
+END;	
+--/*
+--Get Sell by date
+--
+--Input parameters
+------------------
+--Reference to list of sell by dates
+--Item number to lookup
+--Returns sellbyDate or NULL if not found or date was in the past
+--*/
+--CREATE FUNCTION GetSellbyDate(IN slbdt REFERENCE, IN itemNo CHAR) RETURNS CHAR 
+--BEGIN
+--	DECLARE slbDt CHAR;
+--	DECLARE slbDate DATE;
+--	SET slbDt = THE(SELECT ITEM A.ZBSLDT FROM slbdt.Item[] AS A WHERE A.ITNO = TRIM(itemNo));
+--	IF slbDt IS NOT NULL AND CAST(slbDt AS DATE FORMAT 'yyyyMMdd') >= CURRENT_DATE THEN
+--		RETURN slbDt;
+--	ELSE
+--		RETURN '';
+--	END IF;
+--END;	
+
+-- handel null and 0 to empty string 	
+
+CREATE FUNCTION DateCharFromyyyyMMdd( IN obj CHARACTER) RETURNS CHARACTER
+BEGIN
+	DECLARE source CHAR obj;
+	
+	DECLARE DateAsDate DATE CAST(source AS DATE FORMAT 'yyyyMMdd');
+	DECLARE DateAsChar CHAR CAST(DateAsDate AS CHARACTER FORMAT 'yyyy-MM-dd');
+	RETURN DateAsChar;
+	
+END;	
+	
+/* 
+Checks if an item number already exists in the customer's list of articles.
+Returns a boolean value of true if it already exists, and a value of
+false if it does not exist.
+*/ 
+CREATE FUNCTION CheckIfDuplicate(
+	IN currentItemRef REFERENCE, 
+	IN destinationRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	DECLARE itnoRef REFERENCE TO currentItemRef.ITNO;
+		
+	-- Check if item number already exists in list
+	DECLARE duplicateRef REFERENCE TO destinationRef;
+	MOVE duplicateRef FIRSTCHILD NAME 'ItemNumber';
+	DECLARE foundDuplicate BOOLEAN FALSE;
+	X : WHILE LASTMOVE (duplicateRef) DO
+		IF itnoRef = duplicateRef THEN
+			SET foundDuplicate = TRUE;
+			LEAVE X;
+		ELSE
+			MOVE duplicateRef NEXTSIBLING;
+		END IF;
+	END WHILE X;
+
+	IF foundDuplicate = FALSE THEN
+		RETURN FALSE; -- No duplicate found, so item does not exist in list
+	ELSE
+		RETURN TRUE; -- A duplicate is found
+	END IF;
+END;
+
+/*
+Checks if an item number is in the TINEGaven assortment. 
+Returns a boolean value of true if the item is in TINEGaven, 
+and false if it is not.
+*/
+CREATE FUNCTION CheckIfInTINEGaven(
+	IN currentItemRef REFERENCE, 
+	IN tineGavenRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	MOVE tineGavenRef FIRSTCHILD NAME 'Item';
+	DECLARE itnoRef REFERENCE TO currentItemRef.ITNO;
+	SET itnoRef = TRIM(itnoRef);
+	X : WHILE LASTMOVE(tineGavenRef) DO
+		IF itnoRef = tineGavenRef.itemNumber THEN
+			RETURN TRUE;
+		END IF;
+		
+		MOVE tineGavenRef NEXTSIBLING NAME 'Item';
+	END WHILE X;
+	RETURN FALSE; -- No match in TINEGaven list
+END;
+
+/*
+Calculates price
+
+Input parameters
+----------------
+Reference to current item - TYPE: REFERENCE
+Unit of package (D or F) - TYPE: CHARACTER
+*/
+CREATE FUNCTION CalculatePrice(
+	IN currentItemRef REFERENCE,
+	IN unit CHAR
+) RETURNS DECIMAL 
+BEGIN
+	DECLARE total DECIMAL 0;
+	DECLARE field CHAR;
+
+--	IF currentItemRef.ITNO = '1048' THEN
+--		DECLARE break BOOLEAN true;
+--	END IF;
+
+	IF UPPER(unit) = 'F' THEN
+		
+		SET total = CAST(currentItemRef.LNAM AS DECIMAL) 
+			  + CAST(currentItemRef.DIA6 AS DECIMAL);
+	
+	ELSEIF UPPER(unit) = 'D' THEN
+		
+		SET total = CAST(currentItemRef.LNAM AS DECIMAL) 
+			  + CAST(currentItemRef.DIA6 AS DECIMAL);
+
+	END IF;
+	
+	IF total = 0 THEN 
+		RETURN NULL;
+	ELSE 
+		RETURN total;
+	END IF;
+END;
+
+
+/*
+Calculates price before discount
+
+Input parameters
+----------------
+Reference to current item - TYPE: REFERENCE
+Unit of package (D or F) - TYPE: DECIMAL
+PriceBeforeDisc = LNAM  + DIA2 + DIA3 + DIA4 + DIA5 + DIA6
+IF DIA2-DIA5 not on exludlist, DIA1 never included 
+*/
+CREATE FUNCTION CalculatePriceBeforeDisc(IN currentItemRef REFERENCE, IN ExcludeDiscountsRef REFERENCE, IN unit char
+) RETURNS DECIMAL 
+BEGIN
+	DECLARE total DECIMAL;
+	
+	IF UPPER(unit) = 'F' THEN
+		SET total = CAST(currentItemRef.LNAM AS DECIMAL);
+	ELSE
+		SET total = CAST(currentItemRef.LNAM AS DECIMAL);
+	END IF;
+	
+	IF  notInExcludList(currentItemRef.CMP2, ExcludeDiscountsRef) THEN
+		SET total = total + CAST(currentItemRef.DIA2 AS DECIMAL);
+	END IF;
+	IF notInExcludList(currentItemRef.CMP3, ExcludeDiscountsRef) THEN
+		SET total = total + CAST(currentItemRef.DIA3 AS DECIMAL);
+	END IF;
+	IF notInExcludList(currentItemRef.CMP4, ExcludeDiscountsRef) THEN
+		SET total = total + CAST(currentItemRef.DIA4 AS DECIMAL);
+	END IF;
+	IF notInExcludList(currentItemRef.CMP5, ExcludeDiscountsRef) THEN
+		SET total = total + CAST(currentItemRef.DIA5 AS DECIMAL);
+	END IF;		
+		
+	SET total = total + CAST(currentItemRef.DIA6 AS DECIMAL);
+	
+	IF total = 0 THEN 
+		RETURN NULL;
+	ELSE 
+		RETURN total;
+	END IF;
+END;
+
+
+/*
+Calculates price pr unit
+
+Input parameters
+----------------
+Reference to current item - TYPE: REFERENCE
+Unit of package (D or F) - TYPE: DECIMAL
+PricePrUnit = (LNAM + DIA6)/Conversion factor 
+*/
+CREATE FUNCTION CalculateDPakPrUnitPrice(
+IN currentItemRef REFERENCE,
+IN variableRef REFERENCE
+) RETURNS DECIMAL 
+BEGIN
+	DECLARE total DECIMAL 0;
+	DECLARE ConversionFactor DECIMAL GetConversionFactor(currentItemRef, variableRef);
+	SET total = CalculatePrice(currentItemRef, 'D');
+	
+	SET total = total / ConversionFactor;
+	
+	SET total = Round(total, 2 MODE ROUND_HALF_UP);
+	
+	IF total = 0 THEN 
+		RETURN NULL;
+	ELSE 
+		RETURN total;
+	END IF;
+END;
+
+/*
+Calculates price pr unit
+
+Input parameters
+----------------
+Reference to current item - TYPE: REFERENCE
+Unit of package (D or F) - TYPE: DECIMAL
+CalculateDPakPrUnitPriceBeforeDisc = dpakPriceBeforeDiscount/Conversion factor 
+*/
+CREATE FUNCTION CalculateDPakPrUnitPriceBeforeDisc(
+IN currentItemRef REFERENCE, 
+IN ExcludeDiscountsRef REFERENCE,
+IN variableRef REFERENCE
+) RETURNS DECIMAL 
+BEGIN
+	DECLARE total DECIMAL 0;
+	DECLARE ConversionFactor DECIMAL GetConversionFactor(currentItemRef, variableRef);
+	SET total = CAST(CalculatePriceBeforeDisc(currentItemRef, ExcludeDiscountsRef, 'D') AS DECIMAL)
+				/ ConversionFactor;
+				
+	SET total = ROUND(total, 2 MODE ROUND_HALF_UP);
+	
+	IF total = 0 THEN 
+		RETURN NULL;
+	ELSE 
+		RETURN total;
+	END IF;
+END;
+
+/*
+Calculates comparisonPrice
+
+Input parameters
+----------------
+Reference to current item - TYPE: REFERENCE
+Unit of package (KG or L) - TYPE: CHARACTER
+*/
+CREATE FUNCTION CalculateComparisonPrice(
+	IN currentItemRef REFERENCE,
+	IN alunRef REFERENCE
+) RETURNS DECIMAL 
+BEGIN
+	DECLARE total DECIMAL 0;
+	MOVE alunRef FIRSTCHILD NAME 'Item';
+	DECLARE itnoRef char TRIM(currentItemRef.ITNO);
+	WHILE LASTMOVE(alunRef) DO
+		IF itnoRef = alunRef.ITNO THEN
+			SET total = CAST(alunRef.LNAM AS DECIMAL); 
+		END IF;
+		MOVE alunRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	
+	IF total = 0 THEN 
+		RETURN NULL;
+	ELSE 
+		RETURN  ROUND(total, 2 MODE ROUND_HALF_UP);
+	END IF;
+END;
+
+--- LOOP lists ---
+
+CREATE FUNCTION inM3List(
+	IN currentItemRef REFERENCE, 
+	IN M3ListRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	MOVE M3ListRef FIRSTCHILD NAME 'Item';
+	DECLARE itnoRef CHAR;
+	SET itnoRef = TRIM(currentItemRef.ITNO);
+	WHILE LASTMOVE(M3ListRef) DO
+		IF itnoRef = M3ListRef.ITNO THEN
+			RETURN TRUE;
+		END IF;
+		
+		MOVE M3ListRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	RETURN FALSE; 
+END;
+
+
+CREATE FUNCTION notInExcludList(
+	IN currentCodeRef REFERENCE, 
+	IN exListRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	DECLARE codeRef CHAR TRIM(currentCodeRef);
+	IF codeRef= '' OR codeRef = NULL THEN
+		RETURN TRUE;
+	END IF;
+	MOVE exListRef FIRSTCHILD NAME 'Row';
+	WHILE LASTMOVE(exListRef) DO
+		IF codeRef = exListRef.code THEN
+			RETURN FALSE;
+		END IF;
+		
+		MOVE exListRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	RETURN TRUE; 
+	END;
+	
+CREATE FUNCTION inExcludList(
+	IN codeRef REFERENCE, 
+	IN exListRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	DECLARE codeIn CHAR codeRef;
+	MOVE exListRef FIRSTCHILD NAME 'Row';
+	WHILE LASTMOVE(exListRef) DO
+		IF codeIn = exListRef.code THEN
+			RETURN TRUE;
+		END IF;
+		
+		MOVE exListRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	RETURN FALSE; 
+END;
+	
+	
+CREATE FUNCTION inTmpList(
+	IN currentItemRef REFERENCE, 
+	IN M3ListRef REFERENCE
+) RETURNS BOOLEAN
+BEGIN
+	MOVE M3ListRef FIRSTCHILD NAME 'ItemNumber';
+	DECLARE listInto CHAR FIELDVALUE(M3ListRef);
+	DECLARE currentItno CHAR TRIM(currentItemRef.ITNO);
+	WHILE LASTMOVE(M3ListRef) DO
+		IF currentItno = listInto THEN
+			RETURN TRUE;
+		END IF;
+		
+		MOVE M3ListRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	RETURN FALSE; 
+END;
+----- return itemInfoRef-------
+CREATE FUNCTION getItemRef(
+	INOUT itemInfoCusor REFERENCE,
+	IN itemInfoRef REFERENCE,  
+	IN itemId CHARACTER
+)
+BEGIN
+	DECLARE listCusor REFERENCE TO itemInfoRef;
+	MOVE listCusor FIRSTCHILD NAME 'Item';
+	WHILE LASTMOVE(listCusor) DO
+		IF listCusor.ITNO = itemId THEN
+			MOVE itemInfoCusor TO listCusor;
+			-- LEAVE WHILE;
+		END IF;
+		MOVE listCusor NEXTSIBLING REPEAT NAME ;
+		END WHILE;
+END;
+-- unit convertion
+CREATE FUNCTION GetConversionFactor(
+IN currentProduct REFERENCE, 
+IN variableRef REFERENCE)
+	RETURNS DECIMAL
+	BEGIN
+		DECLARE varRef REFERENCE TO variableRef;
+		IF currentProduct.MUCOFA IS NULL THEN
+			IF currentProduct.MMUNMS <> 'STK' THEN
+				DECLARE conversionFactor DECIMAL;
+				SET conversionFactor = 
+					THE(SELECT ITEM
+						C.MUCOFA
+					FROM
+						varRef.AllAlternativeConversionFactors.Item[] AS C
+					WHERE
+						C.ITNO = currentProduct.ITNO);
+						
+				RETURN conversionFactor;
+			ELSE
+				RETURN 1.0;
+			END IF;
+		ELSE
+			RETURN currentProduct.MUCOFA;
+		END IF;
+	END;
+/*
+Checks if operation code is in a general ist produced by tineesa DB call
+
+Input parameters
+----------------
+IN codeRef REFERENCE, 
+IN exListRef REFERENCE
+
+Returns TRUE / FALSE
+*/		
+CREATE FUNCTION getFromM3List(
+	IN currentItemRef REFERENCE, 
+	IN M3ListRef REFERENCE,
+	IN getParam CHAR
+) RETURNS CHAR
+BEGIN
+	DECLARE itnoRef CHAR TRIM(currentItemRef.ITNO);
+	MOVE M3ListRef FIRSTCHILD NAME 'Item';
+	WHILE LASTMOVE(M3ListRef) DO
+		IF itnoRef = M3ListRef.ITNO THEN
+			RETURN M3ListRef.{getParam};
+		END IF;
+		
+		MOVE M3ListRef NEXTSIBLING REPEAT NAME ;
+	END WHILE;
+	RETURN ''; -- Value will be filter out since not KG or L
+	END;
+
+/*
+Buildes post message for M3
+
+Input parameters
+----------------
+
+IN jsontree REFERENCE,
+IN customerRef REFERENCE,
+IN itemRef REFERENCE ,
+IN queryParams REFERENCE,
+IN unit char
+
+*/	
+CREATE FUNCTION addProductQuery (
+IN jsontree REFERENCE,
+IN customerRef REFERENCE,
+IN itemRef REFERENCE ,
+IN queryParams REFERENCE,
+IN salesUnit char,
+IN baseUnit char )
+BEGIN
+
+	DECLARE transactionDataRef REFERENCE TO jsontree;
+	CREATE LASTCHILD OF transactionDataRef AS transactionDataRef NAME 'Item';
+	SET transactionDataRef.transaction VALUE = 'GetPriceLine';
+/*
+	IF itemRef.ITNO = '14823' THEN
+		DECLARE break BOOLEAN true;
+	END IF;
+*/
+
+	DECLARE selectedColumnsRef REFERENCE TO transactionDataRef;
+	CREATE FIELD transactionDataRef.selectedColumns AS selectedColumnsRef IDENTITY(JSON.Array)selectedColumns;
+	SET transactionDataRef.selectedColumns.Item[1]='SAPR';
+	SET transactionDataRef.selectedColumns.Item[2]='LNAM';
+	SET transactionDataRef.selectedColumns.Item[3]='DIA1';
+	SET transactionDataRef.selectedColumns.Item[4]='DIA2';
+	SET transactionDataRef.selectedColumns.Item[5]='DIA3';
+	SET transactionDataRef.selectedColumns.Item[6]='DIA4';
+	SET transactionDataRef.selectedColumns.Item[7]='DIA5';
+	SET transactionDataRef.selectedColumns.Item[8]='DIA6';
+	SET transactionDataRef.selectedColumns.Item[9]='CMP1';
+	SET transactionDataRef.selectedColumns.Item[10]='CMP2';
+	SET transactionDataRef.selectedColumns.Item[11]='CMP3';
+	SET transactionDataRef.selectedColumns.Item[12]='CMP4';
+	SET transactionDataRef.selectedColumns.Item[13]='CMP5';
+	SET transactionDataRef.selectedColumns.Item[14]='CMP6';
+	SET transactionDataRef.selectedColumns.Item[15]='ALUN';
+
+	DECLARE recordDataRef REFERENCE TO transactionDataRef;
+	CREATE FIELD transactionDataRef.record AS recordDataRef; 		
+
+
+	SET recordDataRef.FACI VALUE = customerRef.OKFACI;
+	SET recordDataRef.CUNO VALUE = customerRef.OKCUNO;
+	SET recordDataRef.ITNO VALUE = itemRef.ITNO;
+	SET recordDataRef.ORQA VALUE = 1;
+	SET recordDataRef.ALUN VALUE = salesUnit;
+	SET recordDataRef.ORTP VALUE = queryParams.ORTP;
+	SET recordDataRef.DWDT VALUE = queryParams.DATE;
+	--SET recordDataRef.SPUN VALUE = baseUnit;
+
+	IF (baseUnit IN ('KG','L')) THEN
+		SET recordDataRef.SPUN VALUE = baseUnit;
+	END IF;
+
+END;
+	

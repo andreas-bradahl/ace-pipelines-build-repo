@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmDatabase.msgnode="ComIbmDatabase.msgnode" xmlns:ComIbmHTTPHeader.msgnode="ComIbmHTTPHeader.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:putCustomerOrder_add.subflow="putCustomerOrder/add.subflow" xmlns:putCustomerOrder_delete.subflow="putCustomerOrder/delete.subflow"
+    xmlns:putCustomerOrder_update.subflow="putCustomerOrder/update.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="putCustomerOrder/updateOrderInM3.subflow" nsPrefix="putCustomerOrder_updateOrderInM3.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="updateOrderInM3" bundleName="putCustomerOrder/updateOrderInM3" pluginId="TIP026_DSP_Orders_REST"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj16/updateOrderInM3.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj30/updateOrderInM3.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="putCustomerOrder/updateOrderInM3" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="1016,266">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="putCustomerOrder/updateOrderInM3" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="579,20" computeExpression="esql://routine/putCustomerOrder#esqlIterateAndFilterOriginRequest.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="IterateAndFilterOriginRequest"/>
+      </nodes>
+      <nodes xmi:type="putCustomerOrder_update.subflow:FCMComposite_1" xmi:id="FCMComposite_1_2" location="775,102">
+        <translation xmi:type="utility:ConstantString" string="update"/>
+      </nodes>
+      <nodes xmi:type="putCustomerOrder_add.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="775,20">
+        <translation xmi:type="utility:ConstantString" string="add"/>
+      </nodes>
+      <nodes xmi:type="putCustomerOrder_delete.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="775,184">
+        <translation xmi:type="utility:ConstantString" string="delete"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="1012,20">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.HTTPError" bundleName="putCustomerOrder/updateOrderInM3" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="93,20" dataSource="tine_esa" statement="esql://routine/Common#DB_getValueCurrencyAndItemsBuyableInSalesClass.Main">
+        <translation xmi:type="utility:ConstantString" string="GetValueCurrencyAndItemsBuyableInSalesClass"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="370,20" computeExpression="esql://routine/putCustomerOrder#esqlCheckIfNoOrderLinesAfterUpdate.Main">
+        <translation xmi:type="utility:ConstantString" string="CheckIfNoOrderLinesAfterUpdate"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="586,348" computeExpression="esql://routine/putCustomerOrder#esqlPrepareOIZ100MIDelHead.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepareOIZ100MI/DelHead"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="874,348" URLSpecifier="https://m3t10005.tine.no:20008/m3api-rest/execute/OIZ100MI/DelHead" httpMethod="GET" httpVersion="1.1" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="OIZ100MI/DelHead"/>
+      </nodes>
+      <nodes xmi:type="ComIbmHTTPHeader.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="771,348" httpRequestHeader="Add">
+        <translation xmi:type="utility:ConstantString" string="HTTPHeader"/>
+        <nameValue4RequestHeader name="Accept" value="application/json"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.HTTPError" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.HTTPError" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_6" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

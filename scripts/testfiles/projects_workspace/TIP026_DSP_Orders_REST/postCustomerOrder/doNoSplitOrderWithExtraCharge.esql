@@ -1,0 +1,56 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE doNoSplitOrderWithExtraCharge
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE noExtraOrderCharge BOOLEAN varRef.noExtraOrderCharge;
+		
+		SET Environment.OriginalOrderRequest.Data = orderRequestRef;
+		
+		SET varRef.Global.nonWarehouseOrder = false;
+		SET varRef.isExtraOrderCharge = false;
+		
+		-- check if enough clips on clipcard if clipcard supplied		
+		IF LENGTH(orderRequestRef.clipCard) > 0 THEN
+		
+			PROPAGATE TO TERMINAL 'out1';
+		
+		END IF;
+		
+		DECLARE noClipsLeft BOOLEAN varRef.noClipsLeft; -- set true if customer uses an empty clipcard
+		
+		IF noClipsLeft THEN
+			
+			RETURN FALSE;
+			
+		END IF;
+		
+		
+		-- do orderRequest
+		SET orderRequestRef = Environment.OriginalOrderRequest.Data;
+		
+		DECLARE crmRef REFERENCE TO Environment.Variables.CRM;
+		DECLARE extraOrderDiscountIs100 BOOLEAN crmRef.discountIs100;
+		
+		IF noExtraOrderCharge OR extraOrderDiscountIs100 THEN
+			
+			SET varRef.Global.isLastOrder = true;
+			RETURN TRUE;
+			
+		ELSE
+			--RETURN TRUE;
+			PROPAGATE TO TERMINAL 'out';
+		
+		END IF;
+		
+		-- do extraOrderCharges		
+		SET varRef.isExtraOrderCharge = true;
+		SET varRef.Global.isLastOrder = true;
+		
+		RETURN true;
+	END;
+END MODULE;

@@ -1,0 +1,64 @@
+BROKER SCHEMA putCustomerOrder
+
+/* for add action only */ 
+CREATE DATABASE MODULE DB_ProductSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+
+		DECLARE sqlQuery CHAR	'
+								SELECT ZBSLDT FROM ZITBAL 
+								WHERE ZBCONO = ? 
+								AND ZBWHLO = ? 
+								AND ZBITNO = ?
+								';
+		SET sqlQuery = TRIM(sqlQuery);
+		DECLARE todaysDate DECIMAL CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'yyyyMMdd') AS DECIMAL);
+		DECLARE productNumber CHAR '';
+		DECLARE warehouseNumber CHAR '';
+		DECLARE companyNumber CHAR TRIM(orderRequestRef.companyNumber);
+		DECLARE zero DECIMAL 0;
+		DECLARE action CHAR '';
+		DECLARE validAction1 CHAR 'add';
+		DECLARE sellByDateTest BOOLEAN true;
+		DECLARE isValidAction BOOLEAN;
+		DECLARE isLostSales BOOLEAN;
+		
+		FOR orderLine AS orderRequestRef.orderLines.Item[] DO
+			SET action = LOWER(TRIM(orderLine.action));
+			SET isLostSales = orderLine.isLostSales;
+			
+			IF NOT isLostSales AND action = validAction1 THEN
+				SET isValidAction = true;
+			ELSE
+				SET isValidAction = false;
+			END IF;	
+			
+			IF isValidAction AND sellByDateTest THEN
+				SET productNumber = TRIM(orderLine.sku);
+				SET warehouseNumber = TRIM(orderLine.lostSalesWarehouse);
+				SET orderLine.sellByDate = PASSTHRU(sqlQuery, companyNumber, warehouseNumber, productNumber);
+				SET orderLine.sellByDate = COALESCE(FIELDVALUE(orderLine.sellByDate.ZBSLDT), zero);
+				
+				IF orderLine.sellByDate > todaysDate THEN
+					SET sellByDateTest = false;
+				END IF;
+				
+				DELETE FIELD orderLine.sellByDate.ZBSLDT;
+			END IF;
+		END FOR;
+		
+		IF sellByDateTest THEN
+			RETURN true;
+			
+		ELSE
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'SELL_BY_DATE', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		RETURN false;
+	END;
+END MODULE;

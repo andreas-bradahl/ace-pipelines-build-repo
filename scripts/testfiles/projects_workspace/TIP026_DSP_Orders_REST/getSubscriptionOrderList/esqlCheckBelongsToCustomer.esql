@@ -1,0 +1,29 @@
+BROKER SCHEMA getSubscriptionOrderList
+
+
+CREATE COMPUTE MODULE esqlCheckBelongsToCustomer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE OriginRequest REFERENCE TO Environment.Variables.Global.OriginRequest;
+		
+		DECLARE responseRef REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.Response;
+
+		FOR order AS Environment.Variables.HTTPResponses.OIZ163MI_LstHead.Item[] DO
+			
+			IF OriginRequest.ns:customerNumber = TRIM(order.CUNO) THEN
+				
+				IF order.RADD = '' THEN
+					SET order.RADD = '7';
+				END IF;
+				
+				CREATE LASTCHILD OF Environment.Variables.Response AS responseRef NAME 'customerOrder';
+				SET responseRef = order;
+				
+			END IF;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

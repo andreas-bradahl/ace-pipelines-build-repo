@@ -1,0 +1,29 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlRouteResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		IF InputRoot.XMLNSC.ns:postSubscriptionOrderResponseOK.ns:success IS NOT NULL THEN
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSEIF InputRoot.XMLNSC.ns:postSubscriptionOrderResponseFailed.ns:success IS NOT NULL THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF InputRoot.XMLNSC.ns:postSubscriptionOrderResponseError.ns:success IS NOT NULL THEN
+			
+			PROPAGATE TO TERMINAL 'out2';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="OIZ340MILstSupplSummary"
+    	type="OIZ340MILstSupplSummary">
+    </xsd:element>
+    
+    <xsd:complexType name="OIZ340MILstSupplSummary">
+    	<xsd:sequence>
+            <xsd:element name="Item" type="Item" minOccurs="0"
+            	maxOccurs="unbounded">
+            </xsd:element>
+            
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Item">
+    	<xsd:sequence>
+    		<xsd:element name="WHLO" type="xsd:string"></xsd:element>
+    		<xsd:element name="ITNO" type="xsd:string"></xsd:element>
+    		<xsd:element name="PLDT" type="xsd:string"></xsd:element>
+    		<xsd:element name="CODT" type="xsd:string"></xsd:element>
+    		<xsd:element name="TRQA" type="xsd:string"></xsd:element>
+    		<xsd:element name="MAR2" type="xsd:string"></xsd:element>
+    		<xsd:element name="SWHL" type="xsd:string"></xsd:element>
+    		<xsd:element name="ALUN" type="xsd:string"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

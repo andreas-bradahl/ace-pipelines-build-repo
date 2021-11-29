@@ -1,0 +1,63 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE getItemClasses
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		
+		DECLARE companyNumber CHAR globalVarRef.company_number;
+		DECLARE customerNumber CHAR globalVarRef.customer_number;
+
+		
+		CALL storeItemClassCodes(globalVarRef);
+		SET globalVarRef.paymentMethod = getPaymentMethod(companyNumber, customerNumber);
+
+		
+
+		
+		RETURN TRUE;
+	END;
+	
+CREATE FUNCTION getPaymentMethod(IN companyNumber CHAR, IN customerNumber CHAR) RETURNS CHAR
+	BEGIN
+		CREATE FIELD LocalEnvironment.getPaymentMethod;
+		DECLARE getPaymentMethodRef REFERENCE TO LocalEnvironment.getPaymentMethod;
+		
+		DECLARE sqlQuery CHAR 'SELECT OKTEPY from OCUSMA WHERE OKCONO=? and OKCUNO=?';
+		
+		SET getPaymentMethodRef = PASSTHRU(sqlQuery, companyNumber, customerNumber);
+		
+		RETURN TRIM(getPaymentMethodRef.OKTEPY);
+	END;
+	
+CREATE PROCEDURE storeItemClassCodes(IN globalVarRef REFERENCE)
+	BEGIN
+		CREATE FIELD globalVarRef.ItemClasses;
+		DECLARE itemClassesRef, itemClassCursor REFERENCE TO globalVarRef.ItemClasses;
+		
+		DECLARE sqlQuery CHAR 'select MMITCL AS itemclass from MITMAS where MMITNO=?';
+		
+		FOR entry AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+				
+			DECLARE itno CHAR entry.ITNO;
+			MOVE itemClassCursor TO itemClassesRef.{itno};
+			
+			IF NOT LASTMOVE(itemClassCursor) THEN
+				
+				CREATE LASTCHILD OF itemClassesRef AS itemClassCursor NAME itno;
+				SET itemClassCursor = PASSTHRU(sqlQuery, itno); 
+				
+				FOR entry AS itemClassCursor.itemclass[] DO
+					
+					SET entry = FIELDVALUE(entry.itemclass);
+					DELETE FIELD entry.itemclass;
+					
+				END FOR;
+				
+			END IF;
+		
+		END FOR;		
+	END;
+
+END MODULE;

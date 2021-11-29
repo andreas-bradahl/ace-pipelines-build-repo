@@ -1,0 +1,30 @@
+
+CREATE DATABASE MODULE getESATrueFasleFilterData_GetESALeadTimeExceptions
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+		
+		DECLARE source CHARACTER customerRef.CurrentDate;
+		DECLARE target DATE;
+		SET target = CAST(source AS DATE FORMAT 'yyyyMMdd');
+		DECLARE todayDateChar CHAR CAST(target AS CHARACTER FORMAT 'yyyy-MM-dd');
+
+		DECLARE esaQuery CHARACTER '
+		select orderDate, orderBefore, leadDays, pickupTime
+		from zLeadTimeExceptions
+		inner join zSupplyModel supplymodel
+		on supplymodel.id = supplyModelId
+		where supplyModel = ? 
+		AND warehouse = ? 
+		AND orderDate >= ? 
+		order by orderDate asc
+		';
+
+		CREATE FIELD Environment.Variables.ProductData.LeadTimeExceptions;
+		SET Environment.Variables.ProductData.LeadTimeExceptions.Row[] = PASSTHRU(esaQuery, customerRef.OKSPLM,customerRef.OKWHLO, todayDateChar);--Format '2020-04-13'
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

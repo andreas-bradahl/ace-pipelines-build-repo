@@ -1,0 +1,19 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE IntoBatchOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRef REFERENCE TO InputRoot.JSON.Data;
+		
+		CREATE FIELD Environment.Variables.getCustomerOrderListResponseOrderHead_JSONArray;
+		
+		DECLARE batchOrder REFERENCE TO Environment.Variables.getCustomerOrderListResponseOrderHead_JSONArray;
+		DECLARE orderCursor REFERENCE TO Environment;
+		
+		CREATE LASTCHILD OF batchOrder AS orderCursor NAME 'Item';
+		SET orderCursor = orderRef;
+				
+		RETURN TRUE;
+	END;
+END MODULE;

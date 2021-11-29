@@ -1,0 +1,11 @@
+CREATE COMPUTE MODULE StoreReply
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- store reply
+		CALL CopyJsonTreeTo(InputRoot.JSON.Data, Environment);
+		-- forward user auth
+		SET OutputRoot.HTTPRequestHeader.Authorization = InputRoot.HTTPRequestHeader.Authorization;
+		-- forward HTTP HEADERS
+		SET OutputRoot.HTTPRequestHeader."Accept" = InputRoot.HTTPRequestHeader."Accept";
+	END;
+END MODULE;

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrder" version="8.0.5.0" xmlns:map="getCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="HTTPResponses">  
+    <xsd:complexType>  
+      <xsd:sequence>  
+        <xsd:element name="GetOrderValue">  
+          <xsd:complexType>  
+            <xsd:sequence>  
+              <xsd:element name="ONET" type="xsd:string"/>  
+              <xsd:element name="EXAM" type="xsd:string"/>  
+              <xsd:element name="VTAM" type="xsd:string"/>  
+              <xsd:element name="TOPY" type="xsd:string"/>  
+              <xsd:element name="BRAM" type="xsd:string"/>  
+            </xsd:sequence>  
+          </xsd:complexType>  
+        </xsd:element>  
+      </xsd:sequence>  
+    </xsd:complexType>  
+  </xsd:element>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapOIZ100MIGetOrderValueToEnv">
+        <input path="$var3/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="HTTPResponses" ref="var2"/>
+        </input>
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="HTTPResponses" ref="var2"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <foreach>
+                    <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item" var="Item1"/>
+                    <output path="Variables/HTTPResponses/GetOrderValue"/>
+                    <foreach>
+                        <input path="$Item1/NameValue/Item" var="Item"/>
+                        <output path="ONET" var="ONET"/>
+                        <output path="EXAM" var="EXAM"/>
+                        <output path="VTAM" var="VTAM"/>
+                        <output path="TOPY" var="TOPY"/>
+                        <output path="BRAM" var="BRAM"/>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name"/>
+                            <output path="$ONET/."/>
+                            <param name="input" value="$Value"/>
+                            <test lang="xpath">$Name = "ONET"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value1"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name1"/>
+                            <output path="$EXAM/."/>
+                            <param name="input" value="$Value1"/>
+                            <test lang="xpath">$Name1 = "EXAM"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value2"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name2"/>
+                            <output path="$VTAM/."/>
+                            <param name="input" value="$Value2"/>
+                            <test lang="xpath">$Name2 = "VTAM"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value3"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name3"/>
+                            <output path="$TOPY/."/>
+                            <param name="input" value="$Value3"/>
+                            <test lang="xpath">$Name3 = "TOPY"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value4"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name4"/>
+                            <output path="$BRAM/."/>
+                            <param name="input" value="$Value4"/>
+                            <test lang="xpath">$Name4 = "BRAM"</test>
+                        </function>
+                    </foreach>
+                </foreach>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,24 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE setDiscountPercentageField
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		
+		DECLARE discountModel CHAR varRef.ExtraOrderCharge.discountModel;
+		
+		DECLARE dipField CHAR getSingleValueFromApplicationData('zDiscountField_' || discountModel, LocalEnvironment); 
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+/*
+
+select value from tine_esa.dbo.ApplicationData
+where parameter = 'zDiscountField_@discountModel'
+
+*/

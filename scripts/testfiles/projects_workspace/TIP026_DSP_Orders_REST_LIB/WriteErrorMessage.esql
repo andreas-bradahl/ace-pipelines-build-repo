@@ -1,0 +1,21 @@
+
+
+CREATE COMPUTE MODULE WriteErrorMessage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputRoot.JSON.Data;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = Environment.Variables.HTTPCode;
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+		SET OutputRoot.JSON.Data.Response = Environment.Variables.Response;
+		SET OutputRoot.JSON.Data.Error_Code = Environment.Variables.Error_Reason;
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE PROCEDURE setErrorMessage (IN httpCode INT, IN response CHAR, IN reason CHAR, IN environmentRef REFERENCE)
+BEGIN
+	SET environmentRef.Variables.HTTPCode = httpCode;
+	SET environmentRef.Variables.Response = response;
+	SET environmentRef.Variables.Error_Reason = reason;
+END;

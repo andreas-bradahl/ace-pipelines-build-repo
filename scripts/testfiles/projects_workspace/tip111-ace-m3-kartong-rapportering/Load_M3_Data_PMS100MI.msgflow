@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:exceptionFaulthandler.subflow="exceptionFaulthandler.subflow" xmlns:incomingMQ.subflow="incomingMQ.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="Load_M3_Data_PMS100MI.msgflow" nsPrefix="Load_M3_Data_PMS100MI.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.m3authorization" name="m3authorization" defaultValueLiteral="Basic dGluZVx0aW5laW50OmludHRpbmU">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="Load_M3_Data_PMS100MI" bundleName="Load_M3_Data_PMS100MI" pluginId="tip111-ace-m3-kartong-rapportering"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip111-ace-m3-kartong-rapportering/icons/full/obj16/Load_M3_Data_PMS100MI.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip111-ace-m3-kartong-rapportering/icons/full/obj30/Load_M3_Data_PMS100MI.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="69,220" queueName="TIP111.M3.DATA.TRIGGER" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="TIP111.M3.DATA.TRIGGER"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="326,220" computeExpression="esql://routine/#Load_M3_Data_PMS100MI_ReqToPMS100MI_Select.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ReqToPMS100MI/Select"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="508,221" URLSpecifier="https://m3t10005.tine.no:20800/m3api-rest/execute/PMS100MI/Select;returncols=MFNO,MAUN,PRNO" timeoutForServer="10" httpMethod="GET" httpVersion="1.1" protocol="TLSv1.2" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="PMS100MI/Select"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="674,221" computeExpression="esql://routine/#Load_M3_Data_PMS100MI_saveResp.Main">
+        <translation xmi:type="utility:ConstantString" string="saveResp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="756,222" queueName="TIP111.M3.DATA.PMS100MI" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="Purge_TIP111.M3.DATA.PMS100MI"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="983,218" computeExpression="esql://routine/#Load_M3_Data_PMS100MI_SendToQueue.Main">
+        <translation xmi:type="utility:ConstantString" string="SendToQueue"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="1139,219" queueName="TIP111.M3.DATA.PMS100MI">
+        <translation xmi:type="utility:ConstantString" string="TIP111.M3.DATA.PMS100MI"/>
+      </nodes>
+      <nodes xmi:type="incomingMQ.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="220,220">
+        <translation xmi:type="utility:ConstantString" string="incomingMQ"/>
+      </nodes>
+      <nodes xmi:type="exceptionFaulthandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="117,363">
+        <translation xmi:type="utility:ConstantString" string="exceptionFaulthandler"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.m3authorization">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.m3authorization" bundleName="Load_M3_Data_PMS100MI" pluginId="tip111-ace-m3-kartong-rapportering"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard>
+      <stickyNote location="1104,57">
+        <body xmi:type="utility:ConstantString" string="This flow deletes existing message from TIP111.M3.DATA.PMS100MI &#xA;and reload it."/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

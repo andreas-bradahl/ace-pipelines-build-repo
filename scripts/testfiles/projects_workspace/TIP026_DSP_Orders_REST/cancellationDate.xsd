@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP026_DSP_Orders_REST" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP026_DSP_Orders_REST">
+
+
+
+    <element name="postCancellationDateRequest" type="co:postCancellationDateRequest"></element>
+
+    <complexType name="postCancellationDateRequest">
+    	<sequence>
+    		<element name="companyNumber" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="customerNumber" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="date" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <element name="postCancellationDateResponseOK" type="co:postCancellationDateResponseOK"></element>
+
+    <complexType name="postCancellationDateResponseOK">
+    	<sequence>
+    		<element name="success" type="boolean" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <element name="deleteCancellationDateRequest" type="co:deleteCancellationDateRequest"></element>
+
+    <complexType name="deleteCancellationDateRequest">
+    	<sequence>
+    		<element name="companyNumber" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="customerNumber" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="date" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <element name="deleteCancellationDateResponseOK" type="co:deleteCancellationDateResponseOK"></element>
+
+    <complexType name="deleteCancellationDateResponseOK">
+    	<sequence>
+    		<element name="success" type="boolean" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+</schema>

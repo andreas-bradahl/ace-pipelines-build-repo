@@ -1,0 +1,70 @@
+
+
+CREATE COMPUTE MODULE getItems_FillCacheTimer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+			SET InputLocalEnvironment.Variables.skus = Environment.Variables.skus;
+			SET InputLocalEnvironment.Variables.Units = Environment.Variables.Units;
+			IF InputLocalEnvironment.HTTP.Input.Method IS NULL AND CACHE.CacheFromDateTime IS  NULL THEN
+			--timer creation only on bootup locally
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Onstart Timer , initiate Cache update from file');
+			CALL CreateSkuCache();
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Onstart Timer , DONE');
+			END IF;
+		-- CALL CopyEntireMessage();
+		RETURN FALSE;
+	END;
+CREATE PROCEDURE CreateSkuCache() BEGIN
+		--SET OutputRoot = InputRoot;
+		SET CACHE.Valid ='UpdateInProgress';
+		SET CACHE.RequestDateTime  =  CURRENT_TIMESTAMP;
+		SET CACHE.CacheFromDateTime =  CURRENT_TIMESTAMP;
+		DELETE FIELD Environment.*;
+		DELETE FIELD Environment;
+		DELETE FIELD CACHE.skuData;
+		DELETE FIELD CACHE.Data;
+--		DELETE FIELD CACHE.*;
+--		DELETE FIELD CACHE;
+		DECLARE inRef REFERENCE TO InputLocalEnvironment.Variables.skus;
+		DECLARE inPreferred REFERENCE TO InputLocalEnvironment.Variables.Units.Item;
+		DECLARE outRef REFERENCE TO CACHE;
+		DECLARE preferredRef REFERENCE TO CACHE;
+		CREATE LASTCHILD OF CACHE.ItemDataCache  as outRef DOMAIN('JSON') TYPE Name NAME 'ItemDataCache';
+		CREATE LASTCHILD OF CACHE.preferredDataCache AS preferredRef DOMAIN('JSON') TYPE Name NAME 'preferredDataCache';
+		CREATE FIELD outRef IDENTITY(JSON.Object)skuData;
+		CREATE FIELD preferredRef IDENTITY(JSON.Object)preferredData;
+		MOVE inRef FIRSTCHILD;
+		While ( LASTMOVE(inRef) ) DO
+			CREATE LASTCHILD OF CACHE.ItemDataCache.skuData AS outRef NAME inRef.sku;
+			SET outRef = inRef;
+		MOVE inRef NEXTSIBLING;
+		END WHILE;
+		MOVE inPreferred FIRSTCHILD;
+		WHILE LASTMOVE(inPreferred) DO
+			CREATE LASTCHILD OF CACHE.preferredDataCache AS preferredRef NAME FIELDNAME(inPreferred);
+			SET preferredRef = inPreferred;
+			MOVE inPreferred NEXTSIBLING;
+		END WHILE;
+
+		DECLARE inRef2 REFERENCE TO InputLocalEnvironment.Variables.skus;
+		--DECLARE outre REFERENCE TO CACHE.ItemDataCache;
+		CREATE LASTCHILD OF CACHE.ItemDataCache  as outRef DOMAIN('JSON') TYPE Name NAME 'Data';
+		CREATE FIELD outRef IDENTITY(JSON.Object)Data;
+		SET outRef = inRef2;
+		
+		--DECLARE xmlAsBlobsku BLOB ASBITSTREAM(OutputRoot CCSID 1208);
+		--SET CACHE.BLOB.BLOB2=xmlAsBlobsku;
+		--DELETE FIELD OutputRoot;
+--		DECLARE xmlAsBlob BLOB ASBITSTREAM(InputRoot.JSON CCSID 1208);
+--		SET CACHE.BLOB.BLOB=xmlAsBlob;
+--		SET xmlAsBlob =null;
+		--SET xmlAsBlob=CACHE.BLOB.BLOB;
+		--CREATE LASTCHILD OF CACHE.ItemDataCache2 DOMAIN('JSON') PARSE(xmlAsBlob) ;
+
+		
+		SET CACHE.Valid  =  'OK';
+		SET Environment.Cache.Valid = 'OK';
+	END;
+
+END MODULE;

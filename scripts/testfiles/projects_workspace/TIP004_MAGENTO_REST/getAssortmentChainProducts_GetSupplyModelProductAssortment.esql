@@ -1,0 +1,144 @@
+
+
+
+
+CREATE DATABASE MODULE getAssortmentChainProducts_GetSupplyModelProductAssortment
+	
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE supplyModelRef REFERENCE TO Environment.Variables.SupplyModel;
+		DECLARE potentialItemsRef REFERENCE TO supplyModelRef.PotentialItems;
+		MOVE potentialItemsRef FIRSTCHILD;
+		DECLARE supplyModelQuery CHAR;	
+		DECLARE queryVariable CHAR '';
+		
+		DECLARE showSellByDateProduct REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		 
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;	
+
+		IF potentialItemsRef.Priority IS NOT NULL THEN
+		WHILE LASTMOVE(potentialItemsRef) DO
+			DECLARE splmQueryPart1 CHARACTER
+			'SELECT DISTINCT OIITNO AS ITNO, MBWHLO,ZBSLDT,CVVTP1, MUCOFA, MMUNMS,MMITCL, C4PREX
+			FROM OCHCUS
+			
+			INNER JOIN OCUSMA
+			ON OSCONO = OKCONO
+			AND OSCUNO = OKCUNO
+			
+			INNER JOIN OASCUS
+			ON OCCONO=OSCONO
+			AND OCCUNO = ?
+			AND OCFDAT <= ?
+			AND OCTDAT >= ?
+			
+			INNER JOIN MSPLMX
+			ON C4CONO=OSCONO
+			AND C4SPLM=OKSPLM
+			AND C4PREX= CAST(? AS CHAR(2))
+			AND C4FDAT <= ?
+			AND C4TDAT >= ?
+			
+			INNER JOIN MITMAS
+			ON MMCONO=C4CONO
+			AND MMITNO = '|| potentialItemsRef.Column ||'
+			AND SUBSTRING(MMSPE2, CAST(? AS INT),1)=''1''
+			
+			INNER JOIN OASITN
+			ON OICONO = OSCONO
+			AND OIASCD = ?
+			AND OIITNO = MMITNO
+			AND OIFDAT <= ?
+			AND OITDAT >= ?
+			
+			INNER JOIN MITBAL
+			ON MBCONO=MMCONO
+			AND MMITNO=MBITNO
+			AND MBWHLO=C4FWHL
+			AND (MBSTAT = ''20'' OR MBSTAT = ''50'')
+			
+			INNER JOIN MITWHL
+			ON MWCONO=MBCONO
+			AND MWWHLO=MBWHLO
+			
+			INNER JOIN CVATPC
+			ON CVCONO=MWCONO
+			AND CVDIVI=MBDIVI
+			AND CVCSCD=MWCSCD
+			AND CVVTCD=MBVTCS
+			
+			LEFT JOIN ' || cusfdbName || '.ZITBAL
+			ON MBCONO=ZBCONO
+			AND MBWHLO=ZBWHLO
+			AND MBITNO=ZBITNO
+			
+			LEFT JOIN MITAUN
+			ON MMITNO=MUITNO
+			AND MUAUS2 = ''1''
+			AND MUAUTP = ''1''
+			AND MUCONO = MMCONO
+			
+			WHERE
+			OSCONO=?
+			AND OSCUNO=?
+			' || queryVariable || '
+			';
+
+			IF  Environment.Variables.UserInfo.OnlyLimited  = 'YES' THEN
+				SET supplyModelQuery = splmQueryPart1;
+			ELSE
+				SET supplyModelQuery = splmQueryPart1 || ' AND MMACHK = 1 ';
+			END IF;		
+					
+
+
+			SET Environment.Variables.TempItem.Item[] =
+			PASSTHRU(supplyModelQuery
+			VALUES (
+			customerRef.BusinessChain,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate,
+			potentialItemsRef.Priority,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate,
+			customerRef.SalesChannelNumber,
+			customerRef.Assortment,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate,
+			customerRef.OKCONO,
+			customerRef.OKCUNO
+
+			));
+
+--			LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Line 97');
+			DECLARE tempRef, itemRef REFERENCE TO Environment.Variables.TempItem;
+			MOVE tempRef FIRSTCHILD NAME 'Item';
+			CREATE FIELD Environment.Variables.ProductData.BusinessChainAssortment.SupplyModel.{customerRef.BusinessChain}.{customerRef.Assortment} AS itemRef;
+			WHILE LASTMOVE(tempRef) DO
+				CREATE LASTCHILD OF itemRef FROM tempRef;
+
+				MOVE tempRef NEXTSIBLING REPEAT NAME;
+			END WHILE;
+
+			MOVE potentialItemsRef NEXTSIBLING;
+			DELETE FIELD Environment.Variables.TempItem;
+		END WHILE;
+		
+		DECLARE count INT CARDINALITY(Environment.Variables.ProductData.BusinessChainAssortment.SupplyModel.{customerRef.BusinessChain}.{customerRef.Assortment}.Item[]);
+		SET Environment.Variables.ProductData.BusinessChainAssortment.SupplyModel.{customerRef.BusinessChain}.{customerRef.Assortment} = count;
+		END IF;
+		RETURN TRUE;
+	END;
+
+END MODULE;

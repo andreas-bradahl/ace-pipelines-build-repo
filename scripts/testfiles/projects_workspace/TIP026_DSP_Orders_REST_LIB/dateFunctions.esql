@@ -1,0 +1,156 @@
+CREATE FUNCTION getDateByOffset (IN offsetInDays INT, IN workdaysOnly BOOLEAN, IN datum DATE) RETURNS DATE
+	BEGIN
+		
+		IF offsetInDays = 0 THEN
+			
+			RETURN datum;
+			
+		END IF;
+		
+		DECLARE offset INTERVAL CAST(offsetInDays AS INTERVAL DAY);
+		
+		
+		IF NOT workdaysOnly THEN
+			
+			RETURN datum + offset;
+			
+		ELSE
+			
+			DECLARE direction INT 1;
+			
+			IF 0 > offsetInDays THEN
+				
+				SET direction = -1;
+				
+			END IF;
+			
+			DECLARE tempDatum DATE datum;
+			DECLARE counter INT 0;
+			SET offset = CAST(direction AS INTERVAL DAY);
+			
+			WHILE counter < offsetInDays * direction DO
+				
+				SET tempDatum = tempDatum + offset;
+				
+				IF isWorkDay(tempDatum) THEN
+					
+					SET counter = counter + 1;
+					
+				END IF;
+				
+			END WHILE;
+			
+			RETURN tempDatum;
+			
+		END IF;			
+	END;
+
+
+CREATE FUNCTION isWorkDay(IN datum DATE) RETURNS BOOLEAN
+	BEGIN
+		DECLARE isWorkDay BOOLEAN true;
+		
+		IF EXTRACT(DAYOFWEEK FROM datum) = 1 OR EXTRACT(DAYOFWEEK FROM datum) = 7 THEN
+			
+			SET isWorkDay = false;
+			RETURN isWorkDay;
+		
+		END IF;
+		
+		DECLARE mmdd CHAR CAST(datum AS CHAR FORMAT 'MMdd');
+		
+		IF mmdd = '0101' OR mmdd = '0501' OR mmdd = '0517' OR mmdd = '1225' OR mmdd = '1226' THEN
+			
+			SET isWorkDay = false;
+			RETURN isWorkDay;
+			
+		END IF;
+		
+		DECLARE easterSunday DATE getEasterSunday(EXTRACT(YEAR FROM datum));
+		
+		IF easterSunday - INTERVAL '3' DAY = datum THEN
+			
+			SET isWorkDay = false;
+			
+		ELSEIF easterSunday - INTERVAL '2' DAY = datum THEN
+			
+			SET isWorkDay = false;
+			
+		ELSEIF easterSunday + INTERVAL '1' DAY = datum THEN
+			
+			SET isWorkDay = false;
+		
+		ELSEIF easterSunday + INTERVAL '39' DAY = datum THEN
+			
+			SET isWorkDay = false;
+		
+		ELSEIF easterSunday + INTERVAL '50' DAY = datum THEN
+			
+			SET isWorkDay = false;
+		
+		END IF;
+		
+		RETURN isWorkDay;
+	END;
+	
+CREATE FUNCTION getEasterSunday (IN annus INT) RETURNS DATE
+	BEGIN
+		DECLARE easterSunday DATE pascalFullMoonDate(annus);
+		
+		WHILE EXTRACT(DAYOFWEEK FROM easterSunday) <> 1 DO
+		
+			SET easterSunday = easterSunday + INTERVAL '1' DAY;
+		
+		END WHILE;
+		
+		RETURN easterSunday;
+	END;
+	
+CREATE FUNCTION pascalFullMoonDate (IN annus INT) RETURNS DATE
+	BEGIN
+		DECLARE pfmIndex INT MOD(annus, 19) + 1;
+		
+		DECLARE datum CHAR '';
+		
+		IF pfmIndex = 1 THEN
+			SET datum = '0414';
+		ELSEIF pfmIndex = 2 THEN
+			SET datum = '0403';
+		ELSEIF pfmIndex = 3 THEN
+			SET datum = '0323';
+		ELSEIF pfmIndex = 4 THEN
+			SET datum = '0411';
+		ELSEIF pfmIndex = 5 THEN
+			SET datum = '0331';
+		ELSEIF pfmIndex = 6 THEN
+			SET datum = '0418';
+		ELSEIF pfmIndex = 7 THEN
+			SET datum = '0408';
+		ELSEIF pfmIndex = 8 THEN
+			SET datum = '0328';
+		ELSEIF pfmIndex = 9 THEN
+			SET datum = '0416';
+		ELSEIF pfmIndex = 10 THEN
+			SET datum = '0405';
+		ELSEIF pfmIndex = 11 THEN
+			SET datum = '0325';
+		ELSEIF pfmIndex = 12 THEN
+			SET datum = '0413';
+		ELSEIF pfmIndex = 13 THEN
+			SET datum = '0402';
+		ELSEIF pfmIndex = 14 THEN
+			SET datum = '0322';
+		ELSEIF pfmIndex = 15 THEN
+			SET datum = '0410';
+		ELSEIF pfmIndex = 16 THEN
+			SET datum = '0330';
+		ELSEIF pfmIndex = 17 THEN
+			SET datum = '0417';
+		ELSEIF pfmIndex = 18 THEN
+			SET datum = '0407';
+		ELSEIF pfmIndex = 19 THEN
+			SET datum = '0327';
+		END IF;
+		
+		RETURN CAST(CAST(annus as CHAR)||datum AS DATE FORMAT 'yyyyMMdd');
+	END;

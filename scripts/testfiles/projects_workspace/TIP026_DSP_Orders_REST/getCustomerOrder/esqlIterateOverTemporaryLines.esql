@@ -1,0 +1,20 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlIterateOverTemporaryLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		FOR temporaryOrder AS Environment.Variables.HTTPResponses.LstBatchLine.Item[] DO
+			
+			SET OutputLocalEnvironment.Variables.TemporaryOrder = temporaryOrder;	
+			PROPAGATE TO TERMINAL 'out';		
+		END FOR;
+		
+		DELETE FIELD Environment.Variables.HTTPResponses.LstBatchLine;
+		
+		PROPAGATE TO TERMINAL 'out1';
+		
+		RETURN FALSE;
+	END;
+END MODULE;

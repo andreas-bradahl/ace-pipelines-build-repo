@@ -1,0 +1,22 @@
+
+
+CREATE DATABASE MODULE getAssortmentChainProducts_GetBusinessChainAssortments
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+
+		DECLARE m3Query CHAR
+		'SELECT OCASCD
+		FROM OASCUS
+		WHERE OCCONO=100
+		AND OCCUNO= ?';
+
+		SET customerRef.BusinessChain.Assortment[] =
+		PASSTHRU(m3Query
+		VALUES (customerRef.BusinessChain));
+		-- DECLARE count INT CARDINALITY(customerRef.BusinessChain.Assortment[]);
+		-- SET customerRef.BusinessChain= count;
+
+	END;
+
+END MODULE;

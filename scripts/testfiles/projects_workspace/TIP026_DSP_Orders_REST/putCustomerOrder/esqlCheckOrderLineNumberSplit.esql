@@ -1,0 +1,85 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckOrderLineNumberSplit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE error BOOLEAN FALSE;
+		DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+		
+		DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+			SET error = validOrderLineNumbers(customerWarehouseOrderRef);
+		END IF;
+			
+		IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+			SET error = validOrderLineNumbers(promotionalOrder);
+		END IF;
+	
+		IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+			SET error = validOrderLineNumbers(normalOrder);	
+		END IF;
+		
+		IF error THEN
+			
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'ORDER_LINE_NUMBER_DOES_NOT_EXIST', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+							
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE validOrderLineNumbers (IN orderLinesRef REFERENCE)
+	RETURNS BOOLEAN
+	BEGIN
+			
+		DECLARE validOrderLineNumber BOOLEAN;
+		DECLARE PONR CHARACTER;
+		DECLARE ITNO CHARACTER;
+			
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			IF orderLine.action = 'upd' OR orderLine.action = 'del' THEN
+				
+				FOR orderLinePONR AS orderLine.orderLineNumber.Item[] DO
+					
+					SET validOrderLineNumber = FALSE;
+			
+					FOR lstLine2Order AS Environment.JSONResponse.LstLine2.Data.MIRecord.Item[] DO
+						
+						SET ITNO = TRIM(GetValueFromNameValueList('ITNO', lstLine2Order.NameValue));
+						SET PONR = TRIM(GetValueFromNameValueList('PONR', lstLine2Order.NameValue));
+						
+						IF PONR = orderLinePONR AND ITNO = orderLine.sku THEN
+						
+							SET validOrderLineNumber = TRUE;
+							
+						END IF;
+						
+					END FOR;
+					
+					IF NOT validOrderLineNumber THEN
+						
+						RETURN TRUE;
+						
+					END IF;
+					
+				END FOR;
+			
+			END IF;
+		
+		END FOR;
+		
+		RETURN FALSE;
+	END;
+	
+END MODULE;

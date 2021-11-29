@@ -1,0 +1,17 @@
+
+
+CREATE DATABASE MODULE getESATrueFasleFilterData_GetNoVATCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE esaQuery CHARACTER '
+		select code from Code c
+		inner join CodeType ct on ct.id=c.typeId
+		where ct.name=''zNoVATCodes''
+		';
+
+		CREATE FIELD Environment.Variables.ProductData.NoVATCodes;
+		SET Environment.Variables.ProductData.NoVATCodes.Row[] = PASSTHRU(esaQuery);
+	END;
+
+END MODULE;

@@ -1,0 +1,15 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlDeleteEnvironmentVariablesValidation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DELETE FIELD Environment.Variables.SQLQueries.CheckIfMinimumValue;
+		DELETE FIELD Environment.Variables.SQLQueries.MinimumValue;
+		DELETE FIELD Environment.Variables.SQLQueries.PromotionalCode;
+		DELETE FIELD Environment.Variables.SQLQueries.SellByDate;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

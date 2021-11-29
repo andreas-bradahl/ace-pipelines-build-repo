@@ -1,0 +1,119 @@
+
+
+CREATE DATABASE MODULE getAssortmentCustomerProducts_getSupplyModelProductAssortment
+		
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE supplyModelRef REFERENCE TO Environment.Variables.SupplyModel;
+		DECLARE potentialItemsRef REFERENCE TO supplyModelRef.PotentialItems;
+		MOVE potentialItemsRef FIRSTCHILD;
+		DECLARE supplyModelQuery CHAR;	
+		DECLARE queryVariable CHAR '';
+		
+		DECLARE showSellByDateProduct REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		 
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;	
+		
+		IF potentialItemsRef.Priority IS NOT NULL THEN	
+		
+		WHILE LASTMOVE(potentialItemsRef) DO
+				
+				DECLARE splmQueryPart1 CHAR
+					'SELECT DISTINCT ' || potentialItemsRef.Column || ' AS ITNO, MMACHK,MBWHLO, ZBSLDT, CVVTP1, MUCOFA,MMUNMS,MMITCL, C4PREX,
+					MUALUN, MMALUN
+					FROM MSPLMX
+					INNER JOIN MITMAS
+					    ON MMCONO = C4CONO
+					    AND ' || potentialItemsRef.Column || ' = MMITNO
+					    AND SUBSTRING(MMSPE2, CAST(? AS INT), 1) = ''1''
+					INNER JOIN MITBAL
+					    ON MBCONO = MMCONO
+					    AND MMITNO = MBITNO
+					    AND MBWHLO = C4FWHL
+					    AND MBSTAT IN (''20'', ''50'')	
+					INNER JOIN OCUSMA
+					    ON OKCONO = MMCONO
+					    AND OKSPLM = C4SPLM
+					    AND OKCUNO = CAST(? AS CHAR(10))
+					INNER JOIN MITWHL 
+						ON MWCONO=MBCONO
+						AND MWWHLO=MBWHLO
+					INNER JOIN CVATPC 
+						ON CVCONO=MWCONO 
+						AND CVDIVI=MBDIVI 
+						AND CVCSCD=MWCSCD 
+						AND CVVTCD=MBVTCS
+					LEFT JOIN ' || cusfdbName || '.ZITBAL
+						ON MBCONO=ZBCONO 
+						AND MBWHLO=ZBWHLO 
+						AND MBITNO=ZBITNO 
+					INNER JOIN OASCUS
+						ON OCCONO = MMCONO
+						AND OCCUNO = OKCUNO
+						AND OCFDAT <= ?
+						AND OCTDAT >= ?
+					INNER JOIN OASITN
+						ON OICONO = MMCONO
+						AND OIITNO = MMITNO
+						AND OIASCD = OCASCD
+						AND OIFDAT <= ?
+						AND OITDAT >= ?
+					LEFT JOIN MITAUN 
+						ON MMITNO=MUITNO 
+						AND MUAUS2 = ''1'' 
+						AND MUAUTP = ''1''
+						AND MUCONO = MMCONO
+					WHERE C4CONO = CAST(? AS INT)
+						AND C4PREX = CAST(? AS CHAR(2))
+						AND C4FDAT <= ?
+						' || queryVariable || '
+						AND C4TDAT >= ?';
+			
+						
+					SET Environment.Variables.ProductData.Assortment.SupplyModel.{potentialItemsRef.Priority}.Item[] =
+						PASSTHRU(splmQueryPart1  
+						VALUES (
+							customerRef.SalesChannelNumber,
+							customerRef.OKCUNO,
+							customerRef.CurrentDate,
+							customerRef.CurrentDate,
+							customerRef.CurrentDate,
+							customerRef.CurrentDate,
+							customerRef.OKCONO,
+							potentialItemsRef.Priority,
+							customerRef.CurrentDate,
+							customerRef.CurrentDate
+						));
+						
+
+					DECLARE count INT CARDINALITY(Environment.Variables.ProductData.Assortment.SupplyModel.{potentialItemsRef.Priority}.Item[]);
+					SET Environment.Variables.ProductData.Assortment.SupplyModel.{potentialItemsRef.Priority} = count;
+
+--					LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Line 161');
+					
+			
+
+			-- DECLARE count INT CARDINALITY(Environment.Variables.ProductData.Assortment.SupplyModel.{potentialItemsRef.Priority}.Item[]);
+			-- SET Environment.Variables.ProductData.Assortment.SupplyModel.{potentialItemsRef.Priority} = count;
+--			LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Line 183', 'Count was : ' || CAST(count AS CHAR));
+			MOVE potentialItemsRef NEXTSIBLING;
+		END WHILE;
+		END IF;
+		-- SET supplyModelRef.FoundPriority = priority;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

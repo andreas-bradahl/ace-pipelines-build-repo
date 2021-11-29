@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var2"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="MDBREADMILstOXCNTRU1IntoEnv">
+        <input path="$var2/mb:env(Environment)" var="Environment">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$Environment/Variables/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response_JSONArray" ref="var1"/>
+        </input>
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="Variables/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response_JSONArray" ref="var1"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <foreach>
+                    <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item" var="Item4"/>
+                    <output path="Variables/MDBREADMILstOXCNTRU1Response_JSONArray/Item"/>
+                    <foreach>
+                        <input path="$Item4/NameValue/Item" var="Item3"/>
+                        <output path="CUNO" var="CUNO"/>
+                        <output path="STAT" var="STAT"/>
+                        <output path="ORNO" var="ORNO"/>
+                        <output path="PONR" var="PONR"/>
+                        <output path="POSX" var="POSX"/>
+                        <output path="ORNR" var="ORNR"/>
+                        <output path="OPT1" var="OPT1"/>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value15"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name14"/>
+                            <output path="$CUNO/."/>
+                            <param name="input" value="$Value15"/>
+                            <test lang="xpath">$Name14 = "CUNO"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value16"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name15"/>
+                            <output path="$STAT/."/>
+                            <param name="input" value="$Value16"/>
+                            <test lang="xpath">$Name15 = "STAT"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value17"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name16"/>
+                            <output path="$ORNO/."/>
+                            <param name="input" value="$Value17"/>
+                            <test lang="xpath">$Name16 = "ORNO"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value18"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name17"/>
+                            <output path="$PONR/."/>
+                            <param name="input" value="$Value18"/>
+                            <test lang="xpath">$Name17 = "PONR"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value19"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name18"/>
+                            <output path="$POSX/."/>
+                            <param name="input" value="$Value19"/>
+                            <test lang="xpath">$Name18 = "POSX"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value20"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name19"/>
+                            <output path="$ORNR/."/>
+                            <param name="input" value="$Value20"/>
+                            <test lang="xpath">$Name19 = "ORNR"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item3/Value" var="Value21"/>
+                            <input auxiliary="true" path="$Item3/Name" var="Name20"/>
+                            <output path="$OPT1/."/>
+                            <param name="input" value="$Value21"/>
+                            <test lang="xpath">$Name20 = "OPT1"</test>
+                        </function>
+                    </foreach>
+                </foreach>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

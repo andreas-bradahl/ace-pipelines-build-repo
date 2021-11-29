@@ -1,0 +1,55 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE WriteOutPutJSONMsg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputRoot.JSON.Data;
+		DECLARE jsonMsgRef, failedOrderLineCursor REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE orderNumber CHAR Environment.OrderRequest.Data.orderNumber;
+		
+		SET jsonMsgRef.orderNumber = orderNumber;
+		
+		CREATE LASTCHILD OF jsonMsgRef AS failedOrderLineCursor IDENTITY(JSON.Array)failedOrderLines;
+		
+		
+		FOR failedOrderLine AS Environment.failedOrderLines.Item[] DO
+			DECLARE targetItemCursor REFERENCE TO failedOrderLineCursor;
+			CREATE LASTCHILD OF targetItemCursor AS targetItemCursor NAME 'Item';
+			
+			DECLARE fieldCursor REFERENCE TO failedOrderLine;
+
+			MOVE fieldCursor FIRSTCHILD;
+			WHILE LASTMOVE(fieldCursor) DO
+				
+				DECLARE name CHAR FIELDNAME(fieldCursor);
+				
+				IF name = 'orderLineNumbers' THEN
+					DECLARE orderLineNumberCursor REFERENCE TO targetItemCursor;
+					CREATE LASTCHILD OF orderLineNumberCursor AS orderLineNumberCursor IDENTITY(JSON.Array)orderLineNumbers;
+					
+					FOR orderLineNumber AS fieldCursor.Item[] DO
+						
+						CREATE LASTCHILD OF orderLineNumberCursor NAME 'Item' VALUE FIELDVALUE(orderLineNumber);
+						
+					END FOR;
+					
+				ELSE	
+				
+				SET targetItemCursor.{name} = FIELDVALUE(fieldCursor);
+				
+				END IF;
+				
+				MOVE fieldCursor NEXTSIBLING;
+				
+			END WHILE;
+			
+		END FOR;
+		
+		
+		
+		RETURN TRUE;
+	END;
+	
+END MODULE;

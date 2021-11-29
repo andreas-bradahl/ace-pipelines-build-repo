@@ -1,0 +1,25 @@
+
+
+CREATE DATABASE MODULE getItems_Store_EAN_numbers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sqlQuery CHAR '
+			SELECT DISTINCT
+				TRIM(MPITNO) AS ITNO,
+				TRIM(MPPOPN) AS POPN,
+				TRIM(MPALUN) AS ALUN
+			FROM
+				MITPOP
+			WHERE
+				MPALWT = ''2''
+				AND (MPALWQ = ''EA13''
+				OR MPALWQ = ''EA08'')
+				AND MPCONO=100
+		';
+		
+		SET Environment.Variables.EAN.Item[] = PASSTHRU(sqlQuery);
+			
+		RETURN TRUE;
+	END;
+
+END MODULE;

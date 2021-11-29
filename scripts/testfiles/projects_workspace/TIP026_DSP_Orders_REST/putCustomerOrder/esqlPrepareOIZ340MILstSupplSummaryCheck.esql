@@ -1,0 +1,27 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ340MILstSupplSummaryCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+						
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.customerNumber;
+		
+		IF OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO IS NULL THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.OrderRequest.Data.customerNumber;
+			
+		END IF;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDZ = TRIM(GetValueFromNameValueList('RLDT', Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue));
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.POPN = InputLocalEnvironment.Variables.sku;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = InputLocalEnvironment.Variables.quantity;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = Environment.Variables.HTTPResponses.getOCUSMA00.Item.FACI;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPLM = Environment.Variables.HTTPResponses.getOCUSMA00.Item.SPLM;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.BCKO = 2;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.PADL = 2;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

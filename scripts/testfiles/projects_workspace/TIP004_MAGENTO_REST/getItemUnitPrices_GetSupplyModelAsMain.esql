@@ -1,0 +1,44 @@
+
+CREATE DATABASE MODULE getItemUnitPrices_GetSupplyModelAsMain
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		
+		CREATE FIELD Environment.Variables.SupplyModelAsMain;
+		CREATE FIELD Environment.Variables.SupplyModelAsMainList;
+		
+		DECLARE supplyModelAsMain REFERENCE TO Environment.Variables.SupplyModelAsMain;
+		
+		DECLARE tineESARef REFERENCE TO Environment.Variables.SupplyModelAsMainList;
+		
+		
+		DECLARE tineESAQuery CHARACTER '
+		select ct.text code
+		from code c
+		LEFT JOIN CodeText ct
+		ON ct.codeId= c.id
+		and languageCode=''no''
+		where c.typeId=(select id from CodeType where name=''zWarehouseSupplymodel'' )
+		';
+		
+		
+		SET tineESARef.Row[] = PASSTHRU(tineESAQuery);
+		SET supplyModelAsMain = FALSE;
+		DECLARE codeIn CHAR customerRef.OKSPLM;
+		
+		MOVE tineESARef FIRSTCHILD NAME 'Row';
+		WHILE LASTMOVE(tineESARef) AND NOT supplyModelAsMain DO
+			IF TRIM(codeIn) = TRIM(tineESARef.code) THEN
+				
+				SET supplyModelAsMain = TRUE;
+				
+			END IF;
+			MOVE tineESARef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		DELETE FIELD Environment.Variables.SupplyModelAsMainList;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,71 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE calculateAndPrepareResponse_BuildSkuListContainingItemInfo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE inputMessageDataRef REFERENCE TO InputRoot.JSON.Data;
+		CREATE FIELD Environment.Variables.SkuList;
+		DECLARE SkuList, skuCursor REFERENCE TO Environment.Variables.SkuList;
+		
+		FOR orderline AS inputMessageDataRef.orderLines.Item[] DO
+			
+			IF NOT EXISTS(SELECT * FROM SkuList.Item[] AS s WHERE orderline.sku = s.sku) THEN
+				
+				CREATE LASTCHILD of SkuList AS skuCursor NAME 'Item';
+				
+				CREATE LASTCHILD OF skuCursor NAME 'sku' VALUE orderline.sku;
+			
+			END IF;
+			
+			
+		END FOR;
+		
+		-- DECLARE mitaunQuery CHAR 'SELECT MUCOFA from MITAUN WHERE MUCONO=? AND MUITNO = ? AND MUAUS2=''1'' AND MUAUTP=''1''';
+		
+		DECLARE itemDetailQuery CHAR '
+										SELECT
+										mmitno AS itno,
+										mm.MMUNMS AS baseUnit,
+										CASE WHEN IFNULL(mu.MUALUN,'''') = '''' THEN MM.MMUNMS 
+											ELSE mu.MUALUN END AS salesUnit,
+										CASE WHEN IFNULL(mu.MUCOFA,0) = 0 THEN
+											CASE WHEN mm.MMUNMS=''STK'' THEN 1
+											ELSE IFNULL((SELECT m2.MUCOFA from MITAUN m2 where m2.MUCONO=mm.MMCONO and m2.MUITNO=mm.MMITNO and MUAUTP=1 and m2.MUALUN=mm.MMUNMS),1)
+											END
+										ELSE mu.MUCOFA END AS conversionFactor
+										FROM MITMAS mm
+										LEFT JOIN MITAUN mu ON mm.MMCONO=mu.MUCONO AND mm.MMITNO = mu.MUITNO AND mu.MUAUS2=''1'' AND mu.MUAUTP=''1''
+										WHERE mm.MMCONO = ?
+										AND mm.MMITNO = ?
+										';
+		
+		DECLARE companyNumber CHAR inputMessageDataRef.companyNumber;
+		
+		FOR i AS SkuList.Item[] DO
+			
+			CREATE FIELD Environment.itemDetailQueryResult;
+			DECLARE itemDetailQueryResultRef REFERENCE TO Environment.itemDetailQueryResult;
+			
+			SET itemDetailQueryResultRef = PASSTHRU(itemDetailQuery, companyNumber, i.sku);
+			
+			DECLARE baseUnit CHAR TRIM(itemDetailQueryResultRef.BASEUNIT);
+			DECLARE salesUnit CHAR TRIM(itemDetailQueryResultRef.SALESUNIT);
+			DECLARE conversionFactor DECIMAL itemDetailQueryResultRef.CONVERSIONFACTOR;
+			
+			SET i.baseUnit = baseUnit;
+			SET i.salesUnit = salesUnit;
+			SET i.conversionFactor = COALESCE(conversionFactor, CAST('1' AS DECIMAL));
+			
+			DELETE FIELD itemDetailQueryResultRef;
+		END FOR;
+		
+		 CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

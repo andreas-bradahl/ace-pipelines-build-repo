@@ -1,0 +1,19 @@
+
+
+CREATE COMPUTE MODULE TIP026_DSP_Orders_RESTInputCatchHandler_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE envref REFERENCE TO Environment;
+		CALL setErrorMessage(500, 'this is response', 'this is reason', envref);
+
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE setErrorMessage (IN httpCode INT, IN response CHAR, IN reason CHAR, IN environmentRef REFERENCE)
+BEGIN
+    SET environmentRef.Variables.HTTPCode = httpCode;
+    SET environmentRef.Variables.Response = response;
+    SET environmentRef.Variables.Error_Reason = reason;
+END;  
+END MODULE;

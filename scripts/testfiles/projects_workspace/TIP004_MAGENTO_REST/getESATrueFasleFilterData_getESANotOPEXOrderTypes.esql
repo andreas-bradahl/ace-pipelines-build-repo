@@ -1,0 +1,21 @@
+
+
+CREATE DATABASE MODULE getESATrueFasleFilterData_getESANotOPEXOrderTypes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+
+		DECLARE esaQuery CHARACTER '
+		select code from Code c
+		inner join CodeType ct on ct.id=c.typeId
+		where ct.name=''zCantAddOPEXItemsOrderType''
+		and code = ?
+		';
+
+		CREATE FIELD Environment.Variables.ProductData.NotOPEXOrderTypes;
+		SET Environment.Variables.ProductData.NotOPEXOrderTypes.Row[] = PASSTHRU(esaQuery, queryParams.ORTP);
+	
+		RETURN TRUE;
+	END;
+
+END MODULE;

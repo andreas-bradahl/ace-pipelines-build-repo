@@ -1,0 +1,49 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE ApplyOrderLineChangeRequests
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE addTerminal CHAR 'out1';
+		DECLARE addLostSalesTerminal CHAR 'out2';
+		DECLARe updTerminal CHAR 'out3';
+		DECLARE delTerminal CHAR 'out4';
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		CREATE FIELD Environment.failedOrderLines IDENTITY (JSON.Array)failedOrderLines;
+		
+		DECLARE orderLineIndex INT 0;
+		
+		DECLARE action CHAR '';
+		DECLARE isLostSales BOOLEAN;
+		
+		FOR orderLine AS orderRequestRef.orderLines.Item[] DO
+			SET orderLineIndex = orderLineIndex + 1;
+			SET varRef.orderLineIndex = orderLineIndex; 
+			SET action = TRIM(LOWER(COALESCE(orderLine.action, '')));
+			
+			IF action = 'add' THEN
+				SET isLostSales = COALESCE(orderLine.isLostSales, false);	
+				
+				IF isLostSales THEN
+					PROPAGATE TO TERMINAL addLostSalesTerminal;
+				ELSE
+					PROPAGATE TO TERMINAL addTerminal;
+				END IF;
+				
+			ELSEIF action = 'upd' THEN
+				PROPAGATE TO TERMINAL updTerminal;
+				
+			ELSEIF action = 'del' THEN
+				PROPAGATE TO TERMINAL delTerminal;
+				
+			END IF;
+		END FOR;
+		
+		DELETE FIELD varRef.orderLineIndex;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,17 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareMMS200MIGetItmBasic
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;		
+		
+		DECLARE CONO CHARACTER Environment.Variables.Global.company_number;
+		DECLARE ITNO CHARACTER InputLocalEnvironment.Variables.TemporaryOrder.ITNO;
+			
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = CONO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = ITNO;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

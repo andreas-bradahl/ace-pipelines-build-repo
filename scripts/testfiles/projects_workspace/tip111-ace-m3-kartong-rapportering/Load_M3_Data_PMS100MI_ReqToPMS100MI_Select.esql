@@ -1,0 +1,15 @@
+DECLARE m3authorization EXTERNAL CHARACTER 'Basic dGluZVx0aW5laW50OmludHRpbmU';
+
+CREATE COMPUTE MODULE Load_M3_Data_PMS100MI_ReqToPMS100MI_Select
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = '100';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACF = '123';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACT = '123';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.STSF = '20';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.STST = '80';
+		SET OutputRoot.Properties.CodedCharSetId = 1208;
+		SET OutputRoot.HTTPRequestHeader."Authorization" = m3authorization;
+		RETURN TRUE;
+	END;
+END MODULE;

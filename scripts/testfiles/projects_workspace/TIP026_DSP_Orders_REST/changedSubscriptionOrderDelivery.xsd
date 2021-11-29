@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP026_DSP_Orders_REST/changedSubscriptionOrderDelivery">
+
+
+    <element name="putChangedSubscriptionOrderDeliveryRequest" type="co:putChangedSubscriptionOrderDeliveryRequest"></element>
+
+    <complexType name="putChangedSubscriptionOrderDeliveryRequest">
+    	<sequence>
+            <element name="optimizeOrderLines" type="boolean" maxOccurs="1" minOccurs="1"></element>
+            <element name="companyNumber" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="customerNumber" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="orderNumber" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="deliveryDate" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="estimatedOrderAmount" type="float"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="orderLines"
+    			type="co:putChangedSubscriptionOrderDeliveryRequestOrderLines"
+    			maxOccurs="unbounded" minOccurs="1">
+    		</element>
+
+    	</sequence>
+    </complexType>
+
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryRequestOrderLines">
+    	<sequence maxOccurs="unbounded" minOccurs="0">
+    		<element name="putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd" type="co:putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd" maxOccurs="unbounded" minOccurs="0"></element>
+    		<element name="putChangedSubscriptionOrderDeliveryRequestOrderLinesUpd" type="co:putChangedSubscriptionOrderDeliveryRequestOrderLinesUpd" maxOccurs="unbounded" minOccurs="0"></element>
+    		<element name="putChangedSubscriptionOrderDeliveryRequestOrderLinesDel" type="co:putChangedSubscriptionOrderDeliveryRequestOrderLinesDel" maxOccurs="unbounded" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <element name="putChangedSubscriptionOrderDeliveryResponseOK" type="co:putChangedSubscriptionOrderDeliveryResponseOK"></element>
+
+
+    <element name="putChangedSubscriptionOrderDeliveryResponseFailed" type="co:putChangedSubscriptionOrderDeliveryResponseFailed"></element>
+
+    <complexType name="putChangedSubscriptionOrderDeliveryResponseOK">
+    	<sequence>
+    		<element name="orderNumber" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="success" type="boolean" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryResponseFailed">
+    	<sequence>
+    		<element name="orderNumber" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="success" type="boolean" maxOccurs="1" minOccurs="1"></element>
+    		<element name="failedOrderLinesAdd" type="co:putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesAdd" maxOccurs="unbounded" minOccurs="0"></element>
+    		<element name="failedOrderLinesUpd" type="co:putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesUpd" maxOccurs="unbounded" minOccurs="0"></element>
+    		<element name="failedOrderLinesDel" type="co:putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesDel" maxOccurs="unbounded" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesAdd">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="int" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineUnit" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="errorCode" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="errorMessage" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesUpd">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="int" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineUnit" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineNumbers" type="int" maxOccurs="unbounded" minOccurs="1"></element>
+    		<element name="errorCode" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="errorMessage" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryResponseFailedOrderLinesDel">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineNumbers" type="int" maxOccurs="unbounded" minOccurs="1"></element>
+    		<element name="errorCode" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="errorMessage" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="int" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineUnit" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryRequestOrderLinesUpd">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="int" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineUnit" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineNumbers" type="int" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType
+    	name="putChangedSubscriptionOrderDeliveryRequestOrderLinesDel">
+    	<sequence>
+    		<element name="sku" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="action" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineNumbers" type="int" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+</schema>

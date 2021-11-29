@@ -1,0 +1,32 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE CODTEqualsRLDTEquation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		
+		DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest';
+		
+		DECLARE inputRef CHAR Environment.Variables.ns:getProductAvailabilityRequest.requestedDeliveryDate;
+		DECLARE RLDT DATE;
+		
+		IF SUBSTRING(inputRef FROM 5 FOR 1) = '-' THEN
+    		SET RLDT = CAST(inputRef AS DATE FORMAT 'yyyy-MM-dd');
+		ELSE
+   		 	SET RLDT = CAST(inputRef AS DATE FORMAT 'yyyyMMdd');
+		END IF;
+		
+		--DECLARE RLDT DATE CAST(Environment.Variables.ns:getProductAvailabilityRequest.requestedDeliveryDate AS DATE);
+		DECLARE CODT DATE CAST(InputRoot.XMLNSC.OIZ340MILstSupplSummary.Item.CODT AS DATE FORMAT 'yyyyMMdd');
+		
+		IF RLDT >= CODT THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE		
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

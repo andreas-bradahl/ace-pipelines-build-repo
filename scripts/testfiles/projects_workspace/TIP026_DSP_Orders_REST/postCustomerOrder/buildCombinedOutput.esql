@@ -1,0 +1,25 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE buildCombinedOutput
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE outDataRef REFERENCE TO OutputRoot.JSON.Data;
+		DECLARE outItemCursor REFERENCE TO outDataRef.Item;
+		DECLARE warehouseOrderSplitRef REFERENCE TO varRef.WarehouseOrdersplit;
+		
+		FOR order AS warehouseOrderSplitRef.Item[] DO
+		
+			CREATE LASTCHILD OF outDataRef AS outItemCursor NAME 'Item';
+			SET outItemCursor = order;
+			
+		END FOR; 
+		
+		RETURN TRUE;
+	END;
+
+
+END MODULE;

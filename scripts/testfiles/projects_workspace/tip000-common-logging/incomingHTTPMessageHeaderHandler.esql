@@ -1,0 +1,32 @@
+
+
+DECLARE SourceHTTP EXTERNAL CHARACTER NULL;
+
+CREATE COMPUTE MODULE incomingHTTPMessageHeaderHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		IF InputRoot.HTTPInputHeader.Logging.UUID IS NULL THEN
+			SET Environment.Variables.Logging.UUID = UUIDASCHAR;
+		ELSE
+			SET Environment.Variables.Logging.UUID = InputRoot.HTTPInputHeader.Logging.UUID;
+		END IF;
+		
+		IF InputRoot.HTTPInputHeader.Logging.Source IS NULL THEN
+			CREATE FIELD Environment.Variables.Logging.Source;
+			SET Environment.Variables.Logging.Source = SourceHTTP;	
+		ELSE 
+			SET Environment.Variables.Logging.Source = InputRoot.HTTPInputHeader.Logging.Source;
+		END IF;
+		
+		IF InputRoot.HTTPInputHeader.Logging.MessageId IS NULL THEN
+			CREATE FIELD Environment.Variables.Logging.MessageId; 
+			--SET Environment.Variables.Logging.MessageId = MessageId;
+		ELSE
+			SET Environment.Variables.Logging.MessageId = InputRoot.HTTPInputHeader.Logging.MessageId;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

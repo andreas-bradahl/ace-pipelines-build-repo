@@ -1,0 +1,20 @@
+
+
+CREATE COMPUTE MODULE loggingPostCreateCallLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+		DECLARE createStopped CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+				
+		DECLARE createStarted CHARACTER Environment.Variables.Logging.createStarted;
+		DECLARE createTotalTimeTaken CHARACTER subtractOrAddTimes(createStopped, '-', createStarted);
+			
+		DELETE FIELD Environment.Variables.Logging.createStarted;
+		
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Create time taken: ' || createTotalTimeTaken);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

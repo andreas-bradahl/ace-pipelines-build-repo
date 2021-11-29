@@ -1,0 +1,30 @@
+
+
+CREATE COMPUTE MODULE esqlPrepareResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE resultsRef REFERENCE TO Environment;
+		DECLARE recordsRef REFERENCE TO Environment;
+		DECLARE resultItemRef REFERENCE TO Environment;
+		DECLARE recordItemRef REFERENCE TO Environment;
+		
+		CREATE LASTCHILD OF OutputRoot.JSON.Data AS resultsRef IDENTITY(JSON.Array)results;
+
+		FOR result AS Environment.Variables.Response.results.Item[] DO
+			
+			CREATE LASTCHILD OF resultsRef AS resultItemRef NAME 'Item';
+			
+			SET resultItemRef.transaction = result.transaction;
+			CREATE LASTCHILD OF resultItemRef AS recordsRef IDENTITY(JSON.Array)records;
+			
+			CREATE LASTCHILD OF recordsRef AS recordItemRef NAME 'Item';
+			SET recordItemRef = result.records.Item;
+		
+		END FOR;
+		
+		DECLARE priceUnit CHAR Environment.Variables.Unit || 'price';
+				
+		RETURN TRUE;
+	END;
+END MODULE;

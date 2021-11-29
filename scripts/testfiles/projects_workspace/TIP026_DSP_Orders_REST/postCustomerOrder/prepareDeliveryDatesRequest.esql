@@ -1,0 +1,40 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE prepareDeliveryDatesRequest
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE localOutRef REFERENCE TO OutputLocalEnvironment;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE customerNumber CHAR orderRef.customerNumber;
+		DECLARE orderType CHAR orderRef.orderType;	
+		DECLARE pickUpOrder CHAR varRef.pickupOrder;
+		DECLARE expressOrder CHAR varRef.expressOrder;
+		DECLARE extraDelivery CHAR varRef.extraDelivery;
+		
+		SET localOutRef.Destination.HTTP.QueryString.customerNumber = customerNumber;
+		
+		IF orderType = pickUpOrder THEN
+			
+			SET varRef.isPickupOrder = true; 
+			--SET localOutRef.Destination.HTTP.QueryString.orderType = 'pickup';
+			
+		ELSEIF orderType = expressOrder THEN
+			
+			SET varRef.isExpressOrder = true;
+			--SET localOutRef.Destination.HTTP.QueryString.orderType = 'express';
+			
+		ELSEIF orderType = extraDelivery THEN
+			
+			SET varRef.isExtraDelivery = true;
+			--SET localOutRef.Destination.HTTP.QueryString.orderType = 'extra';
+			
+		END IF;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

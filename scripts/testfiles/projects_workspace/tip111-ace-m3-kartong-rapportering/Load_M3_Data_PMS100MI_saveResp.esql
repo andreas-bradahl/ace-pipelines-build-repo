@@ -1,0 +1,23 @@
+DECLARE ns1 NAMESPACE 'http://lawson.com/m3/miaccess';
+
+CREATE COMPUTE MODULE Load_M3_Data_PMS100MI_saveResp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" <> '200' THEN
+			THROW USER EXCEPTION SEVERITY 3 MESSAGE 2951 VALUES(COALESCE(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line",'N/A'));
+		END IF;
+		LOG EVENT SEVERITY 1 VALUES('TIP111', MessageFlowLabel, NodeLabel, 'Completed PMS100MI/Select API call');
+		DECLARE inputRef REFERENCE TO InputRoot.XMLNSC;
+--		DECLARE addSupplierRef REFERENCE TO InputRoot.XMLNSC.ns1:miResult.ns1:MIRecord.ns1:NameValue;
+		MOVE inputRef FIRSTCHILD;
+		MOVE inputRef NEXTSIBLING;
+		DECLARE errorMsg CHARACTER;
+		IF FIELDNAME(inputRef) = 'ErrorMessage' THEN
+			SET errorMsg = inputRef.ns1:Message;
+			THROW USER EXCEPTION SEVERITY 3 MESSAGE 2951 VALUES(COALESCE(errorMsg,'N/A'));
+		END IF;
+		CREATE LASTCHILD OF Environment.variables DOMAIN 'XMLNSC' NAME 'M3Response';
+		SET Environment.variables.M3Response.XMLNSC = InputRoot.XMLNSC;
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,80 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFinalizeOptimizedOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE optimizedOrderLinesCursor REFERENCE TO OutputRoot.JSON.Data.optimizedOrderLines.Item;
+		
+		DECLARE sku CHARACTER;
+		DECLARE currentUnit CHARACTER;
+		DECLARE sameUnit BOOLEAN;
+								
+		-- Construct CombinedOrderLines			
+		WHILE LASTMOVE(optimizedOrderLinesCursor) DO
+			
+			CREATE FIELD Environment.Variables.Units;
+			
+			SET sameUnit = FALSE;
+		
+			FOR combinedOrderLine AS optimizedOrderLinesCursor.combinedOrderLines.Item[] DO
+				
+				SET sku = combinedOrderLine.sku;
+				CREATE LASTCHILD OF Environment.Variables.Units NAME 'Unit' VALUE combinedOrderLine.orderLineUnit;
+				
+			END FOR;
+			
+			FOR unit1 AS Environment.Variables.Units.Unit[] Do
+			
+				SET currentUnit = unit1;
+					
+				DELETE FIELD Environment.Variables.Units.Unit[1];
+				
+				FOR unit2 AS Environment.Variables.Units.Unit[] Do				
+								
+					IF currentUnit = unit2 THEN
+					
+						SET sameUnit = TRUE;
+						
+					END IF;
+									
+				END FOR;
+				
+			END FOR;
+			
+			IF sameUnit THEN
+				
+				SET optimizedOrderLinesCursor.canIncrease = FALSE;
+				SET optimizedOrderLinesCursor.canDecrease = FALSE;
+				
+				FOR combinedOrderLine AS optimizedOrderLinesCursor.combinedOrderLines.Item[] DO
+				
+					SET combinedOrderLine.canIncrease = FALSE;
+					SET combinedOrderLine.canDecrease = FALSE;
+				
+				END FOR;
+				
+				FOR orderLine AS OutputRoot.JSON.Data.orderLines.Item[] DO
+					
+					IF orderLine.sku = sku THEN
+						
+						SET orderLine.canIncrease = FALSE;
+						SET orderLine.canDecrease = FALSE;
+						
+					END IF;
+					
+				END FOR;
+				
+			END IF;
+			
+			DELETE FIELD Environment.Variables.Units;
+										
+			MOVE optimizedOrderLinesCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

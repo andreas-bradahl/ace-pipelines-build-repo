@@ -1,0 +1,18 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE setPartnerLevelAndZone
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+			DECLARE inputDataRef REFERENCE TO InputRoot.JSON.Data; 
+			DECLARE varRef REFERENCE TO Environment.Variables;
+			CREATE FIELD varRef.CRM;
+			DECLARE crmRef REFERENCE TO varRef.CRM;
+			
+			SET crmRef.partnerlevel =  inputDataRef.customerlevel;
+			SET crmRef.zone = inputDataRef.zone;
+			
+		RETURN TRUE;
+	END;
+END MODULE;

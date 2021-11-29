@@ -1,0 +1,30 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE DATABASE MODULE DB_EXTI
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE zDeadlineMinutes CHAR 'zDeadlineMinutes_';
+		DECLARE sqlQuery CHAR 'SELECT value FROM ApplicationData WHERE parameter = CONCAT(?,?)';
+		SET Environment.Tine_esa.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, GetValueFromNameValueList('WHLO', Environment.GetHeadRecord.Item.NameValue));-- whlo  from getHead 
+		DECLARE tine_esaRef, tine_esaRowCursor REFERENCE TO Environment.Tine_esa;
+		MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+		
+		IF LASTMOVE(tine_esaRowCursor) THEN
+			SET Environment.Variables.EXTI = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+			
+		ELSE
+			SET Environment.Tine_esa.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, 'All');
+			MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+			SET Environment.Variables.EXTI = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+			
+		END IF;
+		
+		DELETE FIELD tine_esaRef;
+		
+				
+		
+		RETURN TRUE;
+	END;
+END MODULE;
+

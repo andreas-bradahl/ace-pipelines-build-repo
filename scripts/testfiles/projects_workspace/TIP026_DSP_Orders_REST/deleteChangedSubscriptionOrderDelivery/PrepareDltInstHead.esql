@@ -1,0 +1,18 @@
+BROKER SCHEMA deleteChangedSubscriptionOrderDelivery
+ 
+
+CREATE COMPUTE MODULE PrepareDltInstHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';	
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.deleteOrderRequest.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RORD = Environment.Variables.deleteOrderRequest.orderNumber;  
+		
+		IF CONTAINS(Environment.Variables.deleteOrderRequest.deliveryDate, '-') THEN
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = REPLACE(Environment.Variables.deleteOrderRequest.deliveryDate, '-', '');		
+		ELSE
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = Environment.Variables.deleteOrderRequest.deliveryDate;		
+		END IF;
+	END;
+	
+END MODULE;

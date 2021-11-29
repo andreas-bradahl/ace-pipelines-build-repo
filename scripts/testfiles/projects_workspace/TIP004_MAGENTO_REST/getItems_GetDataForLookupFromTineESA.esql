@@ -1,0 +1,72 @@
+
+
+CREATE DATABASE MODULE getItems_GetDataForLookupFromTineESA
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.tine_esa;
+		
+		CALL GetApplicationDataFromTineEsa('zPriceListOnlyDpak');
+		CALL GetApplicationDataFromTineEsa('zCurrencyOnlyDpak');
+		CALL GetApplicationDataFromTineEsa('zProductClassBasicUnit');
+		CALL GetApplicationDataFromTineEsa('zCreditcardKGItemUnit');
+				
+		CALL GetComparativeSalesUnits();
+				
+		CALL GetMaxQuantityMinimumWeightAndLeadTime();
+
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE GetApplicationDataFromTineEsa(IN parameterString CHAR)
+	BEGIN
+		SET Environment.Variables.tine_esa.ApplicationData.{parameterString} =
+			THE(SELECT ITEM 
+				AD.value
+			FROM 
+				Database.dbo.ApplicationData AS AD 
+			WHERE 
+				AD.parameter = parameterString);
+	END;
+	
+	CREATE PROCEDURE GetMaxQuantityMinimumWeightAndLeadTime()
+	BEGIN
+		DECLARE query CHAR '
+			SELECT
+				I.itemNumber,
+				I.zMaxQty,
+				zMW.minimumWeight,
+				zMW.leadTime
+			FROM
+				Item AS I
+			LEFT JOIN zMinimumWeight AS zMW ON
+				I.id = zMW.itemId
+			WHERE
+				I.zMaxQty IS NOT NULL OR
+				zMW.minimumWeight IS NOT NULL OR
+				zMW.leadTime IS NOT NULL
+		';
+		
+		SET Environment.Variables.tine_esa.ItemsList.Item[] = PASSTHRU(query);
+	END;
+	
+	CREATE PROCEDURE GetComparativeSalesUnits()
+	BEGIN
+		
+		DECLARE sqlQuery CHARACTER;
+		SET  sqlQuery = 
+			'SELECT '
+				|| 'C.code '
+			|| 'FROM '
+			|| 'Code AS C, '
+				|| 'CodeType AS CT '
+			|| 'WHERE '
+				|| 'C.typeId = CT.id '
+				|| 'AND CT.name = ? ';
+		
+		SET Environment.Variables.tine_esa.ComparativeSalesUnit.SalesUnit[] =
+			PASSTHRU(sqlQuery, 'zSalesPriceUnitToRunExtraPriceCallFor');
+			
+	END;
+END MODULE;
+

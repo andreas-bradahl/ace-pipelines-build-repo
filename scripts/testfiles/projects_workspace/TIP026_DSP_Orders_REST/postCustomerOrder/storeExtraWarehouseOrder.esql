@@ -1,0 +1,23 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE storeExtraWarehouseOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef, warehouseItemCursor REFERENCE TO Environment.Variables;
+		
+		MOVE warehouseItemCursor FIRSTCHILD NAME 'WarehouseOrdersplit';
+		
+		IF NOT LASTMOVE(warehouseItemCursor) THEN
+			CREATE LASTCHILD OF warehouseItemCursor AS warehouseItemCursor NAME 'WarehouseOrdersplit';
+		END IF;
+		
+		CREATE LASTCHILD OF warehouseItemCursor AS warehouseItemCursor NAME 'Item';
+		
+		SET warehouseItemCursor = InputRoot.JSON.Data.Item;
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

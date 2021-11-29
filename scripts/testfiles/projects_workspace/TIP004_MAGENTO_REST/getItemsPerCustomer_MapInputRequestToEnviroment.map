@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="default" version="8.0.5.0" xmlns:map="default">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">     
+    <xsd:element name="DATE" type="xsd:string"/>     
+    <xsd:element name="CONO" type="xsd:string"/>     
+    <xsd:element name="UNIT" type="xsd:string"/>     
+    <xsd:element name="ORTP" type="xsd:string"/>     
+    <xsd:element name="CUNO" type="xsd:string"/>     
+    <xsd:element name="showSellByDateProducts" type="xsd:string"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var6"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var1"/>
+    <input path="/getItemsPerCustomer.xsd" var="var5"/>
+    <input path="/getItemsPerCustomer.xsd" var="var7"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var8"/>
+    <output path="/getItemsPerCustomer.xsd" var="var4"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="getItemsPerCustomer_MapInputRequestToEnviroment">
+        <input path="$var6/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="getItemPerCustomerRequestEnviroment" ref="var5"/>
+        </input>
+        <input derivedFrom="MB:JSON_operation_name:getItemsPerCustomer" path="$var/mb:msg(BLOB,assembly,BLOB,Properties,LocalEnvironment)" var="ComIbmMessageAssembly_BLOB">
+            <cast derivedFrom="MB:JSON_path_query_parm:DATE" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="DATE" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:CONO" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="CONO" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:UNIT" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="UNIT" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:ORTP" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="ORTP" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:CUNO" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="CUNO" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:showSellByDateProducts" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="showSellByDateProducts" ref="var1"/>
+        </input>
+        <output path="$var8/mb:env(Environment)">
+            <cast path="Variables/any" qualifier="getItemPerCustomerRequestEnviroment" ref="var4"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/DATE"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/DATE"/>
+                </move>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/CONO"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/CONO"/>
+                </move>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/UNIT"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/UNIT"/>
+                </move>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/ORTP"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/ORTP"/>
+                </move>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/CUNO"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/CUNO"/>
+                </move>
+                <convert>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/showSellByDateProducts"/>
+                    <output path="Variables/getItemPerCustomerRequestEnviroment/Request/showSellByDateProducts"/>
+                </convert>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

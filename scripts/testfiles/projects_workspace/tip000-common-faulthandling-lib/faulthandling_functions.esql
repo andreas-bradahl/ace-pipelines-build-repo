@@ -1,0 +1,28 @@
+CREATE PROCEDURE writeErrorMessage(
+	IN destinationRoot REFERENCE,
+	IN gmtDateTime GMTTIMESTAMP,
+	IN application CHARACTER,
+	IN messageflow CHARACTER,
+	IN severity INTEGER,
+	IN input CHARACTER,
+	IN errorMessage CHARACTER,
+	IN comment CHARACTER,
+	IN uuid CHARACTER
+	) 
+BEGIN
+
+	DECLARE ns NAMESPACE 'http://TIP000_DataModel';
+	 
+	CREATE FIELD destinationRoot.XMLNSC.FaultEvent NAMESPACE ns;
+	 
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.time NAMESPACE ns VALUE gmtDateTime;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.application NAMESPACE ns VALUE application;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.messageflow NAMESPACE ns VALUE messageflow;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.severity NAMESPACE ns VALUE severity;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.input NAMESPACE ns VALUE input;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.errormessage NAMESPACE ns VALUE errorMessage;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.comment NAMESPACE ns VALUE comment;
+	CREATE FIELD destinationRoot.XMLNSC.ns:FaultEvent.uuid NAMESPACE ns VALUE uuid;
+
+END;
+

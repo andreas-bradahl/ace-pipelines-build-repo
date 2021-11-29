@@ -1,0 +1,20 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlMultipleWarehouses
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE multipleWarehouses BOOLEAN Environment.Variables.multipleWarehouses;
+		
+		IF multipleWarehouses THEN
+			SET Environment.Variables.Global.Flags.OPEXSplit = TRUE;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			SET Environment.Variables.Global.Flags.OPEXSplit = FALSE;
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

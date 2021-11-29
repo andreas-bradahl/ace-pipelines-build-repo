@@ -1,0 +1,26 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE esqlFetchPromoCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE sqlQueryPromoAssortment CHAR ' 
+			SELECT value 
+			FROM ApplicationData
+			WHERE [parameter] = ''zReklamartiklersortiment''
+		';
+			
+		SET Environment.Variables.SQLQueries.PromoAssortment = PASSTHRU(sqlQueryPromoAssortment);	
+		
+		DECLARE sqlQueryPromoType CHAR ' 
+			SELECT value 
+			FROM ApplicationData
+			WHERE [parameter] = ''zPromotionalM3OrderType''
+		';
+			
+		SET Environment.Variables.SQLQueries.PromoType = PASSTHRU(sqlQueryPromoType);	
+
+		RETURN TRUE;
+	END;
+END MODULE;

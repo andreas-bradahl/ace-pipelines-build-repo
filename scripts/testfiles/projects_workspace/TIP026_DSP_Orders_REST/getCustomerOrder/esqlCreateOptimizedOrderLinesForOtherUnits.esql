@@ -1,0 +1,183 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateOptimizedOrderLinesForOtherUnits
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE optimizedOrderLinesRef REFERENCE TO OutputRoot.JSON.Data.optimizedOrderLines;
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		
+		DECLARE optimizedOrderLineHeadRef REFERENCE TO Environment;
+		DECLARE optimizedOrderLineRef REFERENCE TO Environment;
+		DECLARE combinedOrderLinesRef REFERENCE TO Environment;
+		DECLARE combinedOrderLineNumbersRef REFERENCE TO Environment;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.tempOrderLines;
+		SET OutputLocalEnvironment.Variables.tempOrderLines = OutputRoot.JSON.Data.orderLines;
+		
+		DECLARE newOptimizedOrderline BOOLEAN;
+		
+		FOR sku AS Environment.Variables.skus.skuFoundOtherUnits.sku[] DO
+			
+			FOR orderLine AS OutputLocalEnvironment.Variables.tempOrderLines.Item[] DO
+				
+				IF sku = orderLine.sku THEN
+					
+					SET newOptimizedOrderline = NOT EXISTS(SELECT i FROM optimizedOrderLinesRef.Item[] AS i WHERE i.sku = orderLine.sku AND i.totalQuantityUnit = orderLine.alternateUnit);
+					
+					IF newOptimizedOrderline THEN
+					
+						CREATE LASTCHILD OF optimizedOrderLinesRef AS optimizedOrderLineHeadRef NAME 'Item';
+						
+						SET optimizedOrderLineHeadRef.sku = orderLine.sku;
+						SET optimizedOrderLineHeadRef.itemDescription = orderLine.itemDescription;
+						
+						CREATE LASTCHILD OF optimizedOrderLineHeadRef AS combinedOrderLineNumbersRef IDENTITY(JSON.Array)combinedOrderLineNumbers;
+						SET combinedOrderLineNumbersRef.Item = orderLine.orderLineNumber;
+	          
+						SET optimizedOrderLineHeadRef.totalQuantity = orderLine.quantityAlternateUnit;
+						SET optimizedOrderLineHeadRef.totalQuantityUnit = orderLine.alternateUnit;
+						SET optimizedOrderLineHeadRef.totalLineAmount = orderLine.lineAmount;
+						SET optimizedOrderLineHeadRef.totalLineAmountWithoutDiscount = orderLine.lineAmountWithoutDiscount;
+						SET optimizedOrderLineHeadRef.totalLineDiscountAmount = optimizedOrderLineHeadRef.discountAmount1 + 
+																	   optimizedOrderLineHeadRef.discountAmount2 + 
+																	   optimizedOrderLineHeadRef.discountAmount3 +
+																	   optimizedOrderLineHeadRef.discountAmount4 + 
+																	   optimizedOrderLineHeadRef.discountAmount5 + 
+																	   optimizedOrderLineHeadRef.discountAmount6;
+																	   
+						SET optimizedOrderLineHeadRef.canIncrease = orderLine.canIncrease;
+						SET optimizedOrderLineHeadRef.canDecrease = orderLine.canDecrease;
+						SET optimizedOrderLineHeadRef.canDelete = orderLine.canDelete;
+						SET optimizedOrderLineHeadRef.updateInReview = orderLine.updateInReview;
+						SET optimizedOrderLineHeadRef.newTotalQuantity = orderLine.newQuantity;
+						SET optimizedOrderLineHeadRef.deleteInReview = orderLine.deleteInReview;
+						SET optimizedOrderLineHeadRef.canSendComplaint = orderLine.canSendComplaint;
+						
+						CREATE LASTCHILD OF optimizedOrderLineHeadRef AS combinedOrderLinesRef IDENTITY(JSON.Array)combinedOrderLines;
+					
+					END IF;	
+					
+					CREATE LASTCHILD OF combinedOrderLinesRef AS optimizedOrderLineRef NAME 'Item';
+					
+					
+					-- orderLine.updateInReview IS NOT NULL is to make sure not to include temporary lines in this
+					IF orderLine.refOrderLine IS NOT NULL AND orderLine.updateInReview IS NOT NULL THEN				
+											
+						SET optimizedOrderLineRef.orderLineNumber = orderLine.orderLineNumber;
+						SET optimizedOrderLineRef.orderLineSuffix = orderLine.orderLineSuffix;
+						SET optimizedOrderLineRef.sku = orderLine.sku;
+						SET optimizedOrderLineRef.quantityOrderLineBaseUnit = orderLine.quantitySalesPriceUnit;
+						SET optimizedOrderLineRef.quantityOrderLineUnit = orderLine.quantityAlternateUnit;
+						SET optimizedOrderLineRef.orderLineBaseUnit = orderLine.salesPriceUnit;
+						SET optimizedOrderLineRef.orderLineUnit = orderLine.alternateUnit;
+						SET optimizedOrderLineRef.deliveryDate = orderLine.deliveryDate;
+						SET optimizedOrderLineRef.discountAmount1 = orderLine.discountAmount1;
+						SET optimizedOrderLineRef.discountAmount2 = orderLine.discountAmount2;
+						SET optimizedOrderLineRef.discountAmount3 = orderLine.discountAmount3;
+						SET optimizedOrderLineRef.discountAmount4 = orderLine.discountAmount4;
+						SET optimizedOrderLineRef.discountAmount5 = orderLine.discountAmount5;
+						SET optimizedOrderLineRef.discountAmount6 = orderLine.discountAmount6;
+						SET optimizedOrderLineRef.lineAmount = orderLine.lineAmount;
+						SET optimizedOrderLineRef.lineAmountWithoutDiscount = optimizedOrderLineRef.discountAmount1 + 
+																   optimizedOrderLineRef.discountAmount2 + 
+																   optimizedOrderLineRef.discountAmount3 +
+																   optimizedOrderLineRef.discountAmount4 + 
+																   optimizedOrderLineRef.discountAmount5 + 
+																   optimizedOrderLineRef.discountAmount6 +
+																   optimizedOrderLineRef.lineAmount;
+					  
+						SET optimizedOrderLineRef.lineRecyclingCharge = orderLine.lineRecyclingCharge;
+						
+						SET optimizedOrderLineRef.status = orderLine.status;
+						SET optimizedOrderLineRef.refOrderCategory = orderLine.refOrderCategory;
+						
+						IF orderLine.refOrderNumber IS NULL THEN
+							SET optimizedOrderLineRef.refOrderNumber = '';			
+						ELSE
+							SET optimizedOrderLineRef.refOrderNumber = orderLine.refOrderNumber;				
+						END IF;
+						
+						SET optimizedOrderLineRef.refOrderLine = orderLine.refOrderLine;
+						SET optimizedOrderLineRef.salesPrice = orderLine.salesPrice;
+						SET optimizedOrderLineRef.updateInReview = orderLine.updateInReview;
+						SET optimizedOrderLineRef.newQuantity = orderLine.newQuantity;
+						SET optimizedOrderLineRef.deleteInReview = orderLine.deleteInReview;
+						SET optimizedOrderLineRef.canIncrease = orderLine.canIncrease;
+						SET optimizedOrderLineRef.canDecrease = orderLine.canDecrease;
+						SET optimizedOrderLineRef.canDelete = orderLine.canDelete;
+						SET optimizedOrderLineRef.canSendComplaint = orderLine.canSendComplaint;
+						SET optimizedOrderLineRef.invoicedQuantity = orderLine.invoicedQuantity;
+					
+					-- Add temporary orderlines
+					ELSEIF orderLine.sku = sku AND EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+					
+						SET optimizedOrderLineRef.orderLineNumber = orderLine.orderLineNumber;
+						SET optimizedOrderLineRef.orderLineSuffix = orderLine.orderLineSuffix;
+						SET optimizedOrderLineRef.sku = orderLine.sku;
+						SET optimizedOrderLineRef.quantityOrderLineUnit = orderLine.quantityOrderLineUnit;
+						SET optimizedOrderLineRef.orderLineUnit = orderLine.orderLineUnit;
+						SET optimizedOrderLineRef.deliveryDate = orderLine.deliveryDate;
+						SET optimizedOrderLineRef.canIncrease = orderLine.canIncrease;
+						SET optimizedOrderLineRef.canDecrease = orderLine.canDecrease;
+						SET optimizedOrderLineRef.canDelete = orderLine.canDelete;
+						SET optimizedOrderLineRef.addInReview = orderLine.addInReview;
+						
+					END IF;
+					
+					IF NOT newOptimizedOrderline THEN
+						
+						MOVE optimizedOrderLineHeadRef TO optimizedOrderLinesRef;
+						MOVE optimizedOrderLineHeadRef FIRSTCHILD;
+						DECLARE notFound BOOLEAN true;
+						
+						WHILE notFound AND LASTMOVE(optimizedOrderLineHeadRef) DO
+							
+							DECLARE orderLineTestRef REFERENCE TO orderLine;
+							
+							SET notFound = NOT (optimizedOrderLineHeadRef.sku = orderLine.sku AND optimizedOrderLineHeadRef.totalQuantityUnit = orderLine.alternateUnit); 
+							
+							IF notFound THEN
+								
+								MOVE optimizedOrderLineHeadRef NEXTSIBLING;
+								
+							END IF;
+							
+						END WHILE; 
+						 
+						
+						CREATE LASTCHILD OF optimizedOrderLineHeadRef.combinedOrderLineNumbers AS combinedOrderLineNumbersRef TYPE NameValue VALUE CAST(orderLine.orderLineNumber AS INT);
+	          					
+						SET optimizedOrderLineHeadRef.totalQuantity = optimizedOrderLineHeadRef.totalQuantity + orderLine.quantityAlternateUnit;						
+						SET optimizedOrderLineHeadRef.totalLineAmount = optimizedOrderLineHeadRef.totalLineAmount + orderLine.lineAmount;
+						SET optimizedOrderLineHeadRef.totalLineAmountWithoutDiscount = optimizedOrderLineHeadRef.totalLineAmountWithoutDiscount + orderLine.lineAmountWithoutDiscount;
+						SET optimizedOrderLineHeadRef.totalLineDiscountAmount = optimizedOrderLineHeadRef.totalLineDiscountAmount +
+																	   optimizedOrderLineHeadRef.discountAmount1 + 
+																	   optimizedOrderLineHeadRef.discountAmount2 + 
+																	   optimizedOrderLineHeadRef.discountAmount3 +
+																	   optimizedOrderLineHeadRef.discountAmount4 + 
+																	   optimizedOrderLineHeadRef.discountAmount5 + 
+																	   optimizedOrderLineHeadRef.discountAmount6;
+																															   
+						SET optimizedOrderLineHeadRef.canIncrease = optimizedOrderLineHeadRef.canIncrease AND orderLine.canIncrease;
+						SET optimizedOrderLineHeadRef.canDecrease = optimizedOrderLineHeadRef.canDecrease AND orderLine.canDecrease;						
+						SET optimizedOrderLineHeadRef.canDelete = optimizedOrderLineHeadRef.canDelete AND orderLine.canDelete;
+						SET optimizedOrderLineHeadRef.updateInReview = optimizedOrderLineHeadRef.updateInReview AND orderLine.updateInReview;
+						SET optimizedOrderLineHeadRef.newTotalQuantity = optimizedOrderLineHeadRef.newTotalQuantity + orderLine.newQuantity;
+						SET optimizedOrderLineHeadRef.deleteInReview = optimizedOrderLineHeadRef.deleteInReview AND orderLine.deleteInReview;
+						SET optimizedOrderLineHeadRef.canSendComplaint = optimizedOrderLineHeadRef.canSendComplaint AND orderLine.canSendComplaint;
+					
+					ELSE
+				
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

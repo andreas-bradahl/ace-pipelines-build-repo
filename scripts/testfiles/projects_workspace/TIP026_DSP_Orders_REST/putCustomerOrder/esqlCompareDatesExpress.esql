@@ -1,0 +1,42 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCompareDatesExpress
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE deadlineDate GMTTIMESTAMP CAST(SUBSTRING(InputRoot.JSON.Data.expressdelivery.deadline BEFORE '+') AS TIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mm');
+		DECLARE deliveryDate CHARACTER InputRoot.JSON.Data.expressdelivery.deliveryDate;
+		DECLARE requestedDeliveryDate CHARACTER orderRequestRef.requestedDeliveryDate;
+		
+		DECLARE alreadySentMessage BOOLEAN FALSE;
+		
+		IF deliveryDate = requestedDeliveryDate THEN
+			
+			IF deadlineDate < CURRENT_TIMESTAMP THEN
+				
+				DECLARE envRef REFERENCE TO Environment;
+				CALL setErrorMessage(400, 'FAILED', 'AFTER_DEADLINE', envRef);
+				
+				SET alreadySentMessage = TRUE;
+				PROPAGATE TO TERMINAL 'out1';
+			ELSE
+				SET alreadySentMessage = TRUE;
+				PROPAGATE TO TERMINAL 'out';
+			END IF;
+			
+		END IF;
+		
+		IF NOT alreadySentMessage THEN
+		
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'AFTER_DEADLINE', envRef);
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+    <xsd:element name="CUNO" type="xsd:string"/> 
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input path="/getProductAvailability/getProductAvailabilityRequest.xsd" var="var"/>
+    <input path="/getProductAvailability/getProductAvailabilityRequest.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var5"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var4"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareGetOCUSMA00">
+        <input path="$var1/mb:env(Environment)">
+            <cast path="Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var" var="any"/>
+        </input>
+        <output path="$var3/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var" var="any1"/>
+        </output>
+        <output path="$var4/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="CUNO" ref="var5" var="any2"/>
+        </output>
+        <passthrough>
+            <input path="."/>
+            <output path="$Environment/."/>
+            <updates/>
+        </passthrough>
+        <local>
+            <input path="Variables/getProductAvailabilityRequest[1]"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination"/>
+            <move>
+                <input path="customerNumber"/>
+                <output path="HTTP/QueryString/CUNO"/>
+            </move>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

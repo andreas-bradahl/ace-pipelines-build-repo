@@ -1,0 +1,30 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE GetDeadline_GetExtiValue
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE zDeadlineMinutes CHAR 'zDeadlineMinutes_';
+		DECLARE getHeadNameValueRef REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue;
+		DECLARE whlo CHAR TRIM(GetValueFromNameValueList('WHLO', getHeadNameValueRef));
+		DECLARE sqlQuery CHAR 'SELECT value FROM ApplicationData WHERE parameter = CONCAT(?,?)';
+		SET Environment.Tine_esa.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, whlo);
+		DECLARE tine_esaRef, tine_esaRowCursor REFERENCE TO Environment.Tine_esa;
+		
+		MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+		IF LASTMOVE(tine_esaRowCursor) THEN
+			SET Environment.Variables.EXTI = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+			
+		ELSE
+			SET Environment.Tine_esa.Row[] = PASSTHRU(sqlQuery, zDeadlineMinutes, 'All');
+			MOVE tine_esaRowCursor FIRSTCHILD NAME 'Row';
+			SET Environment.Variables.Global.EXTI = CAST(FIELDVALUE(tine_esaRowCursor.value) AS INT);
+			
+		END IF;
+		DELETE FIELD tine_esaRef;
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

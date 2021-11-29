@@ -1,0 +1,13 @@
+BROKER SCHEMA putSubscriptionOrderStatus
+
+
+CREATE COMPUTE MODULE esqlPrepareResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.XMLNSC.ns:putSubscriptionOrderStatusResponseOK.ns:orderNumber = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+		SET OutputRoot.XMLNSC.ns:putSubscriptionOrderStatusResponseOK.ns:success = TRUE;
+				
+		RETURN TRUE;
+	END;
+END MODULE;

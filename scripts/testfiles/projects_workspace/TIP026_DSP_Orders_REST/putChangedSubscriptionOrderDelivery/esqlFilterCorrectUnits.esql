@@ -1,0 +1,43 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlFilterCorrectUnits
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE currentOrderline REFERENCE TO InputLocalEnvironment.Variables.CurrentOrderLine;
+		DECLARE validUnitRef REFERENCE TO Environment.Variables.SQLQueries.{currentOrderline.ns:sku};
+		
+		IF currentOrderline.ns:orderLineUnit IS NULL THEN
+			PROPAGATE TO TERMINAL 'out';	
+			
+		ELSEIF currentOrderline.ns:orderLineUnit = '' THEN
+			PROPAGATE TO TERMINAL 'out';
+				
+		ELSEIF NOT (currentOrderline.ns:orderLineUnit = 'STK' OR currentOrderline.ns:orderLineUnit = 'D') THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSEIF NOT InputLocalEnvironment.Variables.buyableInSalesUnit OR NOT InputLocalEnvironment.Variables.buyableInBaseUnit THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSEIF currentOrderline.ns:orderLineUnit = 'STK' THEN
+			DECLARE optimize BOOLEAN FALSE;
+			MOVE validUnitRef FIRSTCHILD NAME 'ValidUnits';
+			WHILE LASTMOVE(validUnitRef) DO  
+				IF validUnitRef.UNIT = 'D' THEN
+					SET optimize = TRUE;
+				END IF;
+				MOVE validUnitRef NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			IF optimize = TRUE THEN
+				PROPAGATE TO TERMINAL 'out1';
+			ELSE 
+				PROPAGATE TO TERMINAL 'out';
+			END IF;
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

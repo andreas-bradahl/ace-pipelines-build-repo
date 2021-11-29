@@ -1,0 +1,35 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE dbGetPromotionalCode
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryPromotionalCode CHAR ' 
+			SELECT value
+			FROM ApplicationData 
+			WHERE [parameter] = ''zPromotionalM3ItemType''
+		';
+			
+		SET Environment.Variables.SQLQueries.PromotionalCode[] = PASSTHRU(sqlQueryPromotionalCode);
+		
+		DECLARE sqlQueryPromotionalOrderCode CHAR ' 
+			SELECT value 
+			FROM ApplicationData
+			WHERE [parameter] = ''zPromotionalM3OrderType''
+		';
+			
+		SET Environment.Variables.SQLQueries.PromotionalOrderCode[] = PASSTHRU(sqlQueryPromotionalOrderCode);
+		
+		DECLARE sqlQueryDefaultM3OrderType CHAR ' 
+			SELECT value
+			FROM ApplicationData 
+			WHERE [parameter] = ''zDefaultM3OrderType''
+		';
+			
+		SET Environment.Variables.SQLQueries.DefaultM3OrderType[] = PASSTHRU(sqlQueryDefaultM3OrderType);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

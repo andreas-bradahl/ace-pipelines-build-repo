@@ -1,0 +1,33 @@
+
+
+CREATE COMPUTE MODULE getItemPerCustomerPrices_SortResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE priceUnit CHAR Environment.Variables.Unit || 'price';
+		
+		SET Environment.Variables.ItemPrices.{priceUnit} = InputRoot.JSON.Data.results;
+		
+		/*
+				
+		FOR requestedItemInfo AS InputRoot.JSON.Data.results.Item[] DO
+			
+			FOR itemInfo AS Environment.Variables.FullItemsList.Item[] DO
+							
+				IF requestedItemInfo.records.Item.ITNO = itemInfo.ITNO THEN
+				
+					CREATE FIELD itemInfo.{priceUnit}; 
+					SET itemInfo.{priceUnit} = requestedItemInfo.records.Item;
+					
+				END IF;
+								
+			END FOR;
+			
+		END FOR;
+		
+		*/
+		
+		RETURN FALSE;
+		
+	END;
+END MODULE;

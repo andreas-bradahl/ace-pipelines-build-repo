@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="OriginRequest" type="OriginRequest"></xsd:element>
+
+    <xsd:complexType name="OriginRequest">
+    	<xsd:sequence>
+    		<xsd:element name="CUNO" type="xsd:string" minOccurs="1" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORNO" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="DSTX" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORDF" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORDT" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORSL" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORST" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ORTY" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="ANTP" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="CONO" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

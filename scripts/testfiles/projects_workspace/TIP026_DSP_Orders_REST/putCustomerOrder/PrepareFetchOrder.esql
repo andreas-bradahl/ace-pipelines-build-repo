@@ -1,0 +1,19 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareFetchOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE companyNumber CHAR orderRef.companyNumber;
+		DECLARE customerNumber CHAR orderRef.customerNumber;
+		DECLARE orderNumber CHAR orderRef.orderNumber;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.companyNumber = companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.customerNumber = customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.orderNumber = orderNumber;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

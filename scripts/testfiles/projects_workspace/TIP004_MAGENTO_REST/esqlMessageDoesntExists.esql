@@ -1,0 +1,11 @@
+
+
+CREATE COMPUTE MODULE esqlMessageDoesntExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.Variables.Flags.MessageExists = FALSE;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

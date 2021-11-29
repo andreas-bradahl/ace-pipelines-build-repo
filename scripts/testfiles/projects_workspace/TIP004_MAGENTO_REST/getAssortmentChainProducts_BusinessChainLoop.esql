@@ -1,0 +1,31 @@
+
+
+CREATE COMPUTE MODULE getAssortmentChainProducts_BusinessChainLoop
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		
+		CREATE FIELD Environment.Variables.ProductData.BusinessChainAssortment;
+		CREATE FIELD Environment.Variables.ProductData.BusinessChainAssortment.Warehouse;
+		CREATE FIELD Environment.Variables.ProductData.BusinessChainAssortment.SupplyModel;
+		
+		
+		DECLARE businessChainRef REFERENCE TO Environment.Variables.UserInfo.BusinessChains;
+		IF businessChainRef is not null then
+			MOVE businessChainRef FIRSTCHILD;
+			X : WHILE LASTMOVE(businessChainRef) DO
+				SET customerRef.BusinessChain = businessChainRef;
+				PROPAGATE TO TERMINAL 'out1';
+				-- Next business chain
+				DELETE FIELD customerRef.BusinessChain;
+				MOVE businessChainRef NEXTSIBLING;
+				IF TRIM(businessChainRef) = '' THEN
+					LEAVE X;
+				END IF;
+			END WHILE;
+		END IF;
+		--DELETE FIELD Environment.Variables.UserInfo.BusinessChains;
+		RETURN TRUE;
+	END;
+END MODULE;
+

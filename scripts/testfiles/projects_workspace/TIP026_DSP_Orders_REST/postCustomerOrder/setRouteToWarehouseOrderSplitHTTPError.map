@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postCustomerOrder" version="8.0.5.0" xmlns:map="postCustomerOrder">
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="setRouteToWarehouseOrderSplitHTTPError">
+        <output path="mb:msg(BLOB,assembly,BLOB,LocalEnvironment)"/>
+        <assign value="warehouseOrderSplitHTTPError">
+            <output path="LocalEnvironment/Destination/RouterList/DestinationData/labelName"/>
+        </assign>
+    </mappingDeclaration>
+</mappingRoot>

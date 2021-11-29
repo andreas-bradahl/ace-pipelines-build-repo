@@ -1,0 +1,36 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareAddBatchText
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE RemainingText CHAR varRef.AddBatchText.TEXT;
+		DECLARE ORNO CHAR varRef.AddBatchText.ORNO;
+		DECLARE TYPE INT varRef.AddBatchText.TYPE; -- 1 = order header text, 2 = order line text
+		DECLARE TYTR INT varRef.AddBatchText.TYTR; -- 1 = pre, 2 = post, 3 = F6
+		DECLARE TXHE CHAR varRef.AddBatchText.TXHE; -- CO01 = orderComment, CO04 = customerReference
+		DECLARE RemainingTextLength INT LENGTH(RemainingText);
+		DECLARE maxTextLength INT 240;
+		SET Environment.Variables.prepareAddBatchTextLoopControl = true;
+		DECLARE prepareAddBatchTextLoopControlRef REFERENCE TO Environment.Variables.prepareAddBatchTextLoopControl;  
+		
+		WHILE RemainingTextLength > 0 AND prepareAddBatchTextLoopControlRef DO
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.PARM = SUBSTRING(RemainingText FROM 1 FOR minimumINT(RemainingTextLength, maxTextLength));
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.TYPE = TYPE;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.TYTR = TYTR;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.TXHE = TXHE;
+			SET RemainingText = SUBSTRING(RemainingText FROM 1 + minimumINT(RemainingTextLength, maxTextLength));
+			SET RemainingTextLength = LENGTH(RemainingText);
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END WHILE;
+		
+		DELETE FIELD prepareAddBatchTextLoopControlRef;
+		DELETE FIELD varRef.AddBatchText;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

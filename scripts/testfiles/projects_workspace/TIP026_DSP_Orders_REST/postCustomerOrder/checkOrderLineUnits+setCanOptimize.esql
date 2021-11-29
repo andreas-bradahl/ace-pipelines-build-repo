@@ -1,0 +1,135 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE "checkOrderLineUnits+setCanOptimize"
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE companyNumber CHAR orderRef.companyNumber;
+		DECLARE itemNumber CHAR;
+		DECLARE validBaseUnitForOptimization CHAR 'STK';
+		DECLARE validSalesUnitForOptimization CHAr 'D';
+		DECLARE orderLineCursorIndex INT 0;
+				
+		DECLARE currentDate INT CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'yyyyMMdd') AS INT);
+		DECLARE pricelist CHAR varRef.pricelist;
+		DECLARE currency CHAR varRef.currency;
+		DECLARE itemclass CHAR varRef.itemclass;
+		
+		DECLARE sqlMitaunQuery CHAR 'select MUALUN, MUAUS2 from MITAUN where MUCONO=? AND MUITNO=?';
+		DECLARE muaus2Query CHAR 'select MUALUN, MUAUS2, MUCOFA from MITAUN where MUCONO=? AND MUITNO=? AND MUAUS2 = ''1'''; 
+		DECLARE sqlMitmasQuery CHAR 'select MMUNMS, MMALUN, MMITCL from MITMAS where MMCONO=? AND MMITNO=?';	
+		DECLARE oprbasQuery CHAR 'SELECT COUNT(ODITNO) AS COUNT FROM OPRBAS WHERE ODCONO=? AND ODITNO=? AND ODPRRF=? AND ODCUCD=? AND ODFVDT<=? AND ODLVDT>=?';
+		
+		
+		
+		DECLARE validOrderLineUnits BOOLEAN true;
+		DECLARE canOptimizeOrderLine BOOLEAN;
+		
+		DECLARE conversionFactor INT 1;
+		DECLARE desiredQuantity INT 1;
+		DECLARE desiredOrderLineUnit CHAR '';
+		DECLARE baseUnitQuantity INT 1;
+		DECLARE salesUnitQuantity INT 1;
+		
+		
+		
+				
+		FOR orderLine as orderRef.orderLines.Item[] DO
+			
+		IF validOrderLineUnits = TRUE THEN
+			
+			DECLARE validUnit BOOLEAN true;
+			DECLARE buyableInBaseUnit BOOLEAN false;
+			
+			SET orderLineCursorIndex = orderLineCursorIndex + 1;
+			
+			DECLARE orderLineRef REFERENCE TO orderRef.orderLines.Item[orderLineCursorIndex];
+			DECLARE itno CHAR orderLineRef.sku;
+			
+			SET Environment.OPRBAS = PASSTHRU(oprbasQuery, companyNumber, itno, pricelist, currency, currentDate, currentDate);
+			SET Environment.MITMAS = PASSTHRU(sqlMitmasQuery, companyNumber, itno);
+			SET Environment.MITAUN = PASSTHRU(sqlMitaunQuery, companyNumber, itno);
+			SET Environment.defaultValue = PASSTHRU(muaus2Query, companyNumber, itno);
+			
+			DECLARE oprbasCount INT Environment.OPRBAS.COUNT;
+			
+			DELETE FIELD Environment.OPRBAS;
+			
+			DECLARE orderLineUnit CHAR COALESCE(orderLine.orderLineUnit, '');
+			SET itemNumber = orderLine.sku;
+			
+			IF NOT orderLineUnit = '' THEN
+				
+				SET LocalEnvironment.{itemNumber}.MITAUN.Row[] = PASSTHRU(sqlMitaunQuery, companyNumber, itemNumber); 
+				SET LocalEnvironment.{itemNumber}.MITMAS.Row[] = PASSTHRU(sqlMitmasQuery, companyNumber, itemNumber);
+				
+				DECLARE foundMitaun BOOLEAN EXISTS(SELECT * FROM LocalEnvironment.{itemNumber}.MITAUN.Row[] AS ma WHERE ma.MUALUN = orderLineUnit);
+				DECLARE foundMitmas BOOLEAN EXISTS(SELECT * FROM LocalEnvironment.{itemNumber}.MITMAS.Row[] AS mm WHERE mm.MMUNMS = orderLineUnit OR mm.MMALUN = orderLineUnit);
+					
+				SET validUnit = foundMitaun OR foundMitmas;
+				
+			END IF;
+			
+			IF orderLineUnit = validBaseUnitForOptimization AND validUnit THEN
+				
+				DECLARE validSalesUnitFound BOOLEAN EXISTS(SELECT * FROM LocalEnvironment.{itemNumber}.MITAUN.Row[] AS ma WHERE ma.MUALUN = validSalesUnitForOptimization)
+												OR  EXISTS(SELECT * FROM LocalEnvironment.{itemNumber}.MITMAS.Row[] AS mm WHERE mm.MMUNMS = validSalesUnitForOptimization OR mm.MMALUN = validSalesUnitForOptimization);
+				
+				SET canOptimizeOrderLine = validSalesUnitFound;
+				
+			ELSE 
+			
+				SET canOptimizeOrderLine = false;
+				
+			END IF;
+			
+			SET validOrderLineUnits = validOrderLineUnits AND validUnit;
+			
+			SET orderLine.canOptimizeOrderLine = canOptimizeOrderLine;
+			
+			IF oprbasCount > 0 THEN
+				SET buyableInBaseUnit = true;
+			END IF;
+			
+			
+			--SJEKE OM DEN SKAL OPTIMERES
+			IF orderLineRef.orderLineUnit = 'STK' AND NOT buyableInBaseUnit THEN
+
+				SET canOptimizeOrderLine = TRUE;
+				--todo
+		SET conversionFactor = CAST(Environment.defaultValue.MUCOFA AS INT);
+		SET desiredQuantity = CAST(orderLineRef.quantity AS INT);
+		SET desiredOrderLineUnit = orderLineRef.orderLineUnit;
+
+		SET baseUnitQuantity = MOD(desiredQuantity, conversionFactor);
+		IF baseUnitQuantity =0 THEN
+			SET validOrderLineUnits = TRUE;
+		ELSE
+			SET validOrderLineUnits = FALSE;
+		END IF;
+		SET salesUnitQuantity = (desiredQuantity) / conversionFactor;
+
+			END IF;
+			
+			IF orderLineRef.orderLineUnit = Environment.MITMAS.MMALUN THEN
+				SET validOrderLineUnits = TRUE;
+			ELSEIF orderLineRef.orderLineUnit = Environment.MITMAS.MMUNMS THEN
+				SET validOrderLineUnits = TRUE;
+			ELSEIF orderLineRef.orderLineUnit = Environment.defaultValue.MUALUN THEN
+				SET validOrderLineUnits = TRUE;
+			END IF;
+
+		END IF;
+			
+		END FOR;
+		
+		SET varRef.validOrderLineUnits = validOrderLineUnits;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

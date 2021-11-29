@@ -1,0 +1,114 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCantBeLoweredSplit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE error BOOLEAN FALSE;
+		DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+		
+		DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+			SET error = cantBeLowered(customerWarehouseOrderRef);
+		END IF;
+			
+		IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+			SET error = cantBeLowered(promotionalOrder);
+		END IF;
+	
+		IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+			SET error = cantBeLowered(normalOrder);	
+		END IF;
+		
+		IF error THEN
+			
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'ITEM_CLASS_CANT_LOWER', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+							
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE cantBeLowered (IN orderLinesRef REFERENCE)
+RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE ITNO CHARACTER;
+		DECLARE ORQT CHARACTER;
+		DECLARE orderedQuantity INTEGER;
+		
+		FOR orderLine AS orderLinesRef.Item[] DO
+			
+			IF orderLine.action = 'upd' OR orderLine.action = 'del' THEN
+									
+				DECLARE sqlQueryCantBeLoweredItemCode CHAR ' 
+					SELECT MMITCL
+					FROM MITMAS
+					WHERE
+							MMCONO = ''100''
+						AND MMITNO = ?
+				';
+					
+				SET Environment.Variables.SQLQueries.CantBeLoweredItemCode = PASSTHRU(sqlQueryCantBeLoweredItemCode, orderLine.sku);
+				
+				DECLARE itemCode CHARACTER Environment.Variables.SQLQueries.CantBeLoweredItemCode.MMITCL;
+				
+				FOR code AS Environment.Variables.SQLQueries.CantBeLoweredItemCodes.Code[] DO
+				
+					IF itemCode = code.code THEN
+						
+						IF orderLine.action = 'upd' THEN
+					
+							FOR lstLine2Record AS Environment.JSONResponse.LstLine2.Data.MIRecord.Item[] DO
+								
+								SET ITNO = TRIM(GetValueFromNameValueList('ITNO', lstLine2Record.NameValue));
+								
+								IF ITNO = orderLine.sku THEN
+									
+									SET ORQT = TRIM(GetValueFromNameValueList('ORQT', lstLine2Record.NameValue));
+									
+									IF CONTAINS(ORQT, '.') THEN
+										SET orderedQuantity = CAST(SUBSTRING(ORQT BEFORE '.') AS INTEGER);
+									ELSE
+										SET orderedQuantity = CAST(ORQT AS INTEGER);					
+									END IF;
+									
+									IF orderedQuantity > orderLine.quantity THEN
+										
+										RETURN TRUE;
+										
+									END IF;
+									
+								END IF;
+								
+							END FOR;
+						
+						ELSE
+												
+							RETURN TRUE;
+						
+						END IF;
+						
+					END IF;
+				
+				END FOR;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN FALSE;
+		
+	END;
+	
+END MODULE;
+

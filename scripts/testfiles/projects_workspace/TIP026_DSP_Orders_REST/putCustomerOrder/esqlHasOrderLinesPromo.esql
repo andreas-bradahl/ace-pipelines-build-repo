@@ -1,0 +1,20 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlHasOrderLinesPromo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF EXISTS(Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines.Item[]) THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

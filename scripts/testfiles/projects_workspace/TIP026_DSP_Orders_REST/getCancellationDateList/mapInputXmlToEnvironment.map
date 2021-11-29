@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCancellationDateList" version="8.0.5.0" xmlns:map="getCancellationDateList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:Q1="http://TIP026_DSP_Orders_REST">  
+        <xsd:import namespace="http://TIP026_DSP_Orders_REST" schemaLocation="/cancellationDateList.xsd"/> 
+    <xsd:element name="Global"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="OriginRequest" type="Q1:getCancellationDateListRequest"/> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element>  
+          </xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var5"/>
+    <input path="/cancellationDateList.xsd" var="var6"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var7"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputXmlToEnvironment">
+        <input path="$var5/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var4"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST" path="$var6/mb:msg(getCancellationDateListRequest,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var4"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$MessageAssembly/getCancellationDateListRequest"/>
+                    <output path="Variables/Global/OriginRequest"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putCustomerOrder" version="8.0.5.0" xmlns:map="putCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+    <xsd:element name="SQLQueries"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="PromotionalType"> 
+          <xsd:complexType> 
+            <xsd:sequence> 
+              <xsd:element name="value" type="xsd:string"/> 
+            </xsd:sequence> 
+          </xsd:complexType> 
+        </xsd:element> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element> 
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var5"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var6"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var7"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var2"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var3"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareLegalPostCustomerOrder">
+        <input path="$var5/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="SQLQueries" ref="var4" var="any"/>
+        </input>
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}PutCustomerOrderRequest" ref="var1" var="anyType"/>
+        </input>
+        <output path="$var7/mb:env(Environment)" var="Environment1">
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="SQLQueries" ref="var4" var="any1"/>
+        </output>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var2/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}NewOrder" ref="var3" var="anyType1"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates/>
+        </passthrough>
+        <foreach>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/orderLines/Item"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/orderLines/Item"/>
+            <move automap="true">
+                <input path="sku"/>
+                <output path="sku"/>
+            </move>
+            <move automap="true">
+                <input path="quantity"/>
+                <output path="quantity"/>
+            </move>
+            <move automap="true">
+                <input path="lostSalesWarehouse"/>
+                <output path="lostSalesWarehouse"/>
+            </move>
+            <move automap="true">
+                <input path="orderLineUnit"/>
+                <output path="orderLineUnit"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine1"/>
+                <output path="discountLine1"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine2"/>
+                <output path="discountLine2"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine3"/>
+                <output path="discountLine3"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine4"/>
+                <output path="discountLine4"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine5"/>
+                <output path="discountLine5"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine6"/>
+                <output path="discountLine6"/>
+            </move>
+            <move automap="true">
+                <input path="isLostSales"/>
+                <output path="isLostSales"/>
+            </move>
+        </foreach>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/companyNumber"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/companyNumber"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/customerNumber"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/customerNumber"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/orderNumber"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/customerOrderNumber"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/estimatedOrderAmount"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/estimatedOrderAmount"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/requestedDeliveryDate"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/requestedDeliveryDate"/>
+        </move>
+        <move>
+            <input path="$Environment/Variables/SQLQueries[1]/PromotionalType/value"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/orderType"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

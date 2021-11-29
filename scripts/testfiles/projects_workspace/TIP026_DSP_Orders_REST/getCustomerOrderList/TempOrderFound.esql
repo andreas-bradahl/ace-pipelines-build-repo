@@ -1,0 +1,18 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE TempOrderFound
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE TempOrderFound BOOLEAN EXISTS(InputRoot.JSON.Data.MIRecord[]);
+		
+		IF TempOrderFound THEN
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,28 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE orderTypeHasExtraCharges
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data; 
+		
+		DECLARE orderType CHAR orderRef.orderType;
+		DECLARE extraChargeName CHAR 'zOrderHasExtraCharges';
+		DECLARE sqlQuery CHAR 'select code from Code c inner join CodeType ct on c.typeId=ct.Id AND c.code = ? AND ct.name= ?';
+		SET sqlQuery = 'select code from Code c inner join CodeType ct on c.typeId=ct.Id AND ct.name=''zOrderHasExtraCharges'' AND c.code = ''' || orderType || '''';
+		
+		SET LocalEnvironment.CodeQuery = PASSTHRU(sqlQuery);
+
+		IF EXISTS(SELECT * FROM LocalEnvironment.CodeQuery[]) THEN
+			
+			SET varRef.orderTypeHasExtraCharges = true;
+			SET varRef.extraChargeDone = false;
+			SET varRef.isExtraOrderCharge = false;
+
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

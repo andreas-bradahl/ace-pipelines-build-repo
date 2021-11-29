@@ -1,0 +1,14 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlThrowErrorNotF
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+		SET OutputRoot.JSON.Data.Response = 'FAILED';
+		SET OutputRoot.JSON.Data.Error_Code = 'NO_SUBSCRIPTION_ORDER_FOUND';
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,69 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE getOrderTypeCostOfOrderTypeAndDeliveryDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE crmRef REFERENCE TO varRef.CRM;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		
+		DECLARE zExtraDeliveryDaysQuery CHAR 'select price from zExtraDeliveryDays where customerLevel=? AND dayOfWeek=? AND zone=? AND orderType=?';
+		DECLARE zOrderChargeItemsQuery CHAR 'select itemNumber from zOrderChargeItems where price=?';
+		DECLARE zChargeMvxOrderType CHAR 'zChargeMvxOrderType';
+		
+		DECLARE customerLevel INT crmRef.partnerlevel;
+		DECLARE zone CHAR crmRef.zone;
+		DECLARE requestedDeliveryDate DATE CAST(orderRequestRef.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		DECLARE dayOfWeek INT EXTRACT(DAYOFWEEK FROM requestedDeliveryDate);
+		DECLARE isExtraDelivery BOOLEAN COALESCE(varRef.isExtraDelivery, false);
+		DECLARE isExpressOrder BOOLEAN COALESCE(varRef.isExpressOrder, false);
+		DECLARE orderType CHAR getOrderType(isExtraDelivery, isExpressOrder);
+		
+		SET LocalEnvironment.zExtraDeliveryDays = PASSTHRU(zExtraDeliveryDaysQuery, customerLevel, dayOfWeek, zone, orderType);
+		
+		DECLARE price DECIMAL LocalEnvironment.zExtraDeliveryDays.price;
+		
+		SET LocalEnvironment.zOrderChargeItems = PASSTHRU(zOrderChargeItemsQuery, price);
+		
+		DECLARE itemNumber CHAR LocalEnvironment.zOrderChargeItems.itemNumber;
+		
+		DECLARE chargeOrderType CHAR getSingleValueFromApplicationData(zChargeMvxOrderType, LocalEnvironment);
+		
+		SET varRef.ExtraOrderCharge.price = price;
+		SET varRef.ExtraOrderCharge.itemNumber = COALESCE(itemNumber, '');
+		SET varRef.ExtraOrderCharge.chargeOrderType = chargeOrderType;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE FUNCTION getOrderType (IN isExtraDelivery BOOLEAN, IN isExpressOrder BOOLEAN) RETURNS CHAR
+	BEGIN
+		
+		IF isExtraDelivery AND NOT isExpressOrder THEN
+			
+			RETURN 'NXO';
+			
+		ELSEIF NOT isExtraDelivery AND isExpressOrder THEN
+			
+			RETURN 'NEO';
+			
+		END IF;
+		
+		RETURN NULL;
+	END; 
+
+
+/*
+
+select price from tine_esa..zExtraDeliveryDays
+where
+customerLevel=@customerlevel
+AND dayOfWeek=@weekdayNumber
+AND zone=@zone AND orderType=@orderTypeTH
+
+*/

@@ -1,0 +1,56 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE ValidateAllOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef, orderLineCursor REFERENCE TO Environment.OrderRequest;
+        DECLARE orderNumber CHAR orderRequestRef.orderNumber;
+        -- DECLARE tempOrderNumber CHAR '';
+        DECLARE msgItemCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item;
+        DECLARE noMiniTank,noWO_PO_DO BOOLEAN true;
+        
+        WHILE LASTMOVE(msgItemCursor) DO
+        	DECLARE ITNO char GetValueFromNameValueList('ITNO',msgItemCursor.NameValue); 
+        	DECLARE RORC char GetValueFromNameValueList('RORC',msgItemCursor.NameValue);
+        	DECLARE RORN char GetValueFromNameValueList('RORN',msgItemCursor.NameValue);
+        	
+            IF CheckValueFromNoDeleteItemClassList(ITNO,Environment.NoDeleteItemList) is not NULL THEN
+            	SET noMiniTank = FALSE; 
+				Call setErrorMessage (400, 'FAILED','MINI_TANK', Environment);
+				PROPAGATE TO TERMINAL 'Failure';
+				
+            ELSEIF RORC in ('1','2','5') AND (RORN <> '??????????' And RORN <> '￮￮￮￮￮￮￮￮￮￮') THEN
+            	SET noMiniTank = FALSE; 
+				Call setErrorMessage (400, 'FAILED','CONNECTED_ORDER', Environment);
+				PROPAGATE TO TERMINAL 'Failure';
+				   	
+            END IF;
+            
+            MOVE msgItemCursor NEXTSIBLING REPEAT NAME;
+               
+        END WHILE;
+        
+        IF noMiniTank AND noWO_PO_DO THEN
+        	PROPAGATE TO TERMINAL  'out';
+        	
+        END IF;
+        
+        
+        RETURN FALSE;
+    END;
+END MODULE;
+
+CREATE FUNCTION CheckValueFromNoDeleteItemClassList(IN itemName CHAR, IN nameValueListRef REFERENCE) RETURNS CHAR
+BEGIN
+	DECLARE bolFound BOOLEAN FALSE;
+	MOVE nameValueListRef FIRSTCHILD NAME 'Row';	
+		WHILE LASTMOVE(nameValueListRef) IS TRUE AND bolFound IS FALSE DO
+			IF nameValueListRef.MMITNO = itemName THEN
+				SET bolFound = TRUE;
+				RETURN nameValueListRef.MMITNO;
+			END IF;			
+			MOVE nameValueListRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+	RETURN NULL; -- When not found
+END;

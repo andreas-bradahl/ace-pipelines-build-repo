@@ -1,0 +1,17 @@
+
+
+CREATE COMPUTE MODULE loggingPreCreateCallLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE createStarted CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+		
+		SET Environment.Variables.Logging.createStarted = createStarted;
+					
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('___________________________________________________________________________________________________');	
+			
+		RETURN TRUE;
+	END;
+END MODULE;

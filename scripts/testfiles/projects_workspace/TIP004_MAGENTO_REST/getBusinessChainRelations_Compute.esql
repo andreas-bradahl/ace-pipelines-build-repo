@@ -1,0 +1,29 @@
+
+
+CREATE COMPUTE MODULE getBusinessChainRelations_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE customerChainRelationsQuery CHAR
+			'(SELECT 
+				TRIM(OSCUNO) "CustomerID", 
+				TRIM(OSCHL1) "ChainLevel1ID", 
+				TRIM(OSCHL2) "ChainLevel2ID", 
+				TRIM(OSCHL3) "ChainLevel3ID", 
+				TRIM(OSCHL4) "ChainLevel4ID"
+			FROM OCHCUS
+			WHERE OSCONO = ?
+			AND OSFVDT <= ?
+			AND OSLVDT >= ?
+			ORDER BY OSCUNO)';
+			
+		DECLARE inputCONO INT InputLocalEnvironment.REST.Input.Parameters.CONO;
+		DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+		SET OutputRoot.JSON.Data.CustomerChainRelations =
+			PASSTHRU(customerChainRelationsQuery VALUES (inputCONO, currentDate, currentDate));
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

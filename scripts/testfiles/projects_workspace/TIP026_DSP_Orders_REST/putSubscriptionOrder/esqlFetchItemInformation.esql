@@ -1,0 +1,74 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlFetchItemInformation
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE currentOrderlineRef REFERENCE TO InputLocalEnvironment.Variables.CurrentOrderLine;
+		
+		DECLARE priceList CHARACTER Environment.Variables.SQLQueries.PriceList.value;
+		DECLARE currency CHARACTER Environment.Variables.SQLQueries.Currency.value;
+		DECLARE itemClass CHARACTER Environment.Variables.SQLQueries.ItemClass.value;		
+		
+		DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		DECLARE sku CHARACTER currentOrderlineRef.ns:sku;
+
+		DECLARE sqlQueryBuyableInBaseUnit CHAR ' 
+			SELECT ODITNO
+			FROM OPRBAS 
+			WHERE 
+					ODCONO = 100 
+				AND ODITNO = ?
+			    AND ODPRRF = ?
+			    AND ODCUCD = ?
+			    AND ODFVDT <= ?
+			    AND ODLVDT >= ?
+		';
+			
+		SET Environment.Variables.SQLQueries.BuyableInBaseUnit = PASSTHRU(sqlQueryBuyableInBaseUnit, sku, priceList, currency, currentDate, currentDate);	
+		
+		DECLARE sqlQueryBuyableInSalesUnit CHAR ' 
+			SELECT MMITNO
+			FROM MITMAS
+			WHERE
+					MMITCL <> ?
+				AND MMITNO = ?
+		';
+			
+		SET Environment.Variables.SQLQueries.BuyableInSalesUnit = PASSTHRU(sqlQueryBuyableInSalesUnit, itemClass, sku);	
+		
+		DECLARE sqlQueryConversionFactor CHAR ' 
+			SELECT MUCOFA 
+			FROM MITAUN 
+			WHERE 
+						MUCONO = 100 
+					AND MUAUTP = 1 
+					AND MUAUS2 = 1
+					AND MUITNO = ?
+		';
+			
+		SET Environment.Variables.SQLQueries.ConversionFactor = PASSTHRU(sqlQueryConversionFactor, sku);
+		
+		IF Environment.Variables.SQLQueries.BuyableInBaseUnit.ODITNO IS NOT NULL THEN	
+			SET OutputLocalEnvironment.Variables.buyableInBaseUnit = TRUE;
+		ELSE		
+			SET OutputLocalEnvironment.Variables.buyableInBaseUnit = FALSE;					
+		END IF;
+		
+		IF Environment.Variables.SQLQueries.BuyableInSalesUnit.MMITNO IS NOT NULL THEN	
+			SET OutputLocalEnvironment.Variables.buyableInSalesUnit = TRUE;				
+		ELSE		
+			SET OutputLocalEnvironment.Variables.buyableInSalesUnit = FALSE;				
+		END IF;
+				
+		IF Environment.Variables.SQLQueries.ConversionFactor.MUCOFA IS NOT NULL THEN				
+			SET OutputLocalEnvironment.Variables.conversionFactor = CAST(SUBSTRING(CAST(Environment.Variables.SQLQueries.ConversionFactor.MUCOFA AS CHARACTER) BEFORE '.') AS INTEGER);
+		ELSE		
+			SET OutputLocalEnvironment.Variables.conversionFactor = 1;				
+		END IF;				
+
+		RETURN TRUE;
+	END;
+END MODULE;

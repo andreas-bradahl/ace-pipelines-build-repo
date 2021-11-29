@@ -1,0 +1,22 @@
+BROKER SCHEMA getSubscriptionOrderList
+
+
+CREATE COMPUTE MODULE esqlIterateOverOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE OriginRequest REFERENCE TO Environment.Variables.Global.OriginRequest;
+
+		FOR order AS Environment.Variables.HTTPResponses.OIZ163MI_LstHead.Item[] DO
+			
+			IF OriginRequest.customerNumber = TRIM(order.CUNO) THEN
+				
+				SET OutputLocalEnvironment.Variables.order = order;
+				
+			END IF;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

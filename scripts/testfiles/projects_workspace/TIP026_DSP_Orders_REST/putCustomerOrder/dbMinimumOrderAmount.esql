@@ -1,0 +1,28 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE dbMinimumOrderAmount
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerNumber CHAR Environment.OrderRequest.Data.customerNumber;
+		DECLARE companyNumber CHAR Environment.OrderRequest.Data.companyNumber;
+		DECLARE sqlQuery CHAR 'SELECT KZBEKT FROM ZCUMIN WHERE KZCUNO = ? AND KZCONO = ?';
+		SET Environment.MinimumOrderAmount = PASSTHRU(sqlQuery, customerNumber, companyNumber);
+		
+		--IF Environment.MinimumOrderAmount.KZBEKT = '1' THEN
+		IF Environment.MinimumOrderAmount.KZBEKT = '1' THEN
+			
+			DELETE FIELD Environment.MinimumOrderAmount;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			DELETE FIELD Environment.MinimumOrderAmount;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

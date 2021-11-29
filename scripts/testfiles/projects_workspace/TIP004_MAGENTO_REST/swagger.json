@@ -1,0 +1,600 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "title" : "ApiForNettbutikk",
+    "version" : "1",
+    "description" : "ApiForNettbutikk"
+  },
+  "paths" : {
+    "/warehouses/items" : {
+      "get" : {
+        "operationId" : "getAllItemsPerWarehouse",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/WarehousesItems"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Returns a list of all active (status 20-50) items in all warehouses.",
+        "parameters" : [ {
+          "name" : "CONO",
+          "in" : "query",
+          "type" : "integer",
+          "format" : "100",
+          "required" : true,
+          "description" : "Company number"
+        } ]
+      }
+    },
+    "/businesschains/customers" : {
+      "get" : {
+        "operationId" : "getBusinessChainRelations",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/BusinessChainsCustomers"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Returns a list of all active business chains related to all customers.",
+        "parameters" : [ {
+          "name" : "CONO",
+          "in" : "query",
+          "type" : "integer",
+          "format" : "100",
+          "required" : true,
+          "description" : "Company number"
+        } ]
+      }
+    },
+    "/assortments/items" : {
+      "get" : {
+        "operationId" : "getAllAssortmentsPerItem",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/AssortmentsItems"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Returns a list of all active (per date) assortments and items (status 20-79)",
+        "parameters" : [ {
+          "name" : "CONO",
+          "in" : "query",
+          "type" : "integer",
+          "format" : "100",
+          "required" : true,
+          "description" : "Company number"
+        } ]
+      }
+    },
+    "/assortments/customers" : {
+      "get" : {
+        "operationId" : "getAssortmentsPerCustomer",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/AssortmentsCustomers"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Returns a list of all assortments related to all active (per date) customers. Customer ID can refer to either a customer or a chain.",
+        "parameters" : [ {
+          "name" : "CONO",
+          "in" : "query",
+          "type" : "integer",
+          "format" : "100",
+          "required" : true,
+          "description" : "Company number"
+        } ]
+      }
+    },
+    "/customers/items" : {
+      "get" : {
+        "operationId" : "getItemsPerCustomer",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/CustomerItem"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "204" : {
+            "description" : "No content.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Returns a list of all items that can be ordered (and therefore should be visible) for a given customer.",
+        "parameters" : [ {
+          "name" : "CONO",
+          "in" : "query",
+          "type" : "string",
+          "format" : "100",
+          "required" : true,
+          "description" : "Company number"
+        }, {
+          "name" : "CUNO",
+          "in" : "query",
+          "type" : "string",
+          "format" : "123456",
+          "description" : "Customer number or 'guest'",
+          "required" : true
+        }, {
+          "name" : "DATE",
+          "in" : "query",
+          "type" : "string",
+          "format" : "20190303",
+          "description" : "Date (yyyymmdd)"
+        }, {
+          "name" : "UNIT",
+          "in" : "query",
+          "type" : "string",
+          "format" : "D",
+          "description" : "D (D-pak), F (F-pak), BOTH (D-pak and F-pak) or NONE (only Item ID)",
+          "required" : true
+        }, {
+          "name" : "ORTP",
+          "in" : "query",
+          "type" : "string",
+          "description" : "Type or order (ex. WEB)",
+          "format" : "WEB"
+        }, {
+          "name" : "showSellByDateProducts",
+          "in" : "query",
+          "type" : "boolean",
+          "format" : "true",
+          "description" : "filter products with sellbydate value",
+          "required" : false
+        } ]
+      }
+    },
+    "/items" : {
+      "get" : {
+        "operationId" : "getItems",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "$ref" : "#/definitions/SalesItems"
+            }
+          },
+          "204" : {
+            "description" : "If input parameters are not found, HTTP status code 204 (No content) is returned.",
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          "400" : {
+            "description" : "If input parameters are erroneous, HTTP status code 400 (Bad request) is returned.",
+            "schema" : {
+              "$ref" : "#/definitions/ErrorMessage"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieves extended information about all available sales items",
+        "parameters" : [ {
+          "name" : "locale",
+          "in" : "query",
+          "type" : "string",
+          "format" : "en_WW",
+          "description" : "If locale='EN', some of the data fields are in English. If not present, the same data is returned in Norwegian."
+        }, {
+          "name" : "sku",
+          "in" : "query",
+          "type" : "string",
+          "format" : "1018",
+          "description" : "If this parameter is present, API only returns data for this item. If not present, all items are returned."
+        }, {
+          "name" : "preferredBaseUnit",
+          "in" : "query",
+          "type" : "string",
+          "description" : "ex. L/KG",
+          "format" : "L"
+        }, {
+          "name" : "preferredSalesUnit",
+          "in" : "query",
+          "type" : "string",
+          "description" : "ex. L/KG",
+          "format" : "KG"
+        } ]
+      }
+    },
+    "/items/updater" : {
+      "get" : {
+        "operationId" : "getUpdater",
+        "responses" : {
+          "200" : {
+            "description" : "The operation was successful.",
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        },
+        "produces" : [ "application/json" ],
+        "description" : "Retrieve updater"
+      }
+    }
+  },
+  "basePath" : "/nettbutikkapi/v1",
+  "definitions" : {
+    "WarehousesItems" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "WarehouseID" : {
+            "type" : "string"
+          },
+          "ItemID" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "BusinessChainsCustomers" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "CustomerID" : {
+            "type" : "string"
+          },
+          "ChainLevel1ID" : {
+            "type" : "string"
+          },
+          "ChainLevel2ID" : {
+            "type" : "string"
+          },
+          "ChainLevel3ID" : {
+            "type" : "string"
+          },
+          "ChainLevel4ID" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "AssortmentsItems" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "AssortmentID" : {
+            "type" : "string"
+          },
+          "ItemID" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "AssortmentsCustomers" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "CustomerID" : {
+            "type" : "string"
+          },
+          "AssortmentID" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "CustomerItem" : {
+      "type" : "object",
+      "properties" : {
+        "itemId" : {
+          "type" : "string"
+        },
+        "dpakPrice" : {
+          "type" : "number"
+        },
+        "fpakPrice" : {
+          "type" : "number"
+        },
+        "inAgreementAssortment" : {
+          "type" : "boolean"
+        },
+        "dpakPriceBeforeDiscount" : {
+          "type" : "string"
+        },
+        "dpakPerUnitPrice" : {
+          "type" : "string"
+        },
+        "dpakPerUnitPriceBeforeDiscount" : {
+          "type" : "string"
+        },
+        "fpakPriceBeforeDiscount" : {
+          "type" : "string"
+        },
+        "comparisonPriceUnit" : {
+          "type" : "string"
+        },
+        "comparisonPrice" : {
+          "type" : "string"
+        },
+        "promotionalProduct" : {
+          "type" : "string"
+        },
+        "sellByDate" : {
+          "type" : "string"
+        },
+        "canBeDeliveredAtDate" : {
+          "type" : "string",
+          "format" : null
+        },
+        "canBuy" : {
+          "type" : "boolean"
+        },
+        "cannotBuyCode" : {
+          "type" : "string"
+        },
+        "VAT" : {
+          "type" : "number"
+        }
+      },
+      "required" : [ "itemId", "dpakPrice", "fpakPrice" ]
+    },
+    "SalesItems" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "sku" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "productClass" : {
+            "type" : "string"
+          },
+          "baseUnit" : {
+            "type" : "string"
+          },
+          "salesUnit" : {
+            "type" : "string"
+          },
+          "visible" : {
+            "type" : "boolean"
+          },
+          "weightPerBaseUnit" : {
+            "type" : "number"
+          },
+          "unspscNumber" : {
+            "type" : "string"
+          },
+          "conversionFactor" : {
+            "type" : "number"
+          },
+          "recyclingChargeBaseUnit" : {
+            "type" : "number"
+          },
+          "comparativeUnit" : {
+            "type" : "string"
+          },
+          "categoryLevel1" : {
+            "type" : "string"
+          },
+          "categoryLevel2" : {
+            "type" : "string"
+          },
+          "categoryLevel3" : {
+            "type" : "string"
+          },
+          "brand" : {
+            "type" : "string"
+          },
+          "productGroup" : {
+            "type" : "string"
+          },
+          "newUntilDate" : {
+            "type" : "string"
+          },
+          "expiredUntilDate" : {
+            "type" : "string"
+          },
+          "certifications" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "ingredients" : {
+            "type" : "string"
+          },
+          "nutrition" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/Nutrition"
+            }
+          },
+          "allergens" : {
+            "type" : "string"
+          },
+          "preservable" : {
+            "type" : "string"
+          },
+          "packaging" : {
+            "type" : "string"
+          },
+          "storage" : {
+            "type" : "string"
+          },
+          "searchWords" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "relatedItems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "minimumWeight" : {
+            "type" : "number"
+          },
+          "leadTimeMinimumWeight" : {
+            "type" : "number"
+          },
+          "maxQuantity" : {
+            "type" : "integer"
+          },
+          "buyableInBaseUnit" : {
+            "type" : "boolean"
+          },
+          "eans" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/definitions/ean"
+            }
+          },
+          "buyableInSalesUnit" : {
+            "type" : "boolean"
+          },
+          "promotionalProduct" : {
+            "type" : "boolean"
+          },
+          "epdNumber" : {
+            "type" : "string"
+          },
+          "variableWeight" : {
+            "type" : "boolean"
+          },
+          "combinedProducts" : {
+            "type" : "string"
+          },
+          "countryOfOrigin" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "ean" : {
+      "type" : "object",
+      "properties" : {
+        "sku" : {
+          "type" : "string"
+        },
+        "code" : {
+          "type" : "string"
+        },
+        "packaging" : {
+          "type" : "string"
+        }
+      }
+    },
+    "Nutrition" : {
+      "type" : "object",
+      "properties" : {
+        "Name" : {
+          "type" : "string"
+        },
+        "Value" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ErrorMessage" : {
+      "type" : "object",
+      "properties" : {
+        "Error_Code" : {
+          "type" : "string"
+        },
+        "Responses" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "Responses", "Error_Code" ]
+    },
+    "CustomerItems" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/CustomerItem"
+      }
+    }
+  }
+}

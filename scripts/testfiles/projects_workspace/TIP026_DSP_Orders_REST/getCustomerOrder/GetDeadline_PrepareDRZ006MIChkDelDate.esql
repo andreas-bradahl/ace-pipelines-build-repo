@@ -1,0 +1,17 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE GetDeadline_PrepareDRZ006MIChkDelDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- prepare arguments
+		DECLARE varRef REFERENCE TO Environment.Variables.Global;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = varRef.company_number; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = varRef.customer_number;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RLDT = CAST(varRef.requestedDeliveryDate AS CHAR FORMAT 'yyyyMMdd');
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.EXTI = varRef.EXTI;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

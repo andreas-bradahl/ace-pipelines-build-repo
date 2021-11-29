@@ -1,0 +1,10 @@
+
+
+CREATE COMPUTE MODULE getUpdater_StoreSkuInEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.skus = InputRoot.JSON.Data;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

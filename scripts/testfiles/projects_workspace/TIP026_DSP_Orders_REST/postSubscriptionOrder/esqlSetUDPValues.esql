@@ -1,0 +1,17 @@
+BROKER SCHEMA postSubscriptionOrder
+
+DECLARE LoggingUDP EXTERNAL BOOLEAN TRUE;
+DECLARE LoggingVerboseUDP EXTERNAL BOOLEAN TRUE;
+DECLARE M3BaseUrlUDP EXTERNAL CHARACTER '';
+
+CREATE COMPUTE MODULE esqlSetUDPValues
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.Global.UDP.Logging = LoggingUDP;
+		SET Environment.Variables.Global.UDP.LoggingVerbose = LoggingVerboseUDP;
+		SET Environment.Variables.Global.UDP.M3BaseUrl = M3BaseUrlUDP;
+
+		RETURN TRUE;
+	END;
+END MODULE;

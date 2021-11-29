@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE "{default}esqlLogItemsError"
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

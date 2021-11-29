@@ -1,0 +1,215 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data;
+		DECLARE lstLineChargeCursor REFERENCE TO Environment.Variables.HTTPResponses.LstLineCharge.Item;
+		DECLARE chargeCodeCursor REFERENCE TO Environment.Variables.SQLQueries.RecyclingChargeCodes.ChargeCode;
+		DECLARE orderLinesRef, orderLineCursor REFERENCE TO dataOutRef;
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE noDeleteItemsRef REFERENCE TO Environment.Variables.Global.noDeleteItems;
+		
+		CREATE LASTCHILD OF dataOutRef AS orderLinesRef IDENTITY(JSON.Array)orderLines;
+		
+		DECLARE lstLine2Cursor REFERENCE TO Environment.Variables.HTTPResponses.LstLine2.Item;
+		
+		DECLARE allOrderLinesCanNotSendComplaint BOOLEAN true;
+		DECLARE allOrderLinesCanDelete BOOLEAN true;
+		DECLARE orderHeadCanSendComplaint BOOLEAN dataOutRef.canSendComplaint;
+		
+		-- Construct OrderLines
+		WHILE LASTMOVE(lstLine2Cursor) DO
+			CREATE LASTCHILD OF orderLinesRef AS orderLineCursor NAME 'Item';	
+			
+			SET orderLineCursor.orderLineNumber = CAST(lstLine2Cursor.PONR AS INTEGER);
+			SET orderLineCursor.orderLineSuffix = CAST(lstLine2Cursor.POSX AS INTEGER);
+			SET orderLineCursor.sku = lstLine2Cursor.ITNO;
+			SET orderLineCursor.itemDescription = lstLine2Cursor.ITDS;
+			IF EXISTS(lstLine2Cursor.extraText[]) THEN
+				SET orderLineCursor.itemDescription = orderLineCursor.itemDescription ||' '|| lstLine2Cursor.extraText.text;
+			--DELETE FIRSTCHILD OF Environment.Variables.deleyedDeliveryText;
+				
+			END IF;
+			SET orderLineCursor.quantitySalesPriceUnit = CAST(CAST(lstLine2Cursor.ORQT AS DECIMAL) AS INTEGER);
+			SET orderLineCursor.quantityAlternateUnit = CAST(lstLine2Cursor.ORQA AS DECIMAL);
+			SET orderLineCursor.salesPriceUnit = TRIM(lstLine2Cursor.UNMS);
+			SET orderLineCursor.alternateUnit = lstLine2Cursor.ALUN;
+			SET orderLineCursor.deliveryDate = CAST(lstLine2Cursor.CODT AS DATE FORMAT 'yyyyMMdd');
+			SET orderLineCursor.discountAmount1 = CAST(lstLine2Cursor.DIA1 AS DECIMAL);
+			SET orderLineCursor.discountAmount2 = CAST(lstLine2Cursor.DIA2 AS DECIMAL);
+			SET orderLineCursor.discountAmount3 = CAST(lstLine2Cursor.DIA3 AS DECIMAL);
+			SET orderLineCursor.discountAmount4 = CAST(lstLine2Cursor.DIA4 AS DECIMAL);
+			SET orderLineCursor.discountAmount5 = CAST(lstLine2Cursor.DIA5 AS DECIMAL);
+			SET orderLineCursor.discountAmount6 = CAST(lstLine2Cursor.DIA6 AS DECIMAL);
+			SET orderLineCursor.lineAmount = CAST(lstLine2Cursor.NLAM AS DECIMAL);
+			SET orderLineCursor.lineAmountWithoutDiscount = orderLineCursor.discountAmount1 + 
+														  orderLineCursor.discountAmount2 + 
+														  orderLineCursor.discountAmount3 +
+														  orderLineCursor.discountAmount4 + 
+														  orderLineCursor.discountAmount5 + 
+														  orderLineCursor.discountAmount6 +
+														  orderLineCursor.lineAmount;
+			IF EXISTS(lstLine2Cursor.extraText[]) THEN
+				SET orderLineCursor.itemDescription = REPLACE(orderLineCursor.itemDescription, '%confirmed%', CAST(lstLine2Cursor.CODT AS CHAR FORMAT 'yyyy-MM-dd'));
+				DECLARE dato CHAR CAST(orderLineCursor.deliveryDate AS CHAR FORMAT 'yyyy-MM-dd');
+				--SET orderLineCursor.itemDescription = orderLineCursor.itemDescription ||''|| CAST(lstLine2Cursor.CODT AS CHAR FORMAT 'yyyy-MM-dd');
+			END IF;
+			-- This while loop is to set lineRecyclingCharge
+			MOVE lstLineChargeCursor TO Environment.Variables.HTTPResponses.LstLineCharge.Item;	
+			WHILE LASTMOVE(lstLineChargeCursor) DO
+			
+				IF lstLineChargeCursor.PONR = orderLineCursor.orderLineNumber THEN
+					MOVE chargeCodeCursor TO Environment.Variables.SQLQueries.RecyclingChargeCodes.ChargeCode;
+					
+					WHILE LASTMOVE(chargeCodeCursor) DO
+						
+						IF lstLineChargeCursor.CRID = chargeCodeCursor.val THEN
+							SET orderLineCursor.lineRecyclingCharge = CAST(lstLineChargeCursor.PBAM AS DECIMAL);
+						END IF;
+						
+						MOVE chargeCodeCursor NEXTSIBLING REPEAT NAME;
+					END WHILE;
+					
+				END IF;
+				MOVE lstLineChargeCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+			IF orderLineCursor.lineRecyclingCharge IS NULL THEN
+				SET orderLineCursor.lineRecyclingCharge = 0;
+			END IF;
+			-- Set lineRecyclingCharge end
+			
+			
+			SET orderLineCursor.status = lstLine2Cursor.ORST;
+			SET orderLineCursor.refOrderCategory = lstLine2Cursor.RORC;
+			
+			-- Set refOrderNumber
+			IF lstLine2Cursor.RORN IS NULL THEN
+				SET orderLineCursor.refOrderNumber = '';			
+			ELSE
+				SET orderLineCursor.refOrderNumber = lstLine2Cursor.RORN;				
+			END IF;
+			
+			SET orderLineCursor.refOrderLine = lstLine2Cursor.RORL;
+			SET orderLineCursor.salesPrice = CAST(lstLine2Cursor.SAPR AS DECIMAL);
+			SET orderLineCursor.buyableInBaseUnit = lstLine2Cursor.buyableInBaseUnit;
+			
+			DECLARE canUpdateStatic BOOLEAN OutputRoot.JSON.Data.canUpdate;
+			
+			DECLARE canIncreaseDecreaseOrDelete BOOLEAN getCanIncreaseDecreaseDelete(lstLine2Cursor) AND canUpdateStatic;
+			DECLARE noDelete BOOLEAN getNoDelete(lstLine2Cursor.ITNO, noDeleteItemsRef);
+			
+			SET orderLineCursor.canIncrease = globalVarRef.canIncrease AND canIncreaseDecreaseOrDelete;
+			SET orderLineCursor.canDecrease = globalVarRef.canDecrease AND canIncreaseDecreaseOrDelete AND NOT noDelete;
+			SET orderLineCursor.canDelete = globalVarRef.canDelete AND canIncreaseDecreaseOrDelete AND NOT noDelete;
+			-- aggregate orderLine canDelete to head
+			SET allOrderLinesCanDelete = allOrderLinesCanDelete AND orderLineCursor.canDelete;
+					
+			-- Set updateInReview and newQuantity
+			IF lstLine2Cursor.OPT1 = 2 THEN
+				SET orderLineCursor.updateInReview = TRUE;
+				SET dataOutRef.containsTempLines = TRUE;
+				IF CONTAINS(lstLine2Cursor.newORQT, '.') THEN
+					SET orderLineCursor.newQuantity = CAST(SUBSTRING(lstLine2Cursor.newORQT BEFORE '.') AS INTEGER);
+				ELSE
+					SET orderLineCursor.newQuantity = CAST(lstLine2Cursor.newORQT AS INTEGER);
+				END IF;
+			ELSE
+				SET orderLineCursor.updateInReview = FALSE;
+				SET orderLineCursor.newQuantity = 0;
+			END IF;
+			
+			-- Set deleteInReview
+			IF lstLine2Cursor.OPT1 = 4 THEN
+				
+				SET orderLineCursor.deleteInReview = TRUE;
+				SET dataOutRef.containsTempLines = TRUE;
+				-- Update: canIncrease, canDecrease and canDelete
+				SET orderLineCursor.canIncrease = false;
+				SET orderLineCursor.canDecrease = false;
+				SET orderLineCursor.canDelete = false;
+				
+			ELSE
+				
+				SET orderLineCursor.deleteInReview = FALSE;
+				
+			END IF;		
+			
+			SET orderLineCursor.canSendComplaint = orderHeadCanSendComplaint AND canOrderLineSendComplaint(
+																		CAST(lstLine2Cursor.ORST AS INT), 
+																		CAST(globalVarRef.orderLineComplaintMinStatus AS INT),
+																		CAST(globalVarRef.orderLineComplaintMaxStatus AS INT)
+																		);
+															
+			IF CONTAINS(lstLine2Cursor.IVQT, '.') THEN
+				SET orderLineCursor.invoicedQuantity = CAST(SUBSTRING(lstLine2Cursor.IVQT BEFORE '.') AS INTEGER);			
+			ELSE
+				SET orderLineCursor.invoicedQuantity = CAST(lstLine2Cursor.IVQT AS INTEGER);				
+			END IF;
+			
+
+			SET allOrderLinesCanNotSendComplaint = allOrderLinesCanNotSendComplaint AND NOT orderLineCursor.canSendComplaint;
+			
+			MOVE lstLine2Cursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+			
+			
+		
+		-- if all orderlines cant set complaint, set false
+		SET dataOutRef.canSendComplaint = orderHeadCanSendComplaint AND NOT allOrderLinesCanNotSendComplaint;
+		-- if not all orderLines have canDelete = true, the head can't be deleted
+		SET dataOutRef.canDelete = dataOutRef.canDelete AND allOrderLinesCanDelete;
+	END;
+				
+CREATE FUNCTION getNoDelete(IN itno CHAR, IN noDeleteItemsRef REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		DECLARE noDelete BOOLEAN false;
+		
+		IF EXISTS(SELECT i FROM noDeleteItemsRef.ITNO[] AS i WHERE i = itno) THEN
+			SET noDelete = true;
+		END IF;
+		
+		RETURN noDelete;
+	END;
+				
+
+CREATE FUNCTION canOrderLineSendComplaint (IN orderLineStatus INT, IN minComplaintStatus INT, IN maxComplaintStatus INT) RETURNS BOOLEAN
+	BEGIN
+		DECLARE canSendComplaint BOOLEAN false;
+		
+		IF orderLineStatus >= minComplaintStatus AND orderLineStatus <= maxComplaintStatus THEN
+			
+			SET canSendComplaint = true;
+			
+		END IF;
+		
+		RETURN canSendComplaint;
+	END;
+		
+CREATE FUNCTION getCanIncreaseDecreaseDelete (IN lstLine2Ref REFERENCE)
+RETURNS BOOLEAN
+	BEGIN
+	
+		DECLARE canIncreaseDecreaseDelete BOOLEAN;
+		
+		SET canIncreaseDecreaseDelete = TRUE;
+		
+		DECLARE lstLine2Rorc INT;
+		DECLARE lstLine2Rorn CHAR; 
+	
+		SET lstLine2Rorc = CAST(lstLine2Ref.RORC AS INTEGER);
+		SET lstLine2Rorn = lstLine2Ref.RORN;
+		
+		IF lstLine2Rorc = 1 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+			SET canIncreaseDecreaseDelete = FALSE;
+		ELSEIF lstLine2Rorc = 5 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+			SET canIncreaseDecreaseDelete = FALSE;			
+		END IF;
+		
+		RETURN canIncreaseDecreaseDelete;
+	END;
+
+END MODULE;

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="default" version="8.0.5.0" xmlns:map="default">
+    <input path="/tine/tip/cdm/fault/TIP000_DataModel_Fault_Event.xsd"/>
+    <output path="/tine/tip/cdm/fault/TIP000_DataModel_Fault_Event.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="manualFaulthandler_FixMessage">
+        <input namespace="http://TIP000_DataModel" path="mb:msg(FaultEvent,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_FaultEvent"/>
+        <output namespace="http://TIP000_DataModel" path="mb:msg(FaultEvent,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_FaultEvent1"/>
+        <move>
+            <input path="$ComIbmMessageAssembly_FaultEvent/Properties"/>
+            <output path="$ComIbmMessageAssembly_FaultEvent1/Properties"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

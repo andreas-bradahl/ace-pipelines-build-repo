@@ -1,0 +1,54 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.Global.SellByDateError = FALSE;
+		
+		DECLARE deliveryDate CHARACTER TRIM(GetValueFromNameValueList('RLDT', Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue));
+		
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			IF checkIfSellByDate(orderLine, deliveryDate) THEN
+				
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE checkIfSellByDate (IN orderLine REFERENCE, IN deliveryDate CHARACTER)
+	RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryHasSellByDate CHAR ' 
+			SELECT COUNT(ZBITNO) AS ITNOCOUNT
+			FROM ZITBAL
+			WHERE 
+					ZBCONO = ''100'' 
+				AND ZBITNO = ? 
+				AND ZBSLDT > ?
+		';
+	
+		SET Environment.Variables.SQLQueries.HasSellByDate = PASSTHRU(sqlQueryHasSellByDate, orderLine.sku, deliveryDate);
+	
+		IF Environment.Variables.SQLQueries.HasSellByDate.ITNOCOUNT > 0 THEN
+	
+			SET OutputLocalEnvironment.Variables.sku = orderLine.sku;
+			SET OutputLocalEnvironment.Variables.quantity = orderLine.quantity;
+			PROPAGATE TO TERMINAL 'out1';
+		
+		END IF;
+				
+		IF Environment.Variables.Global.SellByDateError THEN
+			RETURN TRUE;
+		END IF;
+		
+		RETURN FALSE;
+	END;
+	
+END MODULE;

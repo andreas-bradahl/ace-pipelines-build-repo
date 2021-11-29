@@ -1,0 +1,31 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckOrderTypeAndStatus
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE errorTerminal CHAR 'out1';
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE getHeadNameValueRef REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue;
+		DECLARE highestOrderStatusM3 INT CAST(TRIM(GetValueFromNameValueList('ORST', getHeadNameValueRef)) AS INT);
+		DECLARE highestOrderStatusAllowed INT 33;
+		DECLARE orderStatusCheckPassed BOOLEAN true;
+		
+		IF highestOrderStatusM3 > highestOrderStatusAllowed THEN
+			SET orderStatusCheckPassed = false;
+		END IF;
+		
+		IF orderStatusCheckPassed THEN
+			RETURN TRUE;
+			
+		ELSE
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'TOO_HIGH_STATUS', envRef);
+			PROPAGATE TO TERMINAL errorTerminal;
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

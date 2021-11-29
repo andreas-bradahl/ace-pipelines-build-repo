@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putCustomerOrder" version="8.0.5.0" xmlns:map="putCustomerOrder">
+    <input path="/putCustomerOrder/customerOrder.xsd"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://TIP026_DSP_Orders_REST/customerOrder"/>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapToJson">
+        <input namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="mb:msg(orderChangeRequest,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_orderChangeRequest"/>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="ComIbmMessageAssembly_JSON">
+            <cast derivedFrom="MB:JSON_operation_response" path="$ComIbmMessageAssembly_JSON/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}PutCustomerOrderRequest" ref="var1"/>
+        </output>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/Properties"/>
+            <output path="$ComIbmMessageAssembly_JSON/Properties"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/companyNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/companyNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/customerNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/orderNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/estimatedOrderAmount"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/estimatedOrderAmount"/>
+        </move>
+        <foreach>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/orderLinesChangeRequest" var="orderLinesChangeRequest"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderLines/Item"/>
+            <condition>
+                <if>
+                    <input path="$orderLinesChangeRequest/addRequest" var="addRequest"/>
+                    <output path="."/>
+                    <test lang="xpath">fn:lower-case($addRequest/in:action ) = 'add'</test>
+                    <move>
+                        <input path="$addRequest/sku" var="sku"/>
+                        <output path="sku"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/quantity" var="quantity"/>
+                        <output path="quantity"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/lostSalesWarehouse" var="lostSalesWarehouse"/>
+                        <output path="lostSalesWarehouse"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/orderLineUnit" var="orderLineUnit"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine1" var="discountLine1"/>
+                        <output path="discountLine1"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine2" var="discountLine2"/>
+                        <output path="discountLine2"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine3" var="discountLine3"/>
+                        <output path="discountLine3"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine4" var="discountLine4"/>
+                        <output path="discountLine4"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine5" var="discountLine5"/>
+                        <output path="discountLine5"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/discountLine6" var="discountLine6"/>
+                        <output path="discountLine6"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/isLostSales" var="isLostSales"/>
+                        <output path="isLostSales"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/action" var="action"/>
+                        <output path="action"/>
+                    </move>
+                    <move>
+                        <input path="$addRequest/lostSalesUniqueId" var="lostSalesUniqueId"/>
+                        <output path="lostSalesUniqueId"/>
+                    </move>
+                </if>
+                <elseif>
+                    <input path="$orderLinesChangeRequest/updateRequest" var="updateRequest"/>
+                    <output path="."/>
+                    <test lang="xpath">fn:lower-case($updateRequest/in:action ) = 'upd'</test>
+                    <move>
+                        <input path="$updateRequest/sku" var="sku1"/>
+                        <output path="sku"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/quantity" var="quantity1"/>
+                        <output path="quantity"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/lostSalesWarehouse" var="lostSalesWarehouse1"/>
+                        <output path="lostSalesWarehouse"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/orderLineUnit" var="orderLineUnit1"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine1" var="discountLine11"/>
+                        <output path="discountLine1"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine2" var="discountLine21"/>
+                        <output path="discountLine2"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine3" var="discountLine31"/>
+                        <output path="discountLine3"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine4" var="discountLine41"/>
+                        <output path="discountLine4"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine5" var="discountLine51"/>
+                        <output path="discountLine5"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/discountLine6" var="discountLine61"/>
+                        <output path="discountLine6"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/isLostSales" var="isLostSales1"/>
+                        <output path="isLostSales"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/action" var="action1"/>
+                        <output path="action"/>
+                    </move>
+                    <move>
+                        <input path="$updateRequest/lostSalesUniqueId" var="lostSalesUniqueId1"/>
+                        <output path="lostSalesUniqueId"/>
+                    </move>
+                    <foreach>
+                        <input path="$updateRequest/orderLineNumber" var="orderLineNumber"/>
+                        <output path="orderLineNumber/Item"/>
+                        <move>
+                            <input path="$orderLineNumber/." var="orderLineNumber1"/>
+                            <output path="."/>
+                        </move>
+                    </foreach>
+                </elseif>
+                <elseif>
+                    <input path="$orderLinesChangeRequest/deleteRequest" var="deleteRequest"/>
+                    <output path="."/>
+                    <test lang="xpath">fn:lower-case($deleteRequest/in:action ) = 'del'</test>
+                    <move>
+                        <input path="$deleteRequest/sku" var="sku2"/>
+                        <output path="sku"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/quantity" var="quantity2"/>
+                        <output path="quantity"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/lostSalesWarehouse" var="lostSalesWarehouse2"/>
+                        <output path="lostSalesWarehouse"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/orderLineUnit" var="orderLineUnit2"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine1" var="discountLine12"/>
+                        <output path="discountLine1"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine2" var="discountLine22"/>
+                        <output path="discountLine2"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine3" var="discountLine32"/>
+                        <output path="discountLine3"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine4" var="discountLine42"/>
+                        <output path="discountLine4"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine5" var="discountLine52"/>
+                        <output path="discountLine5"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/discountLine6" var="discountLine62"/>
+                        <output path="discountLine6"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/isLostSales" var="isLostSales2"/>
+                        <output path="isLostSales"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/action" var="action2"/>
+                        <output path="action"/>
+                    </move>
+                    <move>
+                        <input path="$deleteRequest/lostSalesUniqueId" var="lostSalesUniqueId2"/>
+                        <output path="lostSalesUniqueId"/>
+                    </move>
+                    <foreach>
+                        <input path="$deleteRequest/orderLineNumber" var="orderLineNumber2"/>
+                        <output path="orderLineNumber/Item"/>
+                        <move>
+                            <input path="$orderLineNumber2/." var="orderLineNumber3"/>
+                            <output path="."/>
+                        </move>
+                    </foreach>
+                </elseif>
+            </condition>
+        </foreach>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/orderType"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderType"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/requestedDeliveryDate"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/requestedDeliveryDate"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_orderChangeRequest/orderChangeRequest/defaultM3OrderType"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/defaultM3OrderType"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

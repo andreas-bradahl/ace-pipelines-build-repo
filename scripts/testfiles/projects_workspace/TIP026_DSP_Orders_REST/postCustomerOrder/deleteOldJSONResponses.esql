@@ -1,0 +1,13 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE deleteOldJSONResponses
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DELETE FIELD Environment.JSONResponse;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input path="/getProductAvailability/getProductAvailabilityRequest.xsd" var="var"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapGetProductAvailabilityRequestToEnv">
+        <input path="$var1/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest" path="$var/mb:msg(getProductAvailabilityRequest,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast path="Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest}getProductAvailabilityRequest" ref="var"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$MessageAssembly/getProductAvailabilityRequest"/>
+                    <output path="Variables/getProductAvailabilityRequest"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

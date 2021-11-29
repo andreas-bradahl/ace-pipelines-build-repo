@@ -1,0 +1,16 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ100MILstBatchLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE CONO CHARACTER Environment.Variables.Global.company_number;
+		DECLARE ORNO CHARACTER Environment.Variables.Global.order_number;
+			
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = CONO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

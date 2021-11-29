@@ -1,0 +1,20 @@
+BROKER SCHEMA postCancellationDate
+
+
+CREATE COMPUTE MODULE esqlPrepareResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF NOT EXISTS(InputRoot.JSON.Data[]) THEN
+
+			SET OutputRoot.XMLNSC.ns:postCancellationDateResponseOK.ns:success = TRUE;
+			
+		ELSE
+			
+			SET OutputRoot.XMLNSC.ns:postCancellationDateResponseOK.ns:success = FALSE;
+			
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,29 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareGetPriceLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderLineIndex INT Environment.Variables.orderLineIndex;
+		DECLARE orderLineRef REFERENCE TO orderRequestRef.orderLines.Item[orderLineIndex];
+		DECLARE getHeadNameValueRef REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue;
+
+		
+		DECLARE CUNO CHAR TRIM(orderRequestRef.customerNumber);
+		DECLARE ITNO CHAR TRIM(orderLineRef.sku);
+		DECLARE ORQA CHAR TRIM(orderLineRef.quantity);
+		DECLARE ORTP CHAR TRIM(orderLineRef.orderType);
+		DECLARE tempdate CHAR TRIM(GetValueFromNameValueList('RLDT', getHeadNameValueRef));
+		DECLARE DWDT DATE CAST(tempdate AS DATE FORMAT 'yyyyMMdd');  
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = CUNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = ITNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = ORQA;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTP = ORTP;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDT = DWDT;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

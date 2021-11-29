@@ -1,0 +1,45 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE DB_ProductSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sqlQuery CHAR 'SELECT ZBSLDT FROM ZITBAL WHERE ZBCONO = ? AND ZBWHLO = ? AND ZBITNO = ?';
+		DECLARE companyNumber CHAR Environment.OrderRequest.Data.companyNumber;
+		DECLARE warehouseNumber CHAR Environment.OrderRequest.Data.customerWarehouse;
+		DECLARE todaysDate DECIMAL CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'yyyyMMdd') AS DECIMAL);
+		DECLARE productNumber CHAR '';
+		DECLARE zero DECIMAL 0;
+		DECLARE sellByDateTest BOOLEAN TRUE;
+		
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			IF sellByDateTest THEN
+				SET productNumber = orderLine.sku;
+				SET orderLine.sellByDate = PASSTHRU(sqlQuery, companyNumber, warehouseNumber, productNumber);
+				SET orderLine.sellByDate = COALESCE(FIELDVALUE(orderLine.sellByDate.ZBSLDT), zero);
+				
+				IF orderLine.sellByDate > todaysDate THEN
+					SET sellByDateTest = FALSE;
+				END IF;
+				
+				DELETE FIELD orderLine.sellByDate.ZBSLDT;
+				
+			END IF;
+			
+		END FOR;
+		
+		IF sellByDateTest THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'SELL_BY_DATE';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

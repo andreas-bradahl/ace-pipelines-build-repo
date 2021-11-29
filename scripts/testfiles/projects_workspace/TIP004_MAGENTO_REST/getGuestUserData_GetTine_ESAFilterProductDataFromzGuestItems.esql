@@ -1,0 +1,39 @@
+
+
+CREATE DATABASE MODULE getGuestUserData_GetTine_ESAFilterProductDataFromzGuestItems
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.Exludes;
+		DECLARE tineESARef, tineESACursor REFERENCE TO Environment.Variables.Exludes;
+		
+		DECLARE tineESAQuery CHARACTER '
+		SELECT itemNumber FROM zGuestItems
+		';
+		
+		SET tineESARef.Row[] = PASSTHRU(tineESAQuery);
+		
+		CREATE FIELD Environment.Variables.ExludeList;
+		
+		DECLARE endOfString CHAR '§';
+
+		
+		-- Build locations
+		DECLARE exluded CHAR '';
+		MOVE tineESACursor FIRSTCHILD NAME 'Row';
+		WHILE LASTMOVE(tineESACursor) DO
+			SET exluded = exluded || '''';
+			SET exluded = exluded || tineESACursor.itemNumber;
+			SET exluded = exluded || '''';
+			SET exluded = exluded || ',';
+			MOVE tineESACursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		SET exluded = exluded || endOfString;
+		SET exluded = SUBSTRING(exluded BEFORE ',' || endOfString);
+
+		SET Environment.Variables.ExludeList = exluded;
+		DELETE FIELD Environment.Variables.Exludes;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

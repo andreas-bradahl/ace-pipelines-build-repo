@@ -1,0 +1,20 @@
+
+
+CREATE COMPUTE MODULE loggingPostDbCallLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+		DECLARE dbStopped CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+				
+		DECLARE dbStarted CHARACTER Environment.Variables.Logging.dbStarted;
+		DECLARE dbTotalTimeTaken CHARACTER subtractOrAddTimes(dbStopped, '-', dbStarted);
+			
+		DELETE FIELD Environment.Variables.Logging.dbStarted;
+		
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('DB time taken: ' || dbTotalTimeTaken);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

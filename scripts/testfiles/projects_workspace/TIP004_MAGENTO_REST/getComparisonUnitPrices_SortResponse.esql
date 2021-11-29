@@ -1,0 +1,29 @@
+
+
+CREATE COMPUTE MODULE getComparisonUnitPrices_SortResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.ItemPrices.Cprice = InputRoot.JSON.Data.results;
+		
+		/*	
+		
+		FOR requestedItemInfo AS InputRoot.JSON.Data.results.Item[] DO
+			
+			FOR itemInfo AS Environment.Variables.FullItemsList.Item[] DO
+							
+				IF requestedItemInfo.records.Item.ITNO = itemInfo.ITNO THEN
+				
+					CREATE FIELD itemInfo.Cprice; 
+					SET itemInfo.Cprice = requestedItemInfo.records.Item;
+					
+				END IF;
+								
+			END FOR;
+			
+		END FOR;
+		
+		*/
+		
+	END;
+END MODULE;

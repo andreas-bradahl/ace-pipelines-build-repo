@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postChangedSubscriptionOrderDelivery" version="8.0.5.0" xmlns:map="postChangedSubscriptionOrderDelivery">
+    <input path="/subscriptionOrder.xsd"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var2"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var3"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapResponseToJSONFailed">
+        <input namespace="http://TIP026_DSP_Orders_REST" path="mb:msg(postChangedSubscriptionOrderDeliveryResponseFailed,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var2/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly2">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly2/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}postChangedSubscriptionOrderDeliveryResponseFailed" ref="var3"/>
+        </output>
+        <move>
+            <input path="$MessageAssembly/Properties"/>
+            <output path="$MessageAssembly2/Properties"/>
+        </move>
+        <local>
+            <input path="$MessageAssembly/postChangedSubscriptionOrderDeliveryResponseFailed"/>
+            <output path="$MessageAssembly2/JSON/spath('Data',2)"/>
+            <move>
+                <input path="orderNumber"/>
+                <output path="orderNumber"/>
+            </move>
+            <move>
+                <input path="success"/>
+                <output path="success"/>
+            </move>
+            <foreach>
+                <input path="failedOrderLines"/>
+                <output path="failedOrderLines/Item"/>
+                <move>
+                    <input path="sku"/>
+                    <output path="sku"/>
+                </move>
+                <move>
+                    <input path="quantity"/>
+                    <output path="quantity"/>
+                </move>
+                <move>
+                    <input path="orderLineUnit"/>
+                    <output path="orderLineUnit"/>
+                </move>
+                <move>
+                    <input path="errorCode"/>
+                    <output path="errorCode"/>
+                </move>
+                <move>
+                    <input path="errorMessage"/>
+                    <output path="errorMessage"/>
+                </move>
+            </foreach>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:exceptionFaulthandler.subflow="exceptionFaulthandler.subflow" xmlns:incomingMQ.subflow="incomingMQ.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="SendDataToM3.msgflow" nsPrefix="SendDataToM3.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SendDataToM3" bundleName="SendDataToM3" pluginId="tip111-ace-m3-kartong-rapportering"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip111-ace-m3-kartong-rapportering/icons/full/obj16/SendDataToM3.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip111-ace-m3-kartong-rapportering/icons/full/obj30/SendDataToM3.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="50,237" queueName="TIP106.DIP.TO.CLDPAK.DATA" messageDomainProperty="XMLNSC" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="TIP106.DIP.TO.CLDPAK.DATA"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="337,237" computeExpression="esql://routine/#SendDataToM3_BrowseFromQueue.Main">
+        <translation xmi:type="utility:ConstantString" string="BrowseFromQueue"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="467,238" queueName="TIP111.M3.DATA.PMS100MI" messageDomainProperty="XMLNSC" browse="true" browseFirst="true">
+        <translation xmi:type="utility:ConstantString" string="TIP111.M3.DATA.PMS100MI"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="645,234" computeExpression="esql://routine/#SendDataToM3_ReqToPMS050MI.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ReqToPMS050MI"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="782,235" URLSpecifier="https://m3t10005.tine.no:20800/m3api-rest/execute/PMS050MI/RptReceipt" timeoutForServer="10" httpMethod="GET" httpVersion="1.1" protocol="TLSv1.2" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="PMS050MI/RptReceipt"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="972,235" computeExpression="esql://routine/#SendDataToM3_ProcessResponse.Main">
+        <translation xmi:type="utility:ConstantString" string="ProcessResponse"/>
+      </nodes>
+      <nodes xmi:type="incomingMQ.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="225,237">
+        <translation xmi:type="utility:ConstantString" string="incomingMQ"/>
+      </nodes>
+      <nodes xmi:type="exceptionFaulthandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="106,381">
+        <translation xmi:type="utility:ConstantString" string="exceptionFaulthandler"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="758,348" queueName="TIP106.DIP.TO.CLDPAK.DATA">
+        <translation xmi:type="utility:ConstantString" string="Restore-TIP106.DIP.TO.CLDPAK.DATA"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.warning" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.noMessage" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard>
+      <stickyNote location="1046,44">
+        <body xmi:type="utility:ConstantString" string="If TIP111.M3.DATA.PMS100MI is not having data, &#xA;then the input message is put on the input queue and throw an exception"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

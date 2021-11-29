@@ -1,0 +1,256 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateOrderHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputRoot.JSON.Data;
+		DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;		
+		DECLARE getHeadRef REFERENCE TO Environment.Variables.HTTPResponses.GetHead;
+		DECLARE getChkDelDateRef REFERENCE TO Environment.Variables.HTTPResponses.ChkDelDate;
+		DECLARE getHeadTextRef REFERENCE TO Environment.Variables.HTTPResponses.GetHeadText;
+		DECLARE getOrderValue REFERENCE TO Environment.Variables.HTTPResponses.GetOrderValue;
+		DECLARE lstLine2Ref REFERENCE TO Environment.Variables.HTTPResponses.LstLine2;
+		DECLARE deadlineTimestamp TIMESTAMP;
+		DECLARE containsTemporaryOrder BOOLEAN Environment.Variables.Global.Flags.HasTemporaryOrder;
+		
+		-- Set needed values
+		IF LENGTH(getChkDelDateRef.LMTM) = 3 THEN
+			SET deadlineTimestamp = CAST(getChkDelDateRef.LMDT || '0' || getChkDelDateRef.LMTM AS TIMESTAMP FORMAT 'yyyyMMddHHmm');
+		ELSE
+			SET deadlineTimestamp = CAST(getChkDelDateRef.LMDT || getChkDelDateRef.LMTM AS TIMESTAMP FORMAT 'yyyyMMddHHmm');
+		END IF;
+		
+		-- SET initial boolean values from environment, propagate canUpdate too canAddOpexProducts, canAddOrderLine
+		DECLARE containsTempLines BOOLEAN getContainsTempLines();
+		DECLARE canUpdate BOOLEAN globalVarRef.canUpdate AND getCanUpdate(deadlineTimestamp,getChkDelDateRef.DCHK, getHeadRef, lstLine2Ref);
+		DECLARE canIncrease BOOLEAN globalVarRef.canIncrease;
+		DECLARE canDecrease BOOLEAN globalVarRef.canDecrease;
+		DECLARE canDelete BOOLEAN globalVarRef.canDelete AND getCanDelete(deadlineTimestamp, getHeadRef, lstLine2Ref);
+		DECLARE canCopyOrder BOOLEAN globalVarRef.canCopyOrder;
+		DECLARE canSendComplaint BOOLEAN globalVarRef.canSendComplaint;
+		DECLARE canAddOrderline BOOLEAN globalVarRef.canAddOrderline AND canUpdate;
+		DECLARE canAddOpexProducts BOOLEAN globalVarRef.canAddOPEXProducts AND canUpdate AND canAddOrderline;
+		DECLARE orderComment CHARACTER getOrderComment(getHeadTextRef);
+		
+		
+		-- Construct OrderHead	
+		SET dataOutRef.orderNumber = getHeadRef.ORNO;
+		SET dataOutRef.containsTempLines = containsTempLines;
+		SET dataOutRef.isTemporaryOrder = FALSE;
+		SET dataOutRef.companyNumber = globalVarRef.company_number;
+		SET dataOutRef.customerNumber = getHeadRef.CUNO;
+		
+		IF getHeadRef.CUOR IS NULL THEN
+			SET dataOutRef.customerOrderNumber = '';	
+		ELSE 	
+			SET dataOutRef.customerOrderNumber = getHeadRef.CUOR;
+		END IF;
+		
+		IF getHeadRef.YREF IS NULL THEN
+			SET dataOutRef.customerReference = '';	
+		ELSE 	
+			SET dataOutRef.customerReference = getHeadRef.YREF;
+		END IF;
+		
+		IF getHeadRef.DSTX IS NULL THEN
+			SET dataOutRef.orderName = '';
+		ELSE
+			SET dataOutRef.orderName = getHeadRef.DSTX;			
+		END IF;
+    	
+		IF getHeadRef.OREF IS NULL THEN
+			SET dataOutRef.TINEReference = '';
+		ELSE 	
+			SET dataOutRef.TINEReference = getHeadRef.OREF;
+		END IF;
+		
+		--Fix for orderstatus above 90 , no else since ordertype might have put it to false
+		IF getHeadRef.ORST >= 90 THEN
+			SET canCopyOrder = False;
+		END IF;
+		
+		SET dataOutRef.orderStatusLowest = getHeadRef.ORSL;
+		SET dataOutRef.orderStatusHighest = getHeadRef.ORST;
+		SET dataOutRef.orderType = getHeadRef.ORTP;
+		SET dataOutRef.requestedDeliveryDate = CAST(getHeadRef.RLDT AS DATE FORMAT 'yyyyMMdd');
+		SET dataOutRef.canUpdate = canUpdate;
+		SET dataOutRef.canDelete = canDelete;
+		SET dataOutRef.canAddOpexProducts = canAddOpexProducts;
+		SET dataOutRef.canCopyOrder = canCopyOrder;
+		SET dataOutRef.canSendComplaint = canSendComplaint;
+		SET dataOutRef.canAddOrderline = canAddOrderline;
+		SET dataOutRef.orderComment = TRIM(orderComment);
+		SET dataOutRef.grossOrderValue = CAST(getOrderValue.BRAM AS DECIMAL);
+		SET dataOutRef.netOrderValue = CAST(getOrderValue.ONET AS DECIMAL);
+		SET dataOutRef.orderDiscount = CAST(dataOutRef.grossOrderValue AS DECIMAL) - CAST(dataOutRef.netOrderValue AS DECIMAL);
+		SET dataOutRef.handlingCharge = CAST(getOrderValue.EXAM AS DECIMAL);
+		SET dataOutRef.amountToPay = CAST(getOrderValue.TOPY AS DECIMAL);
+		SET dataOutRef.vatAmount = CAST(getOrderValue.VTAM AS DECIMAL);
+		
+		-- This value is set later in a different node
+		SET dataOutRef.orderRecyclingCharge = 0;
+		
+		SET dataOutRef.termsOfPayment = getHeadRef.TEPY;
+		
+		
+		-- Sets correct deadline, if the deadline date is passed, value should be null
+		
+		DECLARE currentOrderDeadLineGMT GMTTIMESTAMP;
+		
+		IF  globalVarRef.Flags.isPickupOrder THEN
+			
+			SET dataOutRef.deadline = globalVarRef.deadline.deadline;
+			SET currentOrderDeadLineGMT = CAST(dataOutRef.deadline AS GMTTIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mmZZZZZ');
+			
+		ELSEIF globalVarRef.Flags.isExtraDelivery THEN
+			
+			SET dataOutRef.deadline = globalVarRef.deadline.deadlineDate;
+			SET currentOrderDeadLineGMT = CAST(dataOutRef.deadline AS GMTTIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mmZZZZZ');
+			
+		ELSEIF globalVarRef.Flags.isExpressOrder THEN
+			
+			SET dataOutRef.deadline = globalVarRef.deadline.deadline;
+			SET currentOrderDeadLineGMT = CAST(dataOutRef.deadline AS GMTTIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mmZZZZZ');
+			
+		ELSE
+			
+			IF getChkDelDateRef.DCHK LIKE '1' THEN
+				
+				SET dataOutRef.deadline = NULL;
+				CREATE LASTCHILD OF dataOutRef NAME 'deadline' VALUE NULL;
+			
+			ELSE
+				
+				SET dataOutRef.deadline = CAST(deadlineTimestamp AS CHAR FORMAT 'yyyy-MM-dd''T''HH:mmZZZ');
+				SET currentOrderDeadLineGMT = CAST(dataOutRef.deadline AS GMTTIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mmZZZ');
+				
+			END IF;
+		
+		END IF;
+		
+		IF CAST(currentOrderDeadLineGMT AS DATE) > dataOutRef.requestedDeliveryDate THEN
+			-- currentOrderDeadLineGMT < CURRENT_GMTTIMESTAMP OR
+			SET dataOutRef.deadline = NULL;
+			CREATE LASTCHILD OF dataOutRef NAME 'deadline' VALUE NULL;
+		
+		END IF;
+				
+		IF containsTemporaryOrder THEN
+			
+			SET dataOutRef.canUpdate = FALSE;
+			SET dataOutRef.canDelete = FALSE;
+			SET dataOutRef.canAddOrderline = FALSE;
+			SET dataOutRef.canAddOpexProducts = FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+CREATE FUNCTION getCanUpdate (IN deadlineTimestamp TIMESTAMP,IN DCHK CHAR, IN getHeadRef REFERENCE, IN lstLine2Ref REFERENCE)
+RETURNS BOOLEAN
+BEGIN
+	
+		DECLARE canUpdate BOOLEAN;
+		
+		SET canUpdate = TRUE;
+		
+		IF CAST(getHeadRef.ORST AS INTEGER) > 33 THEN
+			SET canUpdate = FALSE;
+			
+		ELSEIF deadlineTimestamp < CURRENT_TIMESTAMP OR DCHK = '1' THEN
+			SET canUpdate = FALSE;
+			
+		ELSE
+			DECLARE lstLine2ItemCursor REFERENCE TO lstLine2Ref.Item;
+			DECLARE lstLine2Rorc INT;
+			DECLARE lstLine2Rorn CHAR; 
+			
+			WHILE LASTMOVE(lstLine2ItemCursor) DO
+				SET lstLine2Rorc = CAST(lstLine2ItemCursor.RORC AS INTEGER);
+				SET lstLine2Rorn = lstLine2ItemCursor.RORN;
+				
+				IF lstLine2Rorc = 2 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+					SET canUpdate = FALSE;
+				END IF;
+				
+				MOVE lstLine2ItemCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+		END IF;
+		
+		RETURN canUpdate;
+END;
+		
+CREATE FUNCTION getCanDelete (IN deadlineTimestamp TIMESTAMP, IN getHeadRef REFERENCE, IN lstLine2Ref REFERENCE)
+RETURNS BOOLEAN
+BEGIN
+	
+		DECLARE canDelete BOOLEAN;
+		
+		SET canDelete = TRUE;
+		
+		IF CAST(getHeadRef.ORST AS INTEGER) > 33 THEN
+			SET canDelete = FALSE;
+			
+		ELSEIF deadlineTimestamp < CURRENT_TIMESTAMP THEN
+			SET canDelete = FALSE;
+			
+		ELSE
+			DECLARE lstLine2ItemCursor REFERENCE TO lstLine2Ref.Item;
+			DECLARE lstLine2Rorc INT;
+			DECLARE lstLine2Rorn CHAR; 
+			
+			WHILE LASTMOVE(lstLine2ItemCursor) DO
+				SET lstLine2Rorc = CAST(lstLine2ItemCursor.RORC AS INTEGER);
+				SET lstLine2Rorn = lstLine2ItemCursor.RORN;
+				
+				IF lstLine2Rorc = 2 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+					SET canDelete = FALSE;
+				ELSEIF lstLine2Rorc = 5 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+					SET canDelete = FALSE;					
+				ELSEIF lstLine2Rorc = 1 AND lstLine2Rorn <> '??????????' AND lstLine2Rorn <> '￮￮￮￮￮￮￮￮￮￮' THEN
+					SET canDelete = FALSE;					
+				END IF;
+				
+				MOVE lstLine2ItemCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+		END IF;
+		
+		RETURN canDelete;
+END;
+		
+CREATE FUNCTION getOrderComment (IN getHeadTextRef REFERENCE)
+RETURNS CHARACTER
+BEGIN
+	
+		DECLARE orderComment CHARACTER '';
+		DECLARE itemCursor REFERENCE TO getHeadTextRef;
+		
+		MOVE itemCursor FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(itemCursor) DO
+			
+			IF itemCursor.TXV9 = 'CO01' THEN
+				SET orderComment = orderComment || itemCursor.TX60;
+			END IF;
+			
+			MOVE itemCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN orderComment;
+END;
+		
+CREATE FUNCTION getContainsTempLines ()
+RETURNS BOOLEAN
+BEGIN
+	
+		IF EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;			
+		END IF;
+	
+END;		
+END MODULE;

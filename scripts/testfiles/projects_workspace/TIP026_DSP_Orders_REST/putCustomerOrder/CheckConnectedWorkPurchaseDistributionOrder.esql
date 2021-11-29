@@ -1,0 +1,80 @@
+BROKER SCHEMA putCustomerOrder
+
+/* for upd, del action only */
+CREATE COMPUTE MODULE CheckConnectedWorkPurchaseDistributionOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE m3OrderLineMIRecordRef REFERENCE TO Environment.JSONResponse.LstLine2.Data.MIRecord;
+		
+		DECLARE canBeUpdated BOOLEAN true;
+		DECLARE canBeDeleted BOOLEAN true;
+		
+		DECLARE RORC CHAR '';
+		DECLARE RORN CHAR '';
+		DECLARE RORNval1 CHAR '??????????';
+		DECLARE RORNval2 CHAR '￮￮￮￮￮￮￮￮￮￮';
+		
+		FOR m3OrderLine AS m3OrderLineMIRecordRef.Item[] DO
+			SET RORC = TRIM(GetValueFromNameValueList('RORC', m3OrderLine.NameValue));
+			SET RORN = TRIM(GetValueFromNameValueList('RORN', m3OrderLine.NameValue));
+			
+			IF RORC = '1' AND (RORN = RORNval1 OR RORN = RORNval2) THEN
+				-- work order connected
+				SET canBeUpdated = false;
+				SET canBeDeleted = false;
+				
+			ELSEIF RORC = '2' AND (RORN = RORNval1 OR RORN = RORNval2) THEN
+				-- purchase order connected
+				SET canBeUpdated = false;
+				
+			ELSEIF RORC = '5' AND (RORN = RORNval1 OR RORN = RORNval2) THEN
+				-- distribution order connected
+				SET canBeUpdated = false;
+				SET canBeDeleted = false;
+				
+			END IF;	
+		END FOR;
+		
+		
+		DECLARE action CHAR '';
+		DECLARE validAction1 CHAR 'upd';
+		DECLARE validAction2 CHAr 'del';
+		DECLARE isValidAction BOOLEAN;
+		DECLARE isLostSales BOOLEAN;
+		DECLARE noConnectedOrders BOOLEAN true;
+		
+		DECLARE orderLineCursor REFERENCE TO orderRequestRef.orderLines.Item[1];
+		WHILE noConnectedOrders AND LASTMOVE(orderLineCursor) DO
+			SET action = LOWER(TRIM(orderLineCursor.action));
+			SET isLostSales = orderLineCursor.isLostSales;
+			
+			IF NOT isLostSales AND (action = validAction1 OR action = validAction2)  THEN
+				SET isValidAction = true;
+				
+			ELSE
+				SET isValidAction = false;
+				
+			END IF;
+			
+			IF (NOT canBeUpdated AND isValidAction AND action = validAction1) OR (NOT canBeDeleted AND isValidAction AND action = validAction2) THEN	
+				SET noConnectedOrders = false;
+			END IF;
+			
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		IF noConnectedOrders THEN
+			RETURN true;
+			
+		ELSE
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'CONNECTED_ORDER', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN false;
+	END;
+END MODULE;

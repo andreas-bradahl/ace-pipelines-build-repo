@@ -1,0 +1,35 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlProcessGetBatchLineResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE foundALUN BOOLEAN FALSE;
+		
+		DECLARE dataCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue.Item;
+		
+		DECLARE Name CHARACTER;
+		DECLARE Value CHARACTER;
+
+		DECLARE itemRef REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.HTTPResponses.LstBatchLine.Item AS itemRef;
+		
+		WHILE LASTMOVE(dataCursor) AND NOT foundALUN DO
+			
+			SET Name = dataCursor.Name;
+			SET Value = dataCursor.Value;
+			
+			IF Name = 'ALUN' THEN
+			
+				SET itemRef.{Name} = TRIM(Value);
+				SET foundALUN = TRUE;
+				
+			END IF;
+			
+			MOVE dataCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+
+		RETURN TRUE;
+	END;
+END MODULE;

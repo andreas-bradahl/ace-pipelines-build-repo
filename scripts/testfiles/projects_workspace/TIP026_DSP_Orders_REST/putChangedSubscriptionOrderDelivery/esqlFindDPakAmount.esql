@@ -1,0 +1,40 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlFindDPakAmount
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderLine REFERENCE TO InputLocalEnvironment.Variables.CurrentOrderLine;
+		DECLARE quantity INTEGER CAST(orderLine.ns:quantity AS INTEGER);
+		DECLARE conversionFactor INT InputLocalEnvironment.Variables.conversionFactor;
+		
+		DECLARE dPakQuantity INTEGER 0;
+		
+		IF orderLine.ns:orderLineUnit = 'D' THEN
+			
+			SET dPakQuantity = quantity;
+			SET quantity = 0;
+			
+		ELSE
+			
+			WHILE conversionFactor <= quantity DO
+				
+				SET quantity = quantity - conversionFactor;
+				SET dPakQuantity = dPakQuantity + 1;
+				
+			END WHILE;
+			
+		END IF;
+		
+		SET orderLine.ns:quantity = quantity;
+		
+		IF orderLine.ns:orderLineUnit = 'D' AND NOT(orderLine.ns:action = 'add') THEN
+			SET orderLine.ns:quantity = dPakQuantity;
+		END IF;
+		
+		SET OutputLocalEnvironment.Variables.CurrentOrderLine = orderLine;
+		SET OutputLocalEnvironment.Variables.DPakQuantity = dPakQuantity;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

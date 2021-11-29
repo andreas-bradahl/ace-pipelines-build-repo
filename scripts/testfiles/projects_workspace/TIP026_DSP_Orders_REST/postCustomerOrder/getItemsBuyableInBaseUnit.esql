@@ -1,0 +1,58 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE getItemsBuyableInBaseUnit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderLineCursorIndex INT varRef.orderLineCursorIndex;
+		DECLARE orderLineRef REFERENCE TO orderRequestRef.orderLines.Item[orderLineCursorIndex];
+		DECLARE companyNumber INT CAST(orderRequestRef.companyNumber AS INT);
+		
+		DECLARE oprbasQuery CHAR 'SELECT COUNT(ODITNO) AS COUNT FROM OPRBAS WHERE ODCONO=? AND ODITNO=? AND ODPRRF=? AND ODCUCD=? AND ODFVDT<=? AND ODLVDT>=?';
+		DECLARE mitmasQuery CHAR 'SELECT MMITCL FROM MITMAS WHERE MMCONO=? AND MMITNO=?';
+		DECLARE mitaunQuery CHAR 'SELECT MUCOFA from MITAUN WHERE MUCONO=? AND MUITNO = ? AND MUAUS2=''1'' AND MUAUTP=''1''';
+		
+		DECLARE currentDate INT CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'yyyyMMdd') AS INT);
+		DECLARE itno CHAR orderLineRef.sku;
+		DECLARE pricelist CHAR varRef.pricelist;
+		DECLARE currency CHAR varRef.currency;
+		DECLARE itemclass CHAR varRef.itemclass;
+		
+		SET Environment.OPRBAS = PASSTHRU(oprbasQuery, companyNumber, itno, pricelist, currency, currentDate, currentDate);
+		SET Environment.MITMAS = PASSTHRU(mitmasQuery, companyNumber, itno);
+		SET Environment.MITAUN = PASSTHRU(mitaunQuery, companyNumber, itno);
+		
+		DECLARE oprbasCount INT Environment.OPRBAS.COUNT;
+		DECLARE mitmas CHAR Environment.MITMAS.MMITCL;
+		DECLARE conversionFactor DECIMAL Environment.MITAUN.MUCOFA;
+		
+		DELETE FIELD Environment.OPRBAS;
+		DELETE FIELD Environment.MITMAS;
+		DELETE FIELD Environment.MITAUN;
+		
+		DECLARE buyableInBaseUnit BOOLEAN false;
+		DECLARE buyableInSalesUnit BOOLEAN false;
+		
+		IF oprbasCount > 0 THEN
+			SET buyableInBaseUnit = true;
+		END IF;
+		
+		IF mitmas <> itemclass THEN
+			SET buyableInSalesUnit = true;
+		END IF;
+		
+		IF conversionFactor IS NULL THEN
+			SET buyableInSalesUnit = FALSE;	
+		END IF;
+		
+		SET varRef.buyableInBaseUnit = buyableInBaseUnit;
+		SET varRef.buyableInSalesUnit = buyableInSalesUnit;
+		SET varRef.conversionFactor = COALESCE(conversionFactor, CAST('1' AS DECIMAL));	
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

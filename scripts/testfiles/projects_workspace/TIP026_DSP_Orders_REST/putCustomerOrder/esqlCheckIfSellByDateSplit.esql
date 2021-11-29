@@ -1,0 +1,85 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfSellByDateSplit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE error BOOLEAN FALSE;
+		DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+		
+		DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		DECLARE deliveryDate CHARACTER TRIM(GetValueFromNameValueList('RLDT', Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue));
+		
+		IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+			FOR orderLine AS normalOrder.Item[] DO
+				IF checkIfSellByDate(orderLine, deliveryDate) THEN
+					RETURN FALSE;
+				END IF;
+			END FOR;
+		END IF;
+			
+		IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+			FOR orderLine AS normalOrder.Item[] DO
+				IF checkIfSellByDate(orderLine, deliveryDate) THEN
+					RETURN FALSE;
+				END IF;
+			END FOR;
+		END IF;
+	
+		IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+			FOR orderLine AS normalOrder.Item[] DO
+				IF checkIfSellByDate(orderLine, deliveryDate) THEN
+					RETURN FALSE;
+				END IF;	
+			END FOR;
+		END IF;
+		
+		IF error THEN
+			
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'CAN_ONLY_LOWER', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE checkIfSellByDate (IN orderLine REFERENCE, IN deliveryDate CHARACTER)
+	RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryHasSellByDate CHAR ' 
+			SELECT COUNT(ZBITNO) AS ITNOCOUNT
+			FROM ZITBAL
+			WHERE 
+					ZBCONO = ''100'' 
+				AND ZBITNO = ? 
+				AND ZBSLDT > ?
+		';
+	
+		SET Environment.Variables.SQLQueries.HasSellByDate = PASSTHRU(sqlQueryHasSellByDate, orderLine.sku, deliveryDate);
+	
+		IF Environment.Variables.SQLQueries.HasSellByDate.ITNOCOUNT > 0 THEN
+	
+			SET OutputLocalEnvironment.Variables.sku = orderLine.sku;
+			SET OutputLocalEnvironment.Variables.quantity = orderLine.quantity;
+			PROPAGATE TO TERMINAL 'out1';
+		
+		END IF;
+				
+		IF Environment.Variables.Global.SellByDateError THEN
+			RETURN TRUE;
+		END IF;
+		
+		RETURN FALSE;
+	END;
+	
+END MODULE;

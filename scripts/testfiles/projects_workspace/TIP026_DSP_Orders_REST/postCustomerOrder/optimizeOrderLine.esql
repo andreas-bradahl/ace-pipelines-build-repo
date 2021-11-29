@@ -1,0 +1,98 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE optimizeOrderLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderLineCursorIndex INT varRef.orderLineCursorIndex;
+		DECLARE orderLineRef REFERENCE TO orderRequestRef.orderLines.Item[orderLineCursorIndex];
+		
+		DECLARE orderLineSalesUnit CHAR 'D';
+		DECLARE orderLineBaseUnit CHAR 'STK';
+		
+		DECLARE ORNO CHAR GetValueFromNameValueList('ORNO', Environment.JSONResponse.AddBatchHead.Data.MIRecord.Item.NameValue);
+		DECLARE pricelist CHAR varRef.pricelist;
+		DECLARE currency CHAR varRef.currency;
+		DECLARE itemclass CHAR varRef.itemclass;
+		DECLARE buyableInBaseUnit BOOLEAN varRef.buyableInBaseUnit;
+		DECLARE buyableInSalesUnit BOOLEAN varRef.buyableInSalesUnit;
+		DECLARE conversionFactor INT CAST(varRef.conversionFactor AS INT);
+		
+		DECLARE desiredQuantity INT CAST(orderLineRef.quantity AS INT);
+		DECLARE desiredOrderLineUnit CHAR orderLineRef.orderLineUnit;
+		
+		
+		IF desiredOrderLineUnit = orderLineSalesUnit THEN
+			SET desiredQuantity = desiredQuantity * conversionFactor;
+		END IF;
+		
+		DECLARE baseUnitQuantity INT MOD(desiredQuantity, conversionFactor);
+		DECLARE salesUnitQuantity INT (desiredQuantity - baseUnitQuantity) / conversionFactor;
+		
+		IF buyableInBaseUnit AND buyableInSalesUnit THEN
+			
+			IF salesUnitQuantity > 0 THEN
+				CALL setupOrderRequest(salesUnitQuantity, orderLineSalesUnit, ORNO, OutputLocalEnvironment, orderLineRef);
+				PROPAGATE;
+			END IF;
+			
+			IF baseUnitQuantity > 0 THEN
+				CALL setupOrderRequest(baseUnitQuantity, orderLineBaseUnit, ORNO, OutputLocalEnvironment, orderLineRef);
+				PROPAGATE;
+			END IF;
+			
+		ELSEIF buyableInBaseUnit AND NOT buyableInSalesUnit THEN
+			
+			IF desiredQuantity > 0 THEN
+				CALL setupOrderRequest(desiredQuantity, orderLineBaseUnit, ORNO, OutputLocalEnvironment, orderLineRef);
+				PROPAGATE;
+			END IF;
+			
+		ELSEIF NOT buyableInBaseUnit AND buyableInSalesUnit THEN
+			
+			IF salesUnitQuantity > 0 THEN
+				CALL setupOrderRequest(salesUnitQuantity, orderLineSalesUnit, ORNO, OutputLocalEnvironment, orderLineRef);
+				PROPAGATE;
+			END IF;
+		
+		ELSEIF NOT buyableInBaseUnit AND NOT buyableInSalesUnit THEN
+		
+			IF desiredQuantity > 0 THEN
+				CALL setupOrderRequest(desiredQuantity, NULL, ORNO, OutputLocalEnvironment, orderLineRef);
+				PROPAGATE;
+			END IF;
+		
+		ELSE
+			RETURN false;
+		END IF;
+		
+		-- env cleanup
+		DELETE FIELD varRef.pricelist;
+		DELETE FIELD varRef.currency;
+		DELETE FIELD varRef.itemclass;
+		DELETE FIELD varRef.buyableInBaseUnit;
+		DELETE FIELD varRef.buyableInSalesUnit;
+		DELETE FIELD varRef.conversionFactor;
+		
+		
+		RETURN false;
+	END;
+	
+CREATE PROCEDURE setupOrderRequest (IN desiredQuantity INT,IN orderLineUnit CHAR, IN ORNO CHAR, IN OutputLocalEnvironment REFERENCE, IN orderLine REFERENCE)
+BEGIN	
+		DECLARE quantity CHAR CAST(desiredQuantity AS CHAR);
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = orderLine.sku;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQT = quantity;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ALUN = orderLineUnit;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP1 = orderLine.discountLine1;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP2 = orderLine.discountLine2;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP3 = orderLine.discountLine3;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP4 = orderLine.discountLine4;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP5 = orderLine.discountLine5;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP6 = orderLine.discountLine6;
+END;	
+END MODULE;

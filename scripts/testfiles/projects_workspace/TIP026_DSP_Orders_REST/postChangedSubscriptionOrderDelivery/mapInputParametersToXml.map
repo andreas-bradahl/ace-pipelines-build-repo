@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postChangedSubscriptionOrderDelivery" version="8.0.5.0" xmlns:map="postChangedSubscriptionOrderDelivery">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="optimizeOrderLines" type="xsd:boolean"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <output path="/subscriptionOrder.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="supplement" prefix="out" uri="http://TIP026_DSP_Orders_REST"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputParametersToXml">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,LocalEnvironment,Properties)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}postChangedSubscriptionOrderDeliveryRequest" ref="var1"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="optimizeOrderLines" ref="var2"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST" path="mb:msg(postChangedSubscriptionOrderDeliveryRequest,assembly,XMLNSC,Properties)" var="MessageAssembly1"/>
+        <local>
+            <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters" var="Parameters"/>
+            <input path="$MessageAssembly/JSON/spath('Data',2)" var="Data"/>
+            <output path="$MessageAssembly1/postChangedSubscriptionOrderDeliveryRequest"/>
+            <move>
+                <input path="$Parameters/optimizeOrderLines[1]"/>
+                <output path="optimizeOrderLines"/>
+            </move>
+            <move>
+                <input path="$Data/companyNumber"/>
+                <output path="companyNumber"/>
+            </move>
+            <move>
+                <input path="$Data/customerNumber"/>
+                <output path="customerNumber"/>
+            </move>
+            <move>
+                <input path="$Data/orderNumber"/>
+                <output path="orderNumber"/>
+            </move>
+            <move>
+                <input path="$Data/validFromDate"/>
+                <output path="validFromDate"/>
+            </move>
+            <move>
+                <input path="$Data/estimatedOrderAmount"/>
+                <output path="estimatedOrderAmount"/>
+            </move>
+            <foreach>
+                <input path="$Data/orderLines/Item"/>
+                <output path="orderLines"/>
+                <move>
+                    <input path="sku"/>
+                    <output path="sku"/>
+                </move>
+                <move>
+                    <input path="quantity"/>
+                    <output path="quantity"/>
+                </move>
+                <move>
+                    <input path="orderLineUnit"/>
+                    <output path="orderLineUnit"/>
+                </move>
+            </foreach>
+        </local>
+        <move>
+            <input path="$MessageAssembly/Properties"/>
+            <output path="$MessageAssembly1/Properties"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,27 @@
+
+
+CREATE COMPUTE MODULE loggingPostM3CallLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+		DECLARE httpResponded CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+				
+		DECLARE httpRequested CHARACTER Environment.Variables.Logging.requestStarted;
+		DECLARE httpTotalTimeTaken CHARACTER subtractOrAddTimes(httpResponded, '-', httpRequested);
+			
+		SET Environment.Variables.Logging.httpTotalTimeTaken = subtractOrAddTimes(Environment.Variables.Logging.httpTotalTimeTaken, '+', httpTotalTimeTaken);
+		
+		DELETE FIELD Environment.Variables.Logging.requestStarted;
+		
+		IF Environment.Variables.Global.UDP.LoggingVerbose THEN
+			
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('HTTPCall responded at: ' || httpResponded);
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Time taken: ' || httpTotalTimeTaken);
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

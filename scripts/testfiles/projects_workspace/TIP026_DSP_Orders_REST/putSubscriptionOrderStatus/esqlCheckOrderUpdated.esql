@@ -1,0 +1,38 @@
+BROKER SCHEMA putSubscriptionOrderStatus
+
+
+CREATE COMPUTE MODULE esqlCheckOrderUpdated
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE updateNotOK BOOLEAN FALSE;
+		
+		IF TRIM(Environment.Variables.HTTPResponses.OIZ163MI_ActHead.Item.RETV) <> 'OK' THEN
+			
+			SET updateNotOK = TRUE;
+			
+		ELSEIF TRIM(Environment.Variables.HTTPResponses.OIZ163MI_DeActHead.Item.RETV) <> 'OK' THEN
+		
+			SET updateNotOK = TRUE;
+		
+		ELSEIF NOT EXISTS(Environment.Variables.HTTPResponses[]) THEN
+			
+			SET updateNotOK = TRUE;
+		
+		END IF;
+		
+		IF updateNotOK THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.orderNumber = Environment.Variables.*:Global.*:OriginRequest.*:orderNumber;
+			SET OutputRoot.JSON.Data.success = false;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'ORDER_NOT_UPDATED';
+			
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

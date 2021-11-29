@@ -1,0 +1,53 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE warehouseSupplying CHARACTER GetValueFromNameValueList('SWHL', InputRoot.JSON.Data.MIRecord.Item.NameValue);
+		DECLARE warehouseDefault CHARACTER Environment.Variables.Customer.warehouse;
+		
+		DECLARE sku CHARACTER InputLocalEnvironment.Variables.sku;
+
+		DECLARE ZBSLDT CHARACTER;
+		DECLARE ZBSLDTDate DATE; 
+		
+		DECLARE sqlQuerySellByDate CHAR ' 
+			SELECT ZBSLDT
+			FROM ZITBAL
+			WHERE 
+					ZBCONO = ''100''
+				AND ZBWHLO = ? 
+				AND ZBITNO = ?
+		';
+		
+		IF warehouseSupplying IS NOT NULL THEN
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseSupplying, sku);
+		ELSE
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseDefault, sku);
+		END IF;
+	
+		SET ZBSLDT = CAST(Environment.Variables.SQLQueries.SellByDate.ZBSLDT AS CHARACTER);
+	
+		IF NOT(ZBSLDT = 0) THEN
+			
+			SET ZBSLDTDate = CAST(ZBSLDT AS DATE FORMAT 'yyyyMMdd');
+			DECLARE requestedDeliveryDate DATE CAST(Environment.OrderRequest.Data.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+			
+			IF ZBSLDTDate > requestedDeliveryDate THEN
+				
+				SET Environment.Variables.Global.SellByDateError = TRUE;
+			
+				SET Environment.Variables.HTTPCode = 400;
+				SET Environment.Variables.Response = 'FAILED';
+				SET Environment.Variables.Error_Reason = 'SELL_BY_DATE';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+			
+			END IF;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

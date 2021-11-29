@@ -1,0 +1,18 @@
+
+
+CREATE COMPUTE MODULE PrintThenResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment; 
+		
+		SET OutputRoot.ExceptionList = InputLocalEnvironment.ExceptionList;
+		
+		PROPAGATE TO TERMINAL 'out';
+		
+		PROPAGATE TO TERMINAL 'out1';
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

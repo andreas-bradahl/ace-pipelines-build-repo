@@ -1,0 +1,345 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateOptimizedAndCombinedOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data;
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE skuListRef REFERENCE TO Environment.Variables.SkuList;
+		
+		-- Value important later in the code, but needs to be made outside of the WHILE scope
+		DECLARE combinedOrderlinesIndex INTEGER 1;
+		DECLARE skuIndex INTEGER 1;
+		
+		-- Iterate through sku and create combinedOrderLines		
+		DECLARE skuFoundCursor REFERENCE TO Environment.Variables.skus.skuFound.sku;
+		
+		DECLARE optimizedOrderLinesRef, optimizedOrderLineCursor REFERENCE TO dataOutRef;
+		CREATE LASTCHILD OF dataOutRef AS optimizedOrderLinesRef IDENTITY(JSON.Array)optimizedOrderLines;
+
+		WHILE LASTMOVE(skuFoundCursor) DO -- TODO remove this loop
+			
+			DECLARE orderLinesCursor REFERENCE TO OutputRoot.JSON.Data.orderLines.Item;		
+			DECLARE combinedOrderLineRef, combinedOrderLineCursor REFERENCE TO dataOutRef;
+			
+			CREATE LASTCHILD OF optimizedOrderLinesRef AS optimizedOrderLineCursor NAME 'Item';
+			CREATE LASTCHILD OF optimizedOrderLineCursor AS combinedOrderLineRef IDENTITY(JSON.Array)combinedOrderlinesTemp;
+			
+			-- Construct CombinedOrderLines			
+			WHILE LASTMOVE(orderLinesCursor) DO
+				
+				-- orderLinesCursor.updateInReview IS NOT NULL is to make sure not to include temporary lines in this
+				IF orderLinesCursor.sku = skuFoundCursor AND orderLinesCursor.refOrderLine IS NOT NULL AND orderLinesCursor.updateInReview IS NOT NULL THEN				
+					
+					CREATE LASTCHILD OF combinedOrderLineRef AS combinedOrderLineCursor NAME 'Item';
+				
+					SET combinedOrderLineCursor.orderLineNumber = orderLinesCursor.orderLineNumber;
+					SET combinedOrderLineCursor.orderLineSuffix = orderLinesCursor.orderLineSuffix;
+					SET combinedOrderLineCursor.sku = orderLinesCursor.sku;
+					SET combinedOrderLineCursor.quantityOrderLineBaseUnit = orderLinesCursor.quantitySalesPriceUnit;
+					SET combinedOrderLineCursor.quantityOrderLineUnit = orderLinesCursor.quantityAlternateUnit;
+					SET combinedOrderLineCursor.orderLineBaseUnit = orderLinesCursor.salesPriceUnit;
+					SET combinedOrderLineCursor.orderLineUnit = orderLinesCursor.alternateUnit;
+					SET combinedOrderLineCursor.deliveryDate = orderLinesCursor.deliveryDate;
+					SET combinedOrderLineCursor.discountAmount1 = orderLinesCursor.discountAmount1;
+					SET combinedOrderLineCursor.discountAmount2 = orderLinesCursor.discountAmount2;
+					SET combinedOrderLineCursor.discountAmount3 = orderLinesCursor.discountAmount3;
+					SET combinedOrderLineCursor.discountAmount4 = orderLinesCursor.discountAmount4;
+					SET combinedOrderLineCursor.discountAmount5 = orderLinesCursor.discountAmount5;
+					SET combinedOrderLineCursor.discountAmount6 = orderLinesCursor.discountAmount6;
+					SET combinedOrderLineCursor.lineAmount = orderLinesCursor.lineAmount;
+					SET combinedOrderLineCursor.lineAmountWithoutDiscount = 
+																combinedOrderLineCursor.discountAmount1 + 
+																combinedOrderLineCursor.discountAmount2 + 
+																combinedOrderLineCursor.discountAmount3 +
+																combinedOrderLineCursor.discountAmount4 + 
+																combinedOrderLineCursor.discountAmount5 + 
+																combinedOrderLineCursor.discountAmount6 +
+																combinedOrderLineCursor.lineAmount;
+				  
+					SET combinedOrderLineCursor.lineRecyclingCharge = orderLinesCursor.lineRecyclingCharge;
+					
+					SET combinedOrderLineCursor.status = orderLinesCursor.status;
+					SET combinedOrderLineCursor.refOrderCategory = orderLinesCursor.refOrderCategory;
+					
+					IF orderLinesCursor.refOrderNumber IS NULL THEN
+						SET combinedOrderLineCursor.refOrderNumber = '';			
+					ELSE
+						SET combinedOrderLineCursor.refOrderNumber = orderLinesCursor.refOrderNumber;				
+					END IF;
+					
+					SET combinedOrderLineCursor.refOrderLine = orderLinesCursor.refOrderLine;
+					SET combinedOrderLineCursor.salesPrice = orderLinesCursor.salesPrice;
+					SET combinedOrderLineCursor.updateInReview = orderLinesCursor.updateInReview;
+					SET combinedOrderLineCursor.newQuantity = orderLinesCursor.newQuantity;
+					SET combinedOrderLineCursor.deleteInReview = orderLinesCursor.deleteInReview;
+					SET combinedOrderLineCursor.canIncrease = orderLinesCursor.canIncrease;
+					SET combinedOrderLineCursor.canDecrease = orderLinesCursor.canDecrease;
+					SET combinedOrderLineCursor.canDelete = orderLinesCursor.canDelete;
+					SET combinedOrderLineCursor.canSendComplaint = orderLinesCursor.canSendComplaint;
+					SET combinedOrderLineCursor.buyableInBaseUnit = orderLinesCursor.buyableInBaseUnit;
+					SET combinedOrderLineCursor.invoicedQuantity = orderLinesCursor.invoicedQuantity;					
+					
+					DELETE FIELD orderLinesCursor.buyableInBaseUnit;
+				
+				-- Add temporary orderlines
+				ELSEIF orderLinesCursor.sku = skuFoundCursor AND EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+					
+					CREATE LASTCHILD OF combinedOrderLineRef AS combinedOrderLineCursor NAME 'Item';
+				
+					SET combinedOrderLineCursor.orderLineNumber = orderLinesCursor.orderLineNumber;
+					SET combinedOrderLineCursor.orderLineSuffix = orderLinesCursor.orderLineSuffix;
+					SET combinedOrderLineCursor.sku = orderLinesCursor.sku;
+					SET combinedOrderLineCursor.quantityOrderLineUnit = orderLinesCursor.quantityOrderLineUnit;
+					SET combinedOrderLineCursor.orderLineUnit = orderLinesCursor.orderLineUnit;
+					SET combinedOrderLineCursor.deliveryDate = orderLinesCursor.deliveryDate;
+					SET combinedOrderLineCursor.canIncrease = orderLinesCursor.canIncrease;
+					SET combinedOrderLineCursor.canDecrease = orderLinesCursor.canDecrease;
+					SET combinedOrderLineCursor.canDelete = orderLinesCursor.canDelete;
+					SET combinedOrderLineCursor.addInReview = orderLinesCursor.addInReview;
+					
+				END IF;
+					-- store total of items in environment --
+				DECLARE skuListItemCursor REFERENCE TO skuListRef;
+					
+				IF orderLinesCursor.sku = skuFoundCursor AND getItemFromSkuList(orderLinesCursor.sku, skuListRef, skuListItemCursor) THEN
+					
+					IF skuListItemCursor.baseUnit = COALESCE(orderLinesCursor.alternateUnit, orderLinesCursor.orderLineUnit) THEN
+						
+						SET skuListItemCursor.baseUnitCount = COALESCE(skuListItemCursor.baseUnitCount, 0) + COALESCE(COALESCE(orderLinesCursor.quantityAlternateUnit,orderLinesCursor.quantityOrderLineUnit),0);
+						
+					ELSEIF skuListItemCursor.salesUnit = COALESCE(orderLinesCursor.alternateUnit, orderLinesCursor.orderLineUnit) THEN
+						
+						SET skuListItemCursor.salesUnitCount = COALESCE(skuListItemCursor.salesUnitCount, 0) + COALESCE(COALESCE(orderLinesCursor.quantityAlternateUnit,orderLinesCursor.quantityOrderLineUnit),0);
+						
+					ELSE
+						
+						-- TODO: can't match quantityAlternateUnit with skuList, 2021-02-16 semi hotfix todo chck bestillning /Simon
+						-- if its here it can mean the customer is not allowed to buy in baseunit and orderd in d pak for example.
+						IF combinedOrderLineCursor.buyableInBaseUnit = false THEN
+							SET skuListItemCursor.salesUnitCount = COALESCE(skuListItemCursor.salesUnitCount, 0) 
+							+ COALESCE(COALESCE(orderLinesCursor.quantityAlternateUnit,orderLinesCursor.quantityOrderLineUnit),0);
+							--SET skuListRef.salesUnit= orderLinesCursor.alternateUnit;
+							SET skuListItemCursor.salesUnit= orderLinesCursor.alternateUnit;
+						ELSE
+						DECLARE errorMessage CHAR 'GET customerOrder, item can''t match quantityAlternateUnit with skuList';
+						LOG EVENT SEVERITY 2 VALUES(BrokerName, NodeLabel, DataSource, errorMessage);
+						END IF;
+						
+			
+						
+					END IF; 
+						
+				ELSE
+						
+						-- TODO: item not found in skuList
+						DECLARE errorMessage CHAR 'GET customerOrder, item not found in skuList';
+						
+						LOG EVENT SEVERITY 2 VALUES(BrokerName, NodeLabel, DataSource, errorMessage);
+						
+				END IF;
+				
+				MOVE orderLinesCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+--_____________________________________________________________________________________________________________________________________________	
+		
+			-- Create optimizedOrderLines	
+
+			MOVE optimizedOrderLineCursor TO optimizedOrderLinesRef.Item[skuIndex];
+			DECLARE combinedOrderlinesTemp REFERENCE TO optimizedOrderLineCursor.combinedOrderlinesTemp.Item[1];
+			
+			-- These are set up just to maintain the right structure
+			SET optimizedOrderLineCursor.sku = '';
+			SET optimizedOrderLineCursor.itemDescription = '';
+			CREATE LASTCHILD OF optimizedOrderLineCursor IDENTITY(JSON.Array)combinedOrderLineNumbers;
+			
+			DECLARE orderLineCursor REFERENCE TO InputRoot.JSON.Data.orderLines.Item;
+			DECLARE stkOrDpack BOOLEAN;
+			
+			-- SET combinedOrderLineNumbers and add up quantities
+			WHILE LASTMOVE(orderLineCursor) DO
+				
+				IF orderLineCursor.sku = combinedOrderlinesTemp.sku THEN
+					
+					SET optimizedOrderLineCursor.sku = orderLineCursor.sku;
+					SET optimizedOrderLineCursor.itemDescription = orderLineCursor.itemDescription;
+					CREATE LASTCHILD OF optimizedOrderLineCursor.combinedOrderLineNumbers TYPE NameValue VALUE CAST(orderLineCursor.orderLineNumber AS INT);
+					
+					SET combinedOrderlinesIndex = combinedOrderlinesIndex + 1;
+					
+				END IF;
+				
+				MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+				
+			END WHILE;
+			
+
+			DECLARE newQuantityAggregation BOOLEAN FALSE;
+			
+			-- Declare structure here to maintain correct structure
+			SET optimizedOrderLineCursor.totalQuantity = 0;
+			SET optimizedOrderLineCursor.totalQuantityUnit = '';
+			SET optimizedOrderLineCursor.totalLineAmount = 0;
+			SET optimizedOrderLineCursor.totalLineAmountWithoutDiscount = 0;
+			SET optimizedOrderLineCursor.totalLineDiscountAmount = 0;
+			SET optimizedOrderLineCursor.totalLineRecyclingCharge = 0;
+			SET optimizedOrderLineCursor.canIncrease = TRUE;
+			SET optimizedOrderLineCursor.canDecrease = TRUE;
+			SET optimizedOrderLineCursor.canDelete = TRUE;
+			SET optimizedOrderLineCursor.updateInReview = FALSE;
+			SET optimizedOrderLineCursor.newTotalQuantity = 0;
+			SET optimizedOrderLineCursor.deleteInReview = FALSE;
+			SET optimizedOrderLineCursor.canSendComplaint = FALSE;
+			
+			DECLARE combinedOrderlinesTempCursor REFERENCE TO optimizedOrderLineCursor.combinedOrderlinesTemp.Item;
+			
+			DECLARE tempOrder BOOLEAN FALSE;
+
+			WHILE LASTMOVE(combinedOrderlinesTempCursor) DO
+				
+				DECLARE conversionFactor DECIMAL THE(SELECT ITEM i.conversionFactor FROM Environment.Variables.SkuList.Item[] AS i WHERE i.sku = combinedOrderlinesTempCursor.sku);
+				
+				IF combinedOrderlinesTempCursor.updateInReview IS NOT NULL THEN
+					
+					SET optimizedOrderLineCursor.totalLineAmount = optimizedOrderLineCursor.totalLineAmount + combinedOrderlinesTempCursor.lineAmount;
+					SET optimizedOrderLineCursor.totalLineAmountWithoutDiscount = optimizedOrderLineCursor.totalLineAmountWithoutDiscount + combinedOrderlinesTempCursor.lineAmountWithoutDiscount;
+					SET optimizedOrderLineCursor.totalLineDiscountAmount = optimizedOrderLineCursor.totalLineAmountWithoutDiscount - optimizedOrderLineCursor.totalLineAmount;
+					SET optimizedOrderLineCursor.totalLineRecyclingCharge = optimizedOrderLineCursor.totalLineRecyclingCharge + combinedOrderlinesTempCursor.lineRecyclingCharge;
+					
+					IF optimizedOrderLineCursor.updateInReview = FALSE THEN
+						SET optimizedOrderLineCursor.updateInReview = combinedOrderlinesTempCursor.updateInReview;
+					END IF;
+					
+					IF optimizedOrderLineCursor.deleteInReview = FALSE THEN
+						SET optimizedOrderLineCursor.deleteInReview = combinedOrderlinesTempCursor.deleteInReview;
+					END IF;
+					
+				ELSEIF EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+					
+					SET tempOrder = TRUE;
+					
+				END IF;
+				
+				SET optimizedOrderLineCursor.canIncrease = optimizedOrderLineCursor.canIncrease AND combinedOrderlinesTempCursor.canIncrease;
+				SET optimizedOrderLineCursor.canDecrease = optimizedOrderLineCursor.canDecrease AND combinedOrderlinesTempCursor.canDecrease;
+				SET optimizedOrderLineCursor.canDelete = optimizedOrderLineCursor.canDelete AND combinedOrderlinesTempCursor.canDelete;
+				SET optimizedOrderLineCursor.canSendComplaint = optimizedOrderLineCursor.canSendComplaint OR combinedOrderlinesTempCursor.canSendComplaint;
+				
+				IF combinedOrderlinesTempCursor.newQuantity <> 0 THEN
+					SET newQuantityAggregation = TRUE;
+				END IF;
+
+				MOVE combinedOrderlinesTempCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+			DECLARE isOpexCustomer BOOLEAN globalVarRef.isOpexCustomer;
+			DECLARE isBuyableInBaseUnit BOOLEAN combinedOrderlinesTemp.buyableInBaseUnit;
+			DECLARE baseUnit CHAR;
+			DECLARE baseUnitCount DECIMAL;
+			DECLARE salesUnit CHAR;
+			DECLARE salesUnitCount DECIMAL;
+			DECLARE conversionFactor DECIMAL;
+			
+			DECLARE skuListItemCursor REFERENCE TO skuListRef;
+			IF getItemFromSkuList(optimizedOrderLineCursor.sku, skuListRef, skuListItemCursor) THEN
+				
+				SET baseUnit = skuListItemCursor.baseUnit;
+				SET baseUnitCount = COALESCE(skuListItemCursor.baseUnitCount,0);
+				SET salesUnit = skuListItemCursor.salesUnit;
+				SET salesUnitCount = COALESCE(skuListItemCursor.salesUnitCount,0);
+				SET conversionFactor = skuListItemCursor.conversionFactor;
+			ELSE
+				
+				-- could not find sku
+				
+			END IF;
+			
+			IF baseUnitCount > 0 AND salesUnitCount = 0 THEN
+				
+				SET optimizedOrderLineCursor.totalQuantity = CAST(baseUnitCount AS INTEGER);
+				SET optimizedOrderLineCursor.totalQuantityUnit = baseUnit;
+				
+			ELSEIF baseUnitCount = 0 AND salesUnitCount > 0 AND NOT isBuyableInBaseUnit THEN
+				SET optimizedOrderLineCursor.totalQuantity = CAST(salesUnitCount AS INTEGER);
+				SET optimizedOrderLineCursor.totalQuantityUnit = salesUnit;
+				
+			ELSEIF baseUnitCount = 0 AND salesUnitCount > 0 AND NOT isOpexCustomer THEN
+				
+				SET optimizedOrderLineCursor.totalQuantity = CAST(salesUnitCount AS INTEGER);
+				SET optimizedOrderLineCursor.totalQuantityUnit = salesUnit;
+				
+			ELSE
+				SET optimizedOrderLineCursor.totalQuantity = CAST(baseUnitCount + conversionFactor  * salesUnitCount AS INTEGER);
+				SET optimizedOrderLineCursor.totalQuantityUnit = baseUnit;
+				
+			END IF;
+			
+			IF newQuantityAggregation = TRUE THEN
+				
+			    MOVE combinedOrderlinesTempCursor TO OutputRoot.JSON.Data.optimizedOrderLines.Item[skuIndex].combinedOrderlinesTemp.Item;
+			    
+			    WHILE LASTMOVE(combinedOrderlinesTempCursor) DO
+			
+			            -- These are only relevant for non temporary lines
+			            IF combinedOrderlinesTempCursor.updateInReview IS NOT NULL THEN
+			
+			                    IF combinedOrderlinesTempCursor.updateInReview = TRUE THEN
+			                            SET optimizedOrderLineCursor.newTotalQuantity = optimizedOrderLineCursor.newTotalQuantity + combinedOrderlinesTempCursor.newQuantity;
+			                    END IF;
+			
+			                    IF combinedOrderlinesTempCursor.deleteInReview = TRUE THEN
+			                            SET optimizedOrderLineCursor.newTotalQuantity = optimizedOrderLineCursor.newTotalQuantity - combinedOrderlinesTempCursor.quantityOrderLineBaseUnit;
+			                    END IF;
+			            ELSEIF EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+			
+			                    IF combinedOrderlinesTempCursor.addInReview = TRUE THEN
+			                            SET optimizedOrderLineCursor.newTotalQuantity = optimizedOrderLineCursor.newTotalQuantity + combinedOrderlinesTempCursor.quantityOrderLineUnit;
+			                    END IF;
+			            END IF;
+			
+			            MOVE combinedOrderlinesTempCursor NEXTSIBLING REPEAT NAME;
+			    END WHILE;
+			END IF;
+					
+			-- Move and delete combinedOrderlinesTemp
+			CREATE LASTCHILD OF optimizedOrderLineCursor IDENTITY(JSON.Array)combinedOrderLines;
+			SET optimizedOrderLineCursor.combinedOrderLines = combinedOrderLineRef;
+			DELETE FIELD combinedOrderLineRef;
+			
+			SET skuIndex = skuIndex + 1;
+			MOVE skuFoundCursor NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+		
+		RETURN TRUE;
+			END;
+			
+CREATE FUNCTION getItemFromSkuList (IN sku CHAR, IN skuListRef REFERENCE, OUT skuListItemRef REFERENCE) RETURNS BOOLEAN
+BEGIN
+	MOVE skuListItemRef TO skuListRef;
+	MOVE skuListItemRef FIRSTCHILD NAME 'Item';
+	
+	WHILE LASTMOVE(skuListItemRef) DO
+		
+		IF sku = skuListItemRef.sku THEN
+			
+			RETURN TRUE;
+		
+		ELSE
+			
+			MOVE skuListItemRef NEXTSIBLING REPEAT NAME;
+			
+		END IF;
+		
+	END WHILE; 
+		
+	
+	RETURN FALSE;
+END;
+			
+END MODULE;

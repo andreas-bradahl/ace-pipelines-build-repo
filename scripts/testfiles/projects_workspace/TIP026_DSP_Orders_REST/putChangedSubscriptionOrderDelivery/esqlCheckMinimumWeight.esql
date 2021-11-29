@@ -1,0 +1,73 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckMinimumWeight
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd[] DO
+			
+			IF checkMinimumWeight(orderLine) THEN
+				
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				SET OutputRoot.JSON.Data.Response = 'FAILED';
+				SET OutputRoot.JSON.Data.Error_Code = 'MINIMUM_WEIGHT';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesUpd[] DO
+			
+			IF checkMinimumWeight(orderLine) THEN
+				
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				SET OutputRoot.JSON.Data.Response = 'FAILED';
+				SET OutputRoot.JSON.Data.Error_Code = 'MINIMUM_WEIGHT';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE checkMinimumWeight (IN orderLine REFERENCE)
+	RETURNS BOOLEAN
+	BEGIN
+		DECLARE minimumWeight INTEGER;
+		DECLARE itemWeight DECIMAL;
+		DECLARE totalWeight DECIMAL;
+		
+		DECLARE sqlQueryMinimumWeight CHAR ' 
+			SELECT minweight.minimumWeight, item.weight 
+			FROM zMinimumWeight minweight
+			INNER JOIN Item item ON item.id=minweight.itemId
+			WHERE 
+					itemnumber = ?
+		';
+			
+		SET Environment.Variables.SQLQueries.MinimumWeight = PASSTHRU(sqlQueryMinimumWeight, orderLine.ns:sku);
+	
+		IF EXISTS(Environment.Variables.SQLQueries.MinimumWeight[]) THEN
+			
+			SET minimumWeight = Environment.Variables.SQLQueries.MinimumWeight.minimumWeight;
+			SET itemWeight = Environment.Variables.SQLQueries.MinimumWeight.weight;
+			SET totalWeight = itemWeight * orderLine.ns:quantity;
+			
+			IF totalWeight < minimumWeight THEN
+			
+				RETURN TRUE;
+			
+			END IF;
+			
+		END IF;
+	
+		RETURN FALSE;
+	END;
+	
+END MODULE;

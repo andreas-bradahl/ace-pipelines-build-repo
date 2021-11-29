@@ -1,0 +1,21 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE FILTER MODULE optimizeOrderLinesFilter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderLineCursorIndex INT varRef.orderLineCursorIndex;
+		DECLARE orderLineRef REFERENCE TO orderRequestRef.orderLines.Item[orderLineCursorIndex];
+		
+		DECLARE orderLineUnit CHAR UPPER(TRIM(orderLineRef.orderLineUnit));
+		
+		IF Environment.Variables.optimizeOrderLines = true AND (orderLineUnit = 'D'  OR orderLineUnit = 'STK') THEN
+			RETURN true;
+		ELSE
+			RETURN false;
+		END IF;
+	END;
+
+END MODULE;

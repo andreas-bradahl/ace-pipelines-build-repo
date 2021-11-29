@@ -1,0 +1,52 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCompareDatesExtra
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE requestedDeliveryDate CHARACTER orderRequestRef.requestedDeliveryDate;
+		DECLARE deadlineDate GMTTIMESTAMP;
+		DECLARE deliveryDate CHARACTER;
+		
+		DECLARE alreadySentMessage BOOLEAN FALSE;
+		
+		DECLARE properTimezoneFormat GMTTIMESTAMP;
+		
+		FOR record AS InputRoot.JSON.Data.extradeliverydates.Item[] DO
+			
+			SET deliveryDate = record.deliveryDate;
+			
+			IF deliveryDate = requestedDeliveryDate THEN
+				--2020-04-08T15:00+0200
+				SET deadlineDate = CAST(SUBSTRING(record.deadlineDate BEFORE '+') AS TIMESTAMP FORMAT 'yyyy-MM-dd''T''HH:mm');
+				
+				IF deadlineDate < CURRENT_TIMESTAMP THEN
+					
+					DECLARE envRef REFERENCE TO Environment;
+					CALL setErrorMessage(400, 'FAILED', 'AFTER_DEADLINE', envRef);
+					
+					SET alreadySentMessage = TRUE;
+					PROPAGATE TO TERMINAL 'out1';
+				ELSE
+					SET alreadySentMessage = TRUE;
+					PROPAGATE TO TERMINAL 'out';
+				END IF;
+				
+			END IF;
+			
+		END FOR;
+		
+		IF NOT alreadySentMessage THEN
+		
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'AFTER_DEADLINE', envRef);
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

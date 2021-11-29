@@ -1,0 +1,43 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.Variables.Global.SellByDateError = FALSE;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines[] DO
+			
+			IF Environment.Variables.Global.SellByDateError THEN
+				RETURN FALSE;
+			END IF;
+			
+			DECLARE sqlQueryHasSellByDate CHAR ' 
+				SELECT COUNT(ZBITNO) AS ITNOCOUNT
+				FROM ZITBAL
+				WHERE 
+						ZBCONO = ''100'' 
+					AND ZBITNO = ? 
+					AND ZBSLDT > ?
+			';
+		
+			SET Environment.Variables.SQLQueries.HasSellByDate = PASSTHRU(sqlQueryHasSellByDate, orderLine.ns:sku, REPLACE(Environment.Variables.Global.OriginRequest.ns:firstDeliveryDate, '-', ''));
+		
+			IF Environment.Variables.SQLQueries.HasSellByDate.ITNOCOUNT > 0 THEN
+		
+				SET OutputLocalEnvironment.Variables.sku = orderLine.ns:sku;
+				SET OutputLocalEnvironment.Variables.quantity = orderLine.ns:quantity;
+				PROPAGATE TO TERMINAL 'out1';
+			
+			END IF;
+			
+		END FOR;
+		
+		IF Environment.Variables.Global.SellByDateError THEN
+			RETURN FALSE;
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

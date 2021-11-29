@@ -1,0 +1,29 @@
+
+
+CREATE COMPUTE MODULE getCustomerAndAssortmentId
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE assortmentsCustomersQuery CHAR
+			'(SELECT 
+				TRIM(OCCUNO) "CustomerID", 
+				TRIM(OCASCD) "AssortmentID"
+			FROM OASCUS
+			WHERE OCCONO = ?
+			AND OCFDAT <= ?
+			AND OCTDAT >= ?
+			ORDER BY OCCUNO, OCASCD)';
+				
+		DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		DECLARE inputCONO INT InputLocalEnvironment.REST.Input.Parameters.CONO;
+				
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+		SET OutputRoot.JSON.Data.AssortmentsCustomers =
+			PASSTHRU(assortmentsCustomersQuery
+			VALUES (inputCONO, currentDate, currentDate));
+
+		RETURN TRUE;
+		
+	END;
+
+END MODULE;

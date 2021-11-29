@@ -1,0 +1,13 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE GetOrderLines_LstLine2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- prepare arguments
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.company_number; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = Environment.Variables.Global.order_number;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

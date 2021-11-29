@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP026_DSP_Orders_REST/customerOrder" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP026_DSP_Orders_REST/customerOrder">
+
+    <simpleType name="companyNumber">
+    	<restriction base="string">
+
+    		<length value="3"></length>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="customerNumber">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    		<maxLength value="10"></maxLength>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="orderNumber">
+    	<restriction base="string">
+
+    		<minLength value="1"></minLength>
+    		<maxLength value="10"></maxLength>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="estimatedOrderAmount">
+    	<restriction base="float"></restriction>
+    </simpleType>
+
+    <simpleType name="optimizeOrderLines">
+    	<restriction base="boolean"></restriction>
+    </simpleType>
+
+    
+    <simpleType name="sku">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    		<maxLength value="15"></maxLength>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="quantity">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    	</restriction>
+    </simpleType>
+
+    <complexType name="orderHeadChangeRequest">
+    	<sequence>
+    		<element name="companyNumber" type="co:companyNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="customerNumber" type="co:customerNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="orderNumber" type="co:orderNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="estimatedOrderAmount"
+    			type="co:estimatedOrderAmount" maxOccurs="1" minOccurs="1">
+    		</element>
+
+
+
+
+
+
+    		<element name="orderType" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="requestedDeliveryDate" type="string"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+            <element name="defaultM3OrderType" type="string" maxOccurs="1" minOccurs="0"></element>
+            <element name="orderLinesChangeRequest"
+    			type="co:orderLinesChangeRequest" maxOccurs="unbounded"
+    			minOccurs="0">
+    		</element>
+
+    	</sequence>
+    </complexType>
+    
+    <simpleType name="lostSalesWarehouse">
+    	<restriction base="string">
+    		<minLength value="0"></minLength>
+    		<maxLength value="3"></maxLength>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="orderLineUnit">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    		<maxLength value="3"></maxLength>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="discountLine">
+    	<restriction base="float"></restriction>
+    </simpleType>
+
+
+
+
+
+
+    <simpleType name="isLostSales">
+    	<restriction base="boolean"></restriction>
+    </simpleType>
+
+    <simpleType name="action">
+    	<restriction base="string">
+
+    		<length value="3"></length>
+    		<enumeration value="add"></enumeration>
+    		<enumeration value="upd"></enumeration>
+    		<enumeration value="del"></enumeration>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="lostSalesUniqueId">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+
+    <simpleType name="orderLineNumber">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <complexType name="addOrderLineRequest">
+    	<sequence>
+    		<element name="sku" type="co:sku" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="quantity" type="co:quantity" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="lostSalesWarehouse"
+    			type="co:lostSalesWarehouse" maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="orderLineUnit" type="co:orderLineUnit"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine1" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine2" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine3" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine4" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine5" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="discountLine6" type="co:discountLine"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="isLostSales" type="co:isLostSales"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="action" type="co:action" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="lostSalesUniqueId"
+    			type="co:lostSalesUniqueId" maxOccurs="1" minOccurs="0">
+    		</element>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="updateOrderLineRequest">
+    	<sequence>
+    		<element name="sku" type="co:sku" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="co:quantity" maxOccurs="1" minOccurs="1"></element>
+    		<element name="lostSalesWarehouse" type="co:lostSalesWarehouse" maxOccurs="1" minOccurs="0"></element>
+    		<element name="orderLineUnit" type="co:orderLineUnit" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine1" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine2" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine3" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine4" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine5" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine6" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="isLostSales" type="co:isLostSales" maxOccurs="1" minOccurs="0"></element>
+    		<element name="action" type="co:action" maxOccurs="1" minOccurs="1"></element>
+    		<element name="lostSalesUniqueId" type="co:lostSalesUniqueId" maxOccurs="1" minOccurs="0"></element>
+    		<element name="orderLineNumber" type="co:orderLineNumber" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="deleteOrderLineRequest">
+    	<sequence>
+    		<element name="sku" type="co:sku" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="co:quantity" maxOccurs="1" minOccurs="0"></element>
+    		<element name="lostSalesWarehouse" type="co:lostSalesWarehouse" maxOccurs="1" minOccurs="0"></element>
+    		<element name="orderLineUnit" type="co:orderLineUnit" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine1" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine2" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine3" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine4" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine5" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine6" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="isLostSales" type="co:isLostSales" maxOccurs="1" minOccurs="0"></element>
+    		<element name="action" type="co:action" maxOccurs="1" minOccurs="1"></element>
+    		<element name="lostSalesUniqueId" type="co:lostSalesUniqueId" maxOccurs="1" minOccurs="0"></element>
+    		<element name="orderLineNumber" type="co:orderLineNumber" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+
+    <element name="orderChangeRequest" type="co:orderHeadChangeRequest"></element>
+
+    <complexType name="orderLinesChangeRequest">
+    	<choice maxOccurs="1" minOccurs="1">
+    		<element name="addRequest" type="co:addOrderLineRequest"></element>
+    		<element name="updateRequest" type="co:updateOrderLineRequest"></element>
+    		<element name="deleteRequest" type="co:deleteOrderLineRequest"></element>
+    	</choice>
+    </complexType>
+
+    <element name="newOrder" type="co:newOrderRequest"></element>
+
+    <complexType name="newOrderRequest">
+    	<sequence>
+            <element name="prevOrderType" type="string" maxOccurs="1" minOccurs="1"></element>
+            <element name="companyNumber" type="co:companyNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="customerNumber" type="co:customerNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="customerWarehouse"
+    			type="co:customerWarehouse" maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="orderType" type="co:orderType" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="requestedDeliveryDate" type="co:date"
+    			maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="estimatedOrderAmount"
+    			type="co:estimatedOrderAmount" maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="customerOrderNumber"
+    			type="co:customerOrderNumber" maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="customerReference"
+    			type="co:customerReference" maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="orderName" type="co:orderName" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="TINEReference" type="co:TINEReference"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="orderComment" type="co:orderComment"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+
+
+    		<element name="clipCard" type="co:clipCard" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="orderLines" type="co:newOrderLineRequest"
+    			maxOccurs="unbounded" minOccurs="1">
+    		</element>
+    	</sequence>
+    </complexType>
+
+    <simpleType name="customerWarehouse">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <simpleType name="orderType">
+    	<restriction base="string">
+
+    		<length value="3"></length>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="date">
+    	<restriction base="string">
+    		<length value="10"></length>
+    		<pattern
+    			value="\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])">
+    		</pattern>
+    	</restriction>
+    </simpleType>
+
+    <simpleType name="customerReference">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <simpleType name="customerOrderNumber">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <simpleType name="orderName">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <simpleType name="TINEReference">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <simpleType name="orderComment">
+    	<restriction base="string"></restriction>
+    </simpleType>
+
+    <complexType name="newOrderLineRequestNotLostSale">
+    	<sequence>
+    		<element name="sku" type="co:sku" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="co:quantity" maxOccurs="1" minOccurs="1"></element>
+    		<element name="lostSalesWarehouse" type="co:lostSalesWarehouse" maxOccurs="1" minOccurs="0"></element>
+    		<element name="orderLineUnit" maxOccurs="1" minOccurs="0" type="co:orderLineUnit">
+
+    		</element>
+    		<element name="discountLine1" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine2" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine3" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine4" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine5" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine6" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="isLostSales" type="co:isLostSales" maxOccurs="1" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="newOrderLineRequestLostSale">
+        <sequence>
+    		<element name="sku" type="co:sku" maxOccurs="1" minOccurs="1"></element>
+    		<element name="quantity" type="co:quantity" maxOccurs="1" minOccurs="1"></element>
+    		<element name="lostSalesWarehouse" type="co:lostSalesWarehouse" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderLineUnit" type="co:orderLineUnit" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine1" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine2" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine3" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine4" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine5" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="discountLine6" type="co:discountLine" maxOccurs="1" minOccurs="0"></element>
+    		<element name="isLostSales" type="co:isLostSales" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="newOrderLineRequest">
+    	<choice maxOccurs="1" minOccurs="1">
+    		<element name="notLostSale" type="co:newOrderLineRequestNotLostSale"></element>
+    		<element name="lostSale" type="co:newOrderLineRequestLostSale"></element>
+    	</choice>
+    </complexType>
+
+    <complexType name="deleteOrderRequest">
+    	<sequence>
+    		<element name="companyNumber" type="co:companyNumber" maxOccurs="1" minOccurs="1"></element>
+    		<element name="customerNumber" type="co:customerNumber" maxOccurs="1" minOccurs="1"></element>
+    		<element name="orderNumber" type="co:orderNumber" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+
+    <element name="deleteOrder" type="co:deleteOrderRequest"></element>
+
+    <complexType name="getOrderRequest">
+    	<sequence>
+    		<element name="companyNumber" type="co:companyNumber"></element>
+    		<element name="customerNumber" type="co:customerNumber"></element>
+    		<element name="orderNumber" type="co:orderNumber"></element>
+    	</sequence>
+    </complexType>
+
+    <element name="getOrder" type="co:getOrderRequest"></element>
+
+    <simpleType name="clipCard">
+    	<restriction base="string"></restriction>
+    </simpleType>
+</schema>

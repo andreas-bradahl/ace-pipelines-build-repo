@@ -1,0 +1,45 @@
+
+
+DECLARE Source EXTERNAL CHARACTER NULL;
+DECLARE MessageId EXTERNAL CHARACTER NULL;
+
+CREATE COMPUTE MODULE incomingMQMessageHeaderHandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+		IF FIELDVALUE(InputRoot.MQRFH2.usr.UUID) IS NULL THEN 
+			SET Environment.Variables.Logging.UUID = UUIDASCHAR;
+		ELSE 
+			SET Environment.Variables.Logging.UUID = FIELDVALUE(InputRoot.MQRFH2.usr.UUID);
+		END IF; 
+		
+		
+		IF FIELDVALUE(InputRoot.MQRFH2.usr.Source) IS NULL THEN
+			CREATE FIELD Environment.Variables.Logging.Source;
+			SET Environment.Variables.Logging.Source = Source;
+		ELSE 
+			SET Environment.Variables.Logging.Source = FIELDVALUE(InputRoot.MQRFH2.usr.Source);
+		END IF;
+		
+		
+		IF FIELDVALUE(InputRoot.MQRFH2.usr.MessageId) IS NULL THEN
+			CREATE FIELD Environment.Variables.Logging.MessageId; 
+			--SET Environment.Variables.Logging.MessageId = MessageId;
+		ELSE
+			SET Environment.Variables.Logging.MessageId = FIELDVALUE(InputRoot.MQRFH2.usr.MessageId);
+		END IF;
+		
+		
+		IF FIELDVALUE(InputRoot.MQRFH2.usr.jobId) IS NULL THEN
+			CREATE FIELD Environment.Variables.Logging.jobId; 
+			--SET Environment.Variables.Logging.MessageId = MessageId;
+		ELSE
+			SET Environment.Variables.Logging.jobId = FIELDVALUE(InputRoot.MQRFH2.usr.jobId);
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

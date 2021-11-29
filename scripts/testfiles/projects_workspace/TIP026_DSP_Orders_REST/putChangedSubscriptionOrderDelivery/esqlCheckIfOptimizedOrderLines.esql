@@ -1,0 +1,17 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckIfOptimizedOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF Environment.Variables.Global.OriginRequest.ns:optimizeOrderLines THEN
+			PROPAGATE TO TERMINAL 'out1';
+		ELSE
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+
+
+		RETURN FALSE;
+	END;
+END MODULE;

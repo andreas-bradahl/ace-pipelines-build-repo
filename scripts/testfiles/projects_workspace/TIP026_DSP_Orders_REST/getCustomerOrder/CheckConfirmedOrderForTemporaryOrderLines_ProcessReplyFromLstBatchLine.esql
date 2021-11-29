@@ -1,0 +1,99 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckConfirmedOrderForTemporaryOrderLines_ProcessReplyFromLstBatchLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE found BOOLEAN FALSE;
+		DECLARE currentPONR CHARACTER InputLocalEnvironment.Variables.current_PONR;
+		DECLARE currentOPT1 CHARACTER InputLocalEnvironment.Variables.current_OPT1;
+		DECLARE dataCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue.Item;
+		DECLARE lstLine2Cursor REFERENCE TO Environment.Variables.HTTPResponses.LstLine2.Item;
+		DECLARe globalVarRef REFERENCE TO Environment.Variables.Global;
+		
+		DECLARE Name CHARACTER;
+		DECLARE Value CHARACTER;
+		
+		IF OrderExists(InputRoot) THEN
+			
+			WHILE LASTMOVE(lstLine2Cursor) AND NOT(found) DO
+				
+				IF currentPONR = lstLine2Cursor.PONR THEN
+		
+					WHILE LASTMOVE(dataCursor) DO
+				
+						SET Name = dataCursor.Name;
+						SET Value = dataCursor.Value;
+						
+						IF Name = 'ORQT' THEN
+							SET lstLine2Cursor.newORQT = TRIM(Value);
+						END IF;
+						
+						MOVE dataCursor NEXTSIBLING REPEAT NAME;
+					END WHILE;
+		
+					SET found = TRUE;
+					
+				END IF;
+				
+				MOVE lstLine2Cursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+			IF NOT found THEN
+			
+				SET globalVarRef.haveTempLines = true;
+				DECLARE itemRef REFERENCE TO Environment;
+				CREATE FIELD Environment.Variables.HTTPResponses.LstBatchLine.Item AS itemRef;
+				
+				WHILE LASTMOVE(dataCursor) DO
+					
+					SET Name = dataCursor.Name;
+					SET Value = dataCursor.Value;
+					
+					SET itemRef.{Name} = TRIM(Value);
+					
+					MOVE dataCursor NEXTSIBLING REPEAT NAME;
+				END WHILE;
+				
+			  	SET itemRef.OPT1 = currentOPT1;
+				SET itemRef.canIncrease = FALSE;
+				SET itemRef.canDecrease = FALSE;
+				SET itemRef.canDelete = FALSE;
+				
+				IF currentOPT1 = '1' THEN
+					SET itemRef.addInReview = TRUE;				
+				ELSE
+					SET itemRef.addInReview = FALSE;				
+				END IF;
+				
+				IF itemRef.SPUN IS NULL THEN
+					
+					SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = globalVarRef.company_number;
+					SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = itemRef.ITNO;
+					
+					PROPAGATE TO TERMINAL 'out';
+					
+				END IF;
+				
+			END IF;
+			
+			RETURN FALSE;
+						
+		ELSE
+			WHILE LASTMOVE(lstLine2Cursor) AND NOT(found) DO
+				
+				IF currentPONR = lstLine2Cursor.PONR THEN
+					
+					SET lstLine2Cursor.OPT1 = currentOPT1;
+					SET found = TRUE;
+					
+				END IF;
+				
+				MOVE lstLine2Cursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

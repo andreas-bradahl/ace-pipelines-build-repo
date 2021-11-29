@@ -1,0 +1,26 @@
+
+
+CREATE DATABASE MODULE getItems_Enrich_from_tine_esa
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE currentItem REFERENCE TO Environment.Variables.ProductList.Product[1];
+		
+		DECLARE sqlQuery CHAR '
+			SELECT
+				I.zMaxQty,
+				zMW.minimumWeight,
+				zMW.leadTime
+			FROM
+				Item AS I
+			LEFT JOIN zMinimumWeight AS zMW ON
+				I.id = zMW.itemId
+			WHERE
+				I.itemNumber = ?
+		';
+		
+		SET currentItem.tineEsa[] = PASSTHRU(sqlQuery VALUES (currentItem.ITNO));
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

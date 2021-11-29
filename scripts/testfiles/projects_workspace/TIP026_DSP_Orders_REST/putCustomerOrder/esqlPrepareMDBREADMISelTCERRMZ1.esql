@@ -1,0 +1,18 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareMDBREADMISelTCERRMZ1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE errorResponse REFERENCE TO InputLocalEnvironment.Variables.Response.Item;
+		
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE queryStringRef REFERENCE TO OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		SET queryStringRef.DIVI = '';
+		SET queryStringRef.ID03 = errorResponse.ORNO;
+		
+	END;
+END MODULE;

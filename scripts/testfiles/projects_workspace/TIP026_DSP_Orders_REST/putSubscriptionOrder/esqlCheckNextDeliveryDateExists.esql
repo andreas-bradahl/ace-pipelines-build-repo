@@ -1,0 +1,20 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckNextDeliveryDateExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		IF LENGTH(Environment.Variables.HTTPResponses.OIZ102MI_LstOrders.Item[1].RLDT) <> 8 THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'NO_POSSIBLE_DELIVERY_DATE';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

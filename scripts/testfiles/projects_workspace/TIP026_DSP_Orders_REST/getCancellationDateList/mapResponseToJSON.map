@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCancellationDateList" version="8.0.5.0" xmlns:map="getCancellationDateList">
+    <input path="/cancellationDateList.xsd"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var4"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var5"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapResponseToJSON">
+        <input namespace="http://TIP026_DSP_Orders_REST" path="mb:msg(getCancellationDateListResponse,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var4/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}JSONArray_getCancellationDateListResponse" ref="var5"/>
+        </output>
+        <move>
+            <input path="$MessageAssembly/Properties"/>
+            <output path="$MessageAssembly1/Properties"/>
+        </move>
+        <local>
+            <input path="$MessageAssembly/getCancellationDateListResponse"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)"/>
+            <foreach>
+                <input path="getCancellationDateListResponseObject"/>
+                <output path="Item"/>
+                <move>
+                    <input path="cancelledByCustomer"/>
+                    <output path="cancelledByCustomer"/>
+                </move>
+                <move>
+                    <input path="cancelledByTINE"/>
+                    <output path="cancelledByTINE"/>
+                </move>
+                <move>
+                    <input path="date"/>
+                    <output path="date"/>
+                </move>
+            </foreach>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

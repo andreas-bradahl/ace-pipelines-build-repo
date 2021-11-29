@@ -1,0 +1,33 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFilterPromotionalProducts
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE hasPromotional BOOLEAN Environment.Variables.Global.Flags.HasPromotional;
+		DECLARE onlyPromotional BOOLEAN Environment.Variables.Global.Flags.OnlyPromotional;
+		
+		DECLARE promotionalOrderCode CHARACTER Environment.Variables.SQLQueries.PromotionalOrderCode.value;
+		DECLARE orderType CHAR Environment.OrderRequest.Data.orderType;
+		
+		DECLARE originalOrderIsPromo BOOLEAN orderType = promotionalOrderCode;
+		
+		DECLARE firstTest BOOLEAN hasPromotional AND NOT originalOrderIsPromo;
+		DECLARE secondTest BOOLEAN NOT hasPromotional AND originalOrderIsPromo;
+		
+		IF (originalOrderIsPromo AND NOT onlyPromotional) OR (NOT originalOrderIsPromo AND hasPromotional) THEN	
+			
+			SET Environment.Variables.Global.Flags.PromoSplit = TRUE;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			SET Environment.Variables.Global.Flags.PromoSplit = FALSE;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

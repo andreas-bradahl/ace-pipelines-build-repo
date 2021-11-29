@@ -1,0 +1,13 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE noClipsLeft
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			SET Environment.Variables.noClipsLeft = true;
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'NO_CLIPS_LEFT_ON_CLIPCARD';
+		RETURN TRUE;
+	END;
+END MODULE;

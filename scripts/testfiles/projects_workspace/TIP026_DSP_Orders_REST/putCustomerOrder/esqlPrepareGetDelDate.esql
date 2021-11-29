@@ -1,0 +1,16 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareGetDelDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE originRequest REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE RLDT CHARACTER TRIM(GetValueFromNameValueList('RLDT', Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue));
+	
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = originRequest.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = originRequest.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RLDT = RLDT;
+
+		RETURN TRUE;
+	END;
+END MODULE;

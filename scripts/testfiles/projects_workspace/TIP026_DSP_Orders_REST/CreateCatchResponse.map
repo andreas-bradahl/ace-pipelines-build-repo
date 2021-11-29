@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="default" version="8.0.5.0" xmlns:map="default">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">   
+    <xsd:element name="ErrorText" type="xsd:string"/>   
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var4"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var5"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="CreateCatchResponse">
+        <input path="$var1/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/any" qualifier="ErrorText" ref="var"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var4/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly2">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly2/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}InternalErrorMessage" ref="var5"/>
+        </output>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment/ErrorText[1]"/>
+            <output path="$MessageAssembly2/JSON/spath('Data',2)/Response"/>
+        </move>
+        <assign value="Internal Server Error">
+            <output path="$MessageAssembly2/JSON/spath('Data',2)/Error_Code"/>
+        </assign>
+        <assign value="500">
+            <output path="$MessageAssembly2/LocalEnvironment/Destination/HTTP/ReplyStatusCode"/>
+        </assign>
+    </mappingDeclaration>
+</mappingRoot>

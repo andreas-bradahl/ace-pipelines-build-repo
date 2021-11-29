@@ -1,0 +1,16 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckIfCustomerCanOrderFPak
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		PROPAGATE TO TERMINAL 'out1';
+		IF Environment.Variables.HTTPResponses.CRS610MI_GetBasicData.Item.CFC6 = 'OPEX' THEN
+			SET Environment.Variables.Global.Flags.CanOrderInFPak = TRUE;
+		ELSE
+			SET Environment.Variables.Global.Flags.CanOrderInFPak = FALSE;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

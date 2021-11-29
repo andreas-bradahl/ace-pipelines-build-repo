@@ -1,0 +1,77 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckCurrentTimeAndOrderDeadline
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE chkDelDateRef REFERENCE TO Environment.JSONResponse.ChkDelDate;
+		
+		DECLARE DCHK CHAR TRIM(GetValueFromNameValueList('DCHK', chkDelDateRef.Data.MIRecord.Item.NameValue));
+		DECLARE RLDT CHAR TRIM(GetValueFromNameValueList('RLDT', chkDelDateRef.Data.MIRecord.Item.NameValue));
+		DECLARE LMDT CHAR TRIM(GetValueFromNameValueList('LMDT', chkDelDateRef.Data.MIRecord.Item.NameValue));
+		DECLARE LMTM CHAR TRIM(GetValueFromNameValueList('LMTM', chkDelDateRef.Data.MIRecord.Item.NameValue));
+		
+		DECLARE dchkNotOk BOOLEAN FALSE;
+		DECLARE deadlineDateNotOk BOOLEAN FALSE;
+		DECLARE deadlineTimeNotOk BOOLEAN FALSE;
+			
+		
+		IF DCHK = '1' THEN
+			
+			SET dchkNotOk = TRUE;
+			
+		ELSE
+			
+			SET dchkNotOk = FALSE;
+			
+		END IF;
+		
+		
+		IF NOT dchkNotOk THEN
+		
+			DECLARE confirmedDeliverydate DATE CAST(RLDT AS DATE FORMAT 'yyyyMMdd');
+			DECLARE deadlineDate DATE CAST(LMDT AS DATE FORMAT 'yyyyMMdd');
+			DECLARE deadlineTime TIME CAST(LMTM AS TIME FORMAT 'HHmm');
+			
+	
+
+			IF deadlineDate < CURRENT_DATE THEN
+				
+				SET deadlineDateNotOk = TRUE;
+			
+			ELSE
+				
+				SET deadlineDateNotOk = FALSE;
+				
+			END IF;
+				
+			IF deadlineTime <= CURRENT_TIME AND deadlineDate = CURRENT_DATE THEN
+				
+				SET deadlineTimeNotOk = TRUE;
+				
+			ELSE
+				
+				SET deadlineTimeNotOk = FALSE;
+				
+			END IF;
+			
+		END IF;
+		
+		
+		IF dchkNotOk OR deadlineDateNotOk OR deadlineTimeNotOk THEN
+			
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'ORDER_DEADLINE';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

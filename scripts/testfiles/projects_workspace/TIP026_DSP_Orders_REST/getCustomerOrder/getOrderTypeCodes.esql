@@ -1,0 +1,26 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE getOrderTypeCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		
+		DECLARE pickupOrderKeyword CHAR 'zMvxOrdertype_pickup';
+		DECLARE expressOrderKeyword CHAR 'zMvxOrdertype_express';
+		DECLARE extraDeliveryOrderKeyword CHAR 'zMvxOrdertype_extra';
+		
+		DECLARE pickupOrder CHAR getSingleValueFromApplicationData(pickupOrderKeyword, LocalEnvironment);
+		DECLARE expressOrder CHAR getSingleValueFromApplicationData(expressOrderKeyword, LocalEnvironment);
+		DECLARE extraDeliveryOrder CHAR getSingleValueFromApplicationData(extraDeliveryOrderKeyword, LocalEnvironment);
+		
+		SET varRef.Global.pickupOrder = pickupOrder;
+		SET varRef.Global.expressOrder = expressOrder;
+		SET varRef.Global.extraDelivery = extraDeliveryOrder;
+		SET varRef.Global.currentOrderType = varRef.HTTPResponses.GetHead.ORTP;
+
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,50 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckOrderLineNumber
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		DECLARE validOrderLineNumber BOOLEAN;
+		DECLARE PONR CHARACTER;
+		DECLARE ITNO CHARACTER;
+			
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			IF orderLine.action = 'upd' OR orderLine.action = 'del' THEN
+				
+				FOR orderLinePONR AS orderLine.orderLineNumber.Item[] DO
+					
+					SET validOrderLineNumber = FALSE;
+			
+					FOR lstLine2Order AS Environment.JSONResponse.LstLine2.Data.MIRecord.Item[] DO
+						
+						SET ITNO = TRIM(GetValueFromNameValueList('ITNO', lstLine2Order.NameValue));
+						SET PONR = TRIM(GetValueFromNameValueList('PONR', lstLine2Order.NameValue));
+						
+						IF PONR = orderLinePONR AND ITNO = orderLine.sku THEN
+						
+							SET validOrderLineNumber = TRUE;
+							
+						END IF;
+						
+					END FOR;
+					
+					IF NOT validOrderLineNumber THEN
+						
+						DECLARE envRef REFERENCE TO Environment;
+						CALL setErrorMessage(400, 'FAILED', 'ORDER_LINE_NUMBER_DOES_NOT_EXIST', envRef);
+						PROPAGATE TO TERMINAL 'out1';
+						RETURN FALSE;
+						
+					END IF;
+					
+				END FOR;
+			
+			END IF;
+		
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

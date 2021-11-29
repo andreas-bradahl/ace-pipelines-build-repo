@@ -1,0 +1,30 @@
+
+
+CREATE COMPUTE MODULE esqlIterateOverMsgIds
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+				
+		DECLARE count INTEGER 0;
+				
+		WHILE CARDINALITY(Environment.msgIds.msgId[]) > 0 DO
+			
+			FOR msgId AS Environment.msgIds.msgId[] DO
+				
+				SET OutputRoot.MQMD.MsgId = CAST(FIELDVALUE(msgId) AS BLOB);
+				SET OutputLocalEnvironment.Variables.CurrentMsgId = CAST(FIELDVALUE(msgId) AS BLOB);
+				
+				PROPAGATE TO TERMINAL 'out';
+			END FOR;
+			
+			SET count = count + 1;
+			
+			IF count = 10000 THEN
+				DELETE FIELD Environment.msgIds;
+			END IF;
+			
+		END WHILE;
+		
+		RETURN FALSE;
+	END;
+	
+END MODULE;

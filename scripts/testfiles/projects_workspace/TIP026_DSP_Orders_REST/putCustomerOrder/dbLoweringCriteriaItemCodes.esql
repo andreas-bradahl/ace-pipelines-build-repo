@@ -1,0 +1,38 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE dbLoweringCriteriaItemCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryCantBeLoweredItemCodes CHAR ' 
+			SELECT C.code
+			FROM Code C
+			INNER JOIN CodeType CT
+			ON C.typeId = CT.id
+			WHERE CT.name = ''zNoDeleteItemClass''
+		';
+			
+		SET Environment.Variables.SQLQueries.CantBeLoweredItemCodes.Code[] = PASSTHRU(sqlQueryCantBeLoweredItemCodes);
+		
+		DECLARE sqlQueryCanOnlyBeLoweredItemCodes CHAR ' 
+			SELECT C.code
+			FROM Code C
+			INNER JOIN CodeType CT
+			ON C.typeId = CT.id
+			WHERE CT.name = ''zCanOnlyLowerOrderType''
+		';
+			
+		SET Environment.Variables.SQLQueries.CanOnlyBeLoweredItemCodes.Code[] = PASSTHRU(sqlQueryCanOnlyBeLoweredItemCodes);
+		
+		DECLARE sqlQueryCreditCardCodes CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zKreditkortsBetalningsmetod''
+		';
+			
+		SET Environment.Variables.SQLQueries.CreditCardCodes.Value[] = PASSTHRU(sqlQueryCreditCardCodes);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

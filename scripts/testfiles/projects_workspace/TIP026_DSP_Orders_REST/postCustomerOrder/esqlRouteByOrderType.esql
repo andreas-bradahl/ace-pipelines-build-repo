@@ -1,0 +1,32 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlRouteByOrderType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF Environment.OrderRequest.Data.orderType = Environment.Variables.pickupOrder THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+		
+		ELSEIF Environment.OrderRequest.Data.prevOrderType = Environment.Variables.pickupOrder THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+		
+		ELSEIF Environment.OrderRequest.Data.orderType = Environment.Variables.expressOrder THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSEIF Environment.OrderRequest.Data.orderType = Environment.Variables.extraDelivery THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

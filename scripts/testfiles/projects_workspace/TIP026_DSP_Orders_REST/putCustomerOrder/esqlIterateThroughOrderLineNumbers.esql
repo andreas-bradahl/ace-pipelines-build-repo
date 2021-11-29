@@ -1,0 +1,22 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlIterateThroughOrderLineNumbers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE CurrentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE orderNumber CHARACTER InputLocalEnvironment.Variables.OrderNumber; 
+		
+		FOR orderLineNumber AS CurrentOrder.orderLineNumber.Item[] DO
+			
+			SET OutputLocalEnvironment.Variables.OrderNumber = orderNumber;
+			SET OutputLocalEnvironment.Variables.CurrentOrder = CurrentOrder;
+			SET OutputLocalEnvironment.Variables.CurrentOrder.PONR = orderLineNumber;
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END FOR;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

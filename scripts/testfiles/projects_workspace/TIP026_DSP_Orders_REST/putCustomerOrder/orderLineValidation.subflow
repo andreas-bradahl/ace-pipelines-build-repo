@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmDatabase.msgnode="ComIbmDatabase.msgnode" xmlns:ComIbmHTTPHeader.msgnode="ComIbmHTTPHeader.msgnode" xmlns:ComIbmWSRequest.msgnode="ComIbmWSRequest.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="putCustomerOrder/orderLineValidation.subflow" nsPrefix="putCustomerOrder_orderLineValidation.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="orderLineValidation" bundleName="putCustomerOrder/orderLineValidation" pluginId="TIP026_DSP_Orders_REST"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj16/orderLineValidation.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj30/orderLineValidation.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="putCustomerOrder/orderLineValidation" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="2388,266">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.OK" bundleName="putCustomerOrder/orderLineValidation" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="2646,102">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.NOK" bundleName="putCustomerOrder/orderLineValidation" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="1932,266" dataSource="tine_esa" statement="esql://routine/putCustomerOrder#DB_MinimumWeight.Main">
+        <translation xmi:type="utility:ConstantString" string="MinimumWeightRequirement"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="10,502" dataSource="m3_test_CUSFDBTST" statement="esql://routine/putCustomerOrder#DB_ProductSellByDate.Main">
+        <translation xmi:type="utility:ConstantString" string="ProductSellByDate"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="2150,266" computeExpression="esql://routine/putCustomerOrder#CheckConnectedWorkPurchaseDistributionOrder.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="CheckForConnectedOrders"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="442,20" computeExpression="esql://routine/#StoreReply.Main">
+        <translation xmi:type="utility:ConstantString" string="StoreLstLine"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="93,20" computeExpression="esql://routine/putCustomerOrder#PrepareLstLine2.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="PrepareLstLine"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="308,20" URLSpecifier="https://m3t10005.tine.no:20008/m3api-rest/execute/OIZ100MI/LstLine2" httpMethod="GET" httpVersion="1.1" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="OIZ100MI/LstLine2"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output2" location="447,430">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.HTTPError" bundleName="putCustomerOrder/orderLineValidation" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmHTTPHeader.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="206,20" httpRequestHeader="Add">
+        <translation xmi:type="utility:ConstantString" string="AcceptJSON"/>
+        <nameValue4RequestHeader name="Accept" value="application/json"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="543,20" dataSource="tine_esa" statement="esql://routine/putCustomerOrder#dbLoweringCriteriaItemCodes.Main">
+        <translation xmi:type="utility:ConstantString" string="LoweringCriteriaItemCodes"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="1150,20" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlCantBeLowered.Main">
+        <translation xmi:type="utility:ConstantString" string="CantBeLowered"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="721,20" computeExpression="esql://routine/putCustomerOrder#esqlSplitOrderFilter.Main">
+        <translation xmi:type="utility:ConstantString" string="SplitOrder?"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="1139,184" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlCantBeLoweredSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="CantBeLoweredSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="1292,20" computeExpression="esql://routine/putCustomerOrder#esqlStatusCheck.Main">
+        <translation xmi:type="utility:ConstantString" string="StatusCheck"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="1281,184" computeExpression="esql://routine/putCustomerOrder#esqlStatusCheckSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="StatusCheckSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="1416,20" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlCanOnlyBeLowered.Main">
+        <translation xmi:type="utility:ConstantString" string="CanOnlyBeLowered"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="1405,184" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlCanOnlyBeLoweredSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="CanOnlyBeLoweredSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="1577,20" computeExpression="esql://routine/putCustomerOrder#esqlCreditCardCustomerCheck.Main">
+        <translation xmi:type="utility:ConstantString" string="CreditCardCustomerCheck"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_17" location="1566,184" computeExpression="esql://routine/putCustomerOrder#esqlCreditCardCustomerCheckSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="CreditCardCustomerCheckSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="10,574" dataSource="m3_test_CUSFDBTST" statement="esql://routine/putCustomerOrder#DB_ProductSellByDateSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="ProductSellByDateSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmDatabase.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="1921,184" dataSource="tine_esa" statement="esql://routine/putCustomerOrder#DB_MinimumWeightSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="MinimumWeightRequirementSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="2139,184" computeExpression="esql://routine/putCustomerOrder#CheckConnectedWorkPurchaseDistributionOrderSplit.Main" computeMode="destination">
+        <translation xmi:type="utility:ConstantString" string="CheckForConnectedOrdersSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="1015,20" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlUnitCheck.Main">
+        <translation xmi:type="utility:ConstantString" string="esqlUnitCheck"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_22" location="1004,184" dataSource="m3_test" computeExpression="esql://routine/putCustomerOrder#esqlUnitCheckSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="esqlUnitCheckSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_23" location="830,20" computeExpression="esql://routine/putCustomerOrder#esqlCheckOrderLineNumber.Main">
+        <translation xmi:type="utility:ConstantString" string="CheckOrderLineNumber"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_24" location="819,184" computeExpression="esql://routine/putCustomerOrder#esqlCheckOrderLineNumberSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="CheckOrderLineNumberSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_25" location="1763,184" dataSource="m3_test_CUSFDBTST" computeExpression="esql://routine/putCustomerOrder#esqlCheckIfSellByDateSplit.Main">
+        <translation xmi:type="utility:ConstantString" string="CheckIfSellByDateSplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_26" location="1916,348" computeExpression="esql://routine/putCustomerOrder#esqlPrepareOIZ340MILstSupplSummaryCheck.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepareOIZ340MI/LstSupplSummary"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_28" location="2522,348" dataSource="m3_test_CUSFDBTST" computeExpression="esql://routine/putCustomerOrder#esqlCheckSellByDate.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="CheckSellByDate"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_29" location="1774,266" dataSource="m3_test_CUSFDBTST" computeExpression="esql://routine/putCustomerOrder#esqlCheckIfSellByDate.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="CheckIfSellByDate"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_30" location="2338,348" URLSpecifier="https://m3t10005.tine.no:20008/m3api-rest/execute/OIZ340MI/LstSupplSummary" httpMethod="GET" httpVersion="1.1" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="OIZ340MI/LstSupplSummary"/>
+      </nodes>
+      <nodes xmi:type="ComIbmHTTPHeader.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_31" location="2184,348" httpRequestHeader="Add">
+        <translation xmi:type="utility:ConstantString" string="AcceptJSON1"/>
+        <nameValue4RequestHeader name="Accept" value="application/json"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_7" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="OutTerminal.Output2" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_32" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_35" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_37" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_38" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_39" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_54" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_40" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_22" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_41" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_42" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_22" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_43" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_44" targetNode="FCMComposite_1_23" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_46" targetNode="FCMComposite_1_21" sourceNode="FCMComposite_1_23" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_48" targetNode="FCMComposite_1_22" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_49" targetNode="FCMComposite_1_24" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_50" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_23" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_51" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_26" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_47" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_28" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_52" targetNode="FCMComposite_1_25" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_55" targetNode="FCMComposite_1_29" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_56" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_29" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_57" targetNode="FCMComposite_1_26" sourceNode="FCMComposite_1_29" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_58" targetNode="FCMComposite_1_29" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_59" targetNode="FCMComposite_1_30" sourceNode="FCMComposite_1_31" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_60" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_26" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_61" targetNode="FCMComposite_1_28" sourceNode="FCMComposite_1_30" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_62" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_30" sourceTerminalName="OutTerminal.error" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

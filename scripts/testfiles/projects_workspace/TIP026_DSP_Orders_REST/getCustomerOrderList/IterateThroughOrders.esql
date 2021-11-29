@@ -1,0 +1,27 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE IterateThroughOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputLocalEnvironment.OrderIndex;
+		DECLARE ItemCursor REFERENCE TO Environment.Variables.OIZ102MILstOrdersResponse_JSONArray;
+		MOVE ItemCursor FIRSTCHILD NAME 'Item';
+		
+		DECLARE orderIndex INTEGER 0;
+		
+		WHILE LASTMOVE(ItemCursor) DO
+			SET OutputRoot.JSON.Data = ItemCursor;
+			SET OutputLocalEnvironment.OrderIndex = orderIndex;
+			SET orderIndex = orderIndex + 1;
+			
+			PROPAGATE TO TERMINAL 'out';
+			MOVE ItemCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+
+		PROPAGATE TO TERMINAL 'out1';
+		
+
+		RETURN FALSE;
+	END;
+END MODULE;

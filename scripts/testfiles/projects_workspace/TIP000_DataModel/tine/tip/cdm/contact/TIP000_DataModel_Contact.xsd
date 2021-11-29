@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+
+
+
+    <element name="ContactObject" type="co:ContactObject"></element>
+
+    <complexType name="ContactObject">
+    	<sequence>
+    		<element name="id" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="accountId" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="firstName" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="lastName" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="email" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="phone" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="mobilephone" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="address" type="co:ContactObjectAddress"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="sourceId" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="customertypeId" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="ownerId" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="birthDate" type="dateTime" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="startDate" type="dateTime" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="endDate" type="dateTime" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="created" type="dateTime" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    		<element name="primaryContact" type="boolean" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="retryCount" type="int" maxOccurs="1" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="ContactObjectAddress">
+    	<sequence>
+    		<element name="line1" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="line2" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="postalCode" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="city" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="country" type="string" maxOccurs="1" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+</schema>

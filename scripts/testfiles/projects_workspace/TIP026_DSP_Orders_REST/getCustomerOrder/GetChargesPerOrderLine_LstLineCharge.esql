@@ -1,0 +1,23 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE GetChargesPerOrderLine_LstLineCharge
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE itemCursor REFERENCE TO Environment.Variables.HTTPResponses.LstLine2.Item;
+		
+		WHILE LASTMOVE(itemCursor) DO
+			
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = globalVarRef.order_number;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.PONR = itemCursor.PONR; 
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.POSX = itemCursor.POSX;
+			PROPAGATE TO TERMINAL 'out1';
+			
+			MOVE itemCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

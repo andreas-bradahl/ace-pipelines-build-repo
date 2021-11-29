@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var2"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var3"/>
+    <imports>
+        <import kind="esql" namespace="/Common.esql"/>
+    </imports>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="extension" prefix="Common" uri="/Common.esql"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="CreateTempOrderRecord">
+        <input path="$var4/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}OIZ100MIGetBatchHeadResponse" ref="var1"/>
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response" ref="var1"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var2/mb:msg(JSON,assembly,JSON)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}getCustomerOrderListResponseOrderHead" ref="var3"/>
+        </output>
+        <join>
+            <input path="LocalEnvironment/MDBREADMILstOXCNTRU1Response" var="MDBREADMILstOXCNTRU1Response"/>
+            <input path="LocalEnvironment/OIZ100MIGetBatchHeadResponse" var="OIZ100MIGetBatchHeadResponse"/>
+            <output path="$MessageAssembly1/JSON"/>
+            <move>
+                <input path="$MDBREADMILstOXCNTRU1Response/CUNO"/>
+                <output path="spath('Data',2)/customerNumber"/>
+            </move>
+            <move>
+                <input path="$MDBREADMILstOXCNTRU1Response/ORNO"/>
+                <output path="spath('Data',2)/orderNumber"/>
+            </move>
+            <assign value="true">
+                <output path="spath('Data',2)/isTemporaryOrder"/>
+            </assign>
+            <assign value="true">
+                <output path="spath('Data',2)/containsTempLines"/>
+            </assign>
+            <move>
+                <input path="$OIZ100MIGetBatchHeadResponse/RLDT"/>
+                <output path="spath('Data',2)/deliveryDate"/>
+            </move>
+        </join>
+    </mappingDeclaration>
+</mappingRoot>

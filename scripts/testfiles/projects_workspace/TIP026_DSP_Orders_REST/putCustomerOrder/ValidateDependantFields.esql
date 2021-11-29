@@ -1,0 +1,36 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE ValidateDependantFields
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE orderRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		FOR orderline AS orderRef.orderLines.Item[] DO
+			
+			IF orderline.isLostSales THEN
+				
+				IF orderline.lostSalesUniqueId IS NULL THEN
+					
+					SET Environment.Variables.Global.invalidInput = true;
+					
+					DECLARE errorCode INT 400;
+					DECLARE response CHAR 'FAILED';
+					DECLARE reason CHAR 'LOSTSALESUNIQUEID_IS_MANDATORY_WHEN_ISLOSTSALES_IS_TRUE';
+					
+					CALL setErrorMessage (errorCode, response, reason, Environment);
+					
+				END IF;
+				
+			END IF;
+			
+		END FOR;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,62 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlFindSkus
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		DECLARE skuAlreadyExists BOOLEAN;
+		DECLARE orderSku CHARACTER;
+		DECLARE STKOrDPak BOOLEAN FALSE;
+		
+		FOR orderLine AS InputRoot.XMLNSC.ns:getSubscriptionOrderResponse.ns:optimizedOrderLines.ns:combinedOrderlines[] DO
+		
+			SET skuAlreadyExists = FALSE;
+			SET orderSku = orderLine.ns:sku;
+			
+			SET STKOrDPak = ((orderLine.ns:salesPriceUnit = 'STK' OR orderLine.ns:salesPriceUnit = 'D') OR (orderLine.ns:orderLineUnit = 'STK' OR orderLine.ns:orderLineUnit = 'D'));
+		
+			IF Environment.Variables.ResponseValues.Skus = NULL THEN
+				
+				CREATE FIELD Environment.Variables.ResponseValues.Skus;
+				
+				IF STKOrDPak THEN
+					SET Environment.Variables.ResponseValues.Skus.sku = orderSku;
+				ELSE
+					SET Environment.Variables.ResponseValues.Skus.skuFoundOtherUnits = orderSku;					
+				END IF;
+				
+			ELSE
+				
+				FOR sku AS Environment.Variables.ResponseValues.Skus.sku[] DO
+				
+					IF sku = orderSku THEN
+						SET skuAlreadyExists = TRUE;
+					END IF;
+				
+				END FOR;
+				
+				FOR sku AS Environment.Variables.ResponseValues.Skus.skuFoundOtherUnits[] DO
+				
+					IF sku = orderSku THEN
+						SET skuAlreadyExists = TRUE;
+					END IF;
+				
+				END FOR;
+				
+				IF NOT(skuAlreadyExists) THEN
+					IF STKOrDPak THEN
+						CREATE LASTCHILD OF Environment.Variables.ResponseValues.Skus NAME 'sku' VALUE orderSku;
+					ELSE
+						CREATE LASTCHILD OF Environment.Variables.ResponseValues.Skus NAME 'skuFoundOtherUnits' VALUE orderSku;
+					END IF;
+				END IF;
+				
+			END IF;
+		
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

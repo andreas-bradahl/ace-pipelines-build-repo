@@ -1,0 +1,54 @@
+
+
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareAddLineBatchEndFPakAdd
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		DECLARE orderNumber REFERENCE TO InputLocalEnvironment.Variables.OrderNumber;
+		DECLARE getPriceLineRef REFERENCE TO InputLocalEnvironment.Variables.HTTPResponses.GetPriceLine.Item;
+		DECLARE currentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE globalVar REFERENCE TO Environment.Variables.Global;
+
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE queryStringRef REFERENCE TO OutputLocalEnvironment.Destination.HTTP.QueryString;
+
+		DECLARE optimizeOrderLines BOOLEAN globalVar.optimizeOrderLines;
+
+		SET queryStringRef.ORNO = orderNumber;
+		SET queryStringRef.ITNO = currentOrder.sku;
+		SET queryStringRef.ORQT = currentOrder.quantity;
+		SET queryStringRef.DIP1 = currentOrder.discountLine1;
+		SET queryStringRef.DIP2 = currentOrder.discountLine2;
+		SET queryStringRef.DIP3 = currentOrder.discountLine3;
+		SET queryStringRef.DIP4 = currentOrder.discountLine4;
+		SET queryStringRef.DIP5 = currentOrder.discountLine5;
+		SET queryStringRef.DIP6 = currentOrder.discountLine6;
+		SET queryStringRef.ALUN = currentOrder.orderLineUnit;
+
+		IF currentOrder.isLostSales THEN
+
+			DECLARE LNAM DECIMAL CAST(getPriceLineRef.LNAM AS DECIMAL);
+			DECLARE DIA6 DECIMAL CAST(getPriceLineRef.DIA6 AS DECIMAL);
+			DECLARE quantity DECIMAL CAST(currentOrder.quantity AS DECIMAL);
+
+			DECLARE salesPriceLostSales DECIMAL (LNAM + DIA6) / quantity;
+			DECLARE realNumber CHARACTER SUBSTRING(CAST(salesPriceLostSales AS CHARACTER) BEFORE '.');
+			DECLARE percision CHARACTER LEFT(SUBSTRING(CAST(salesPriceLostSales AS CHARACTER) AFTER '.'), 2);
+
+			SET queryStringRef.LSLS = '1';
+			SET queryStringRef.LNAM = LNAM;
+			SET queryStringRef.DIA6 = DIA6;
+			SET queryStringRef.SAPR = realNumber || '.' || percision;
+			SET queryStringRef.SPUN = getPriceLineRef.SPUN;
+			SET queryStringRef.WHLO = currentOrder.lostSalesWarehouse;
+			SET queryStringRef.DRDN = currentOrder.lostSalesUniqueId;
+
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

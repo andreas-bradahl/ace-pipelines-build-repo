@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="default" version="8.0.5.0" xmlns:map="default">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">       
+    <xsd:element name="preferredSalesUnit" type="xsd:string"/>       
+    <xsd:element name="preferredBaseUnit" type="xsd:string"/>       
+    <xsd:element name="locale" type="xsd:string"/>       
+    <xsd:element name="sku" type="xsd:string"/>       
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var5"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var1"/>
+    <input path="/getItems.xsd" var="var4"/>
+    <input path="/getItems.xsd" var="var6"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="extension" prefix="fn" uri="http://www.w3.org/2005/xpath-functions"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="getItems_MapInputRequestToEnviroment">
+        <input path="$var5/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="getItemsRequestEnviroment" ref="var4"/>
+        </input>
+        <input derivedFrom="MB:JSON_operation_name:getItems" path="$var/mb:msg(BLOB,assembly,BLOB,Properties,LocalEnvironment)" var="ComIbmMessageAssembly_BLOB">
+            <cast derivedFrom="MB:JSON_path_query_parm:preferredSalesUnit" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="preferredSalesUnit" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:preferredBaseUnit" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="preferredBaseUnit" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:locale" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="locale" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:sku" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="sku" ref="var1"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast path="Variables/any" qualifier="getItemsRequestEnviroment" ref="var4"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <function ref="fn:upper-case">
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/preferredSalesUnit" var="preferredSalesUnit"/>
+                    <output path="Variables/getItemsRequestEnviroment/itemsRequest/preferredSalesUnit"/>
+                    <param name="string" value="$preferredSalesUnit"/>
+                </function>
+                <function ref="fn:upper-case">
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/preferredBaseUnit" var="preferredBaseUnit"/>
+                    <output path="Variables/getItemsRequestEnviroment/itemsRequest/preferredBaseUnit"/>
+                    <param name="string" value="$preferredBaseUnit"/>
+                </function>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/locale"/>
+                    <output path="Variables/getItemsRequestEnviroment/itemsRequest/locale"/>
+                </move>
+                <move>
+                    <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/sku"/>
+                    <output path="Variables/getItemsRequestEnviroment/itemsRequest/sku"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

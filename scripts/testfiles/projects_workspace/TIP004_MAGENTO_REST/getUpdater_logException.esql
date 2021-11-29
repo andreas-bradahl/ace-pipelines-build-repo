@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE getUpdater_logException
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET CACHE.Valid  =  'OK';
+		LOG EVENT SEVERITY 1 VALUES('Exception occured while updating, please try again later');
+		SET OutputRoot.JSON.Data.Status = 'Exception occured while updating, please try again later';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,43 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckGetHeadIfOrderExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE getHeadRef REFERENCE TO Environment.JSONResponse.GetHead;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderRequestCustomerNumber CHAR orderRequestRef.customerNumber;
+		DECLARE m3CustomerNumber CHAR GetValueFromNameValueList('CUNO', getHeadRef.Data.MIRecord.Item.NameValue);
+		
+		CREATE FIELD Environment.OrderRequest.Data.orderType;
+		SET Environment.OrderRequest.Data.orderType = TRIM(GetValueFromNameValueList('ORTP', getHeadRef.Data.MIRecord.Item.NameValue));
+				
+		CREATE FIELD Environment.OrderRequest.Data.requestedDeliveryDate;
+		SET Environment.OrderRequest.Data.requestedDeliveryDate = CAST(CAST(TRIM(GetValueFromNameValueList('RLDT', getHeadRef.Data.MIRecord.Item.NameValue)) AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+		
+		IF LASTMOVE(getHeadRef) THEN
+			
+			IF orderRequestCustomerNumber = m3CustomerNumber THEN 
+				RETURN TRUE;
+				
+			ELSE
+				SET Environment.Variables.HTTPCode = 400;
+				SET Environment.Variables.Response = 'FAILED';
+				SET Environment.Variables.Error_Reason = 'WRONG_CUSTOMER';
+				
+				PROPAGATE TO TERMINAL 'out1';
+			END IF;
+		ELSE
+			
+			SET Environment.Variables.HTTPCode = 404;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'NOT_FOUND';
+			
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

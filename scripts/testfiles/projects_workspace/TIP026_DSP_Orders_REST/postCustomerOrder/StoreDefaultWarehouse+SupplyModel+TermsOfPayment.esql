@@ -1,0 +1,22 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE "StoreDefaultWarehouse+SupplyModel+TermsOfPayment"
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		
+		DECLARE warehouse CHARACTER GetValueFromNameValueList('WHLO', InputRoot.JSON.Data.MIRecord.Item.NameValue);
+		DECLARE facility CHARACTER GetValueFromNameValueList('FACI', InputRoot.JSON.Data.MIRecord.Item.NameValue);
+		DECLARE supplyModel CHARACTER GetValueFromNameValueList('SPLM', InputRoot.JSON.Data.MIRecord.Item.NameValue);
+		DECLARE termsOfPayment CHARACTER GetValueFromNameValueList('TEPY', InputRoot.JSON.Data.MIRecord.Item.NameValue);
+		
+		SET varRef.Customer.warehouse = warehouse;
+		SET varRef.Customer.facility = facility;
+		SET varRef.Customer.supplyModel = supplyModel;
+		SET varRef.Customer.termsOfPayment = termsOfPayment;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

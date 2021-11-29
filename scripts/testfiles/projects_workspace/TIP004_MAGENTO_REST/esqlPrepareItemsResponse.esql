@@ -1,0 +1,123 @@
+
+
+CREATE COMPUTE MODULE esqlPrepareItemsResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('prep response'||CAST(CACHE.CacheFromDateTime as char));
+		DECLARE variablesRef REFERENCE TO Environment.Variables.Preferred;
+		
+		SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+			
+		FOR responseItem AS OutputRoot.JSON.Data.Item[] DO
+			
+			SET responseItem.weight = CAST(responseItem.weight AS DECIMAL(20,2));
+			SET responseItem.conversionFactor = CAST(responseItem.conversionFactor AS DECIMAL(20,2));
+			SET responseItem.recyclingChargeBaseUnit = CAST(responseItem.recyclingChargeBaseUnit AS DECIMAL(20,2));
+						
+			SET responseItem.baseUnit = GetPreferredBaseUnit(variablesRef.preferredBaseUnit, responseItem);
+			SET responseItem.salesUnit = GetPreferredSalesUnit(variablesRef.preferredSalesUnit, responseItem);
+			
+			IF Environment.Variables.getItemsRequestEnviroment.locale = 'en' THEN
+								
+				SET responseItem.searchWord = responseItem.enSearchWord;
+				
+				CREATE LASTCHILD of responseItem IDENTITY (JSON.Array)nutritions;
+				
+				FOR i AS responseItem.enNutritions.Item[] DO
+					
+					CREATE LASTCHILD OF responseItem.nutritions FROM i;
+					
+				END FOR;
+				
+				-- SET responseItem.nutritions = responseItem.enNutritions;
+				
+				SET responseItem.allergens = responseItem.enAllergens;
+				SET responseItem.ingredients = responseItem.enIngredients;
+				SET responseItem.packaging = responseItem.enPackaging;
+				SET responseItem.storage = responseItem.enStorage;
+				SET responseItem.description = responseItem.enDescription;
+				SET responseItem.combinedProducts = responseItem.enCombinedProducts;
+			
+			ELSE
+				
+				SET responseItem.searchWord = responseItem.noSearchWord;
+				
+				CREATE LASTCHILD of responseItem IDENTITY (JSON.Array)nutritions; 
+				
+				FOR i AS responseItem.noNutritions.Item[] DO
+					
+					CREATE LASTCHILD OF responseItem.nutritions FROM i;
+					
+				END FOR;
+				
+				-- SET responseItem.nutritions  = responseItem.noNutritions;
+				
+				SET responseItem.allergens = responseItem.noAllergens;
+				SET responseItem.ingredients = responseItem.noIngredients;
+				SET responseItem.packaging = responseItem.noPackaging;
+				SET responseItem.storage = responseItem.noStorage;
+				SET responseItem.description = responseItem.noDescription;
+				SET responseItem.combinedProducts = responseItem.noCombinedProducts;
+												
+			END IF;
+			
+			DELETE FIELD responseItem.ALUN;
+			DELETE FIELD responseItem.UNMS;
+			
+			DELETE FIELD responseItem.enSearchWord;
+			DELETE FIELD responseItem.enNutritions;				
+			DELETE FIELD responseItem.enAllergens;
+			DELETE FIELD responseItem.enIngredients;
+			DELETE FIELD responseItem.enPackaging;
+			DELETE FIELD responseItem.enStorage;
+			DELETE FIELD responseItem.enDescription;
+			DELETE FIELD responseItem.enCombinedProducts;
+			
+			DELETE FIELD responseItem.noSearchWord;
+			DELETE FIELD responseItem.noNutritions;				
+			DELETE FIELD responseItem.noAllergens;
+			DELETE FIELD responseItem.noIngredients;
+			DELETE FIELD responseItem.noPackaging;
+			DELETE FIELD responseItem.noStorage;
+			DELETE FIELD responseItem.noDescription;
+			DELETE FIELD responseItem.noCombinedProducts;
+			
+		END FOR;
+LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('END prep response'||CAST(CACHE.CacheFromDateTime as char));
+		RETURN TRUE;
+	END;
+
+
+CREATE FUNCTION GetPreferredSalesUnit(IN variblesRef REFERENCE, IN itemDataRef REFERENCE)
+RETURNS CHAR
+BEGIN
+	DECLARE preferredUnitRef, preferredUnitCursor REFERENCE TO variblesRef;
+	MOVE preferredUnitCursor FIRSTCHILD;
+	DECLARE skuRef CHAR;
+	SET skuRef = preferredUnitRef.{itemDataRef.sku}.ALUN;
+		IF skuRef IS NOT NULL THEN
+			RETURN preferredUnitRef.{itemDataRef.sku}.ALUN;
+		END IF;
+	RETURN itemDataRef.ALUN;
+END;
+	
+CREATE FUNCTION GetPreferredBaseUnit(IN variblesRef REFERENCE, IN itemDataRef REFERENCE)
+RETURNS CHAR
+BEGIN
+	DECLARE preferredUnitRef, preferredUnitCursor REFERENCE TO variblesRef;
+	MOVE preferredUnitCursor FIRSTCHILD;
+	--WHILE (LASTMOVE(preferredUnitCursor)) DO
+	DECLARE skuRef CHAR;
+	SET skuRef = itemDataRef.sku; 	
+	--IF preferredUnitCursor.ITNO = itemDataRef.sku THEN
+		SET skuRef = preferredUnitRef.{itemDataRef.sku}.ALUN;
+		IF skuRef IS NOT NULL THEN
+			RETURN preferredUnitRef.{itemDataRef.sku}.ALUN;
+		END IF;
+	--END IF;
+		--MOVE preferredUnitCursor NEXTSIBLING;
+	--END WHILE;
+	RETURN itemDataRef.UNMS;
+	END;
+	
+END MODULE;

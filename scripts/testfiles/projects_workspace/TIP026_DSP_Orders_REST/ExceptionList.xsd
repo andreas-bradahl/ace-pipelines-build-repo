@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="ExceptionList" type="ExceptionList"></xsd:element>
+    
+    <xsd:complexType name="ExceptionList">
+    	<xsd:sequence>
+    		<xsd:element name="RecoverableException" type="RecoverableException"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="RecoverableException">
+    	<xsd:sequence>
+    		<xsd:element name="File" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Line" type="xsd:int" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Function" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Type" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Name" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Label" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Catalog" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Severity" type="xsd:int" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Number" type="xsd:int" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Text" type="xsd:string" maxOccurs="1"
+    			minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="Insert" type="Insert"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="RecoverableException"
+    			type="RecoverableException" maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="SocketException" type="RecoverableException" maxOccurs="1" minOccurs="0"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Insert">
+    	<xsd:sequence>
+    		<xsd:element name="Type" type="xsd:int" maxOccurs="1" minOccurs="1"></xsd:element>
+    		<xsd:element name="Text" type="xsd:string" maxOccurs="1" minOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="RecoverableException" type="RecoverableException"></xsd:element>
+</xsd:schema>

@@ -1,0 +1,107 @@
+
+
+
+
+CREATE DATABASE MODULE getAssortmentChainProducts_GetM3BusinessChainAssortmentWarehouseProductData
+	
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE warehouseItemsQuery CHAR;
+		DECLARE queryVariable CHAR '';
+		DECLARE showSellByDateProduct REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;
+
+
+		DECLARE splmQueryPart1 CHARACTER
+		'SELECT DISTINCT OIITNO AS ITNO,MBWHLO, ZBSLDT, CVVTP1, MUCOFA, MMUNMS,MMITCL
+		FROM OCHCUS
+		INNER JOIN OCUSMA
+		ON OKCONO = OSCONO
+		AND OSCUNO = OKCUNO
+		INNER JOIN OASCUS
+		ON OCCONO = OSCONO
+		AND OCCUNO = ?
+		AND OCFDAT <= ?
+		AND OCTDAT >= ?
+		INNER JOIN OASITN
+		ON OICONO = OCCONO
+		AND OIASCD = ?
+		AND OIFDAT <= ?
+		AND OITDAT >= ?
+		INNER JOIN MITMAS
+		ON MMCONO = OSCONO
+		AND MMITNO = OIITNO
+		AND SUBSTRING(MMSPE2, CAST(? AS INT), 1) = ''1''
+		AND (MMSTAT = ''20'' OR MMSTAT = ''50'')
+		INNER JOIN MITBAL
+		ON MBCONO = OSCONO
+		AND MBITNO = MMITNO
+		AND (MBSTAT = ''20'' OR MBSTAT = ''50'')
+		AND MBWHLO = ?
+		INNER JOIN MITWHL
+		ON MWCONO=MBCONO
+		AND MWWHLO=MBWHLO
+		INNER JOIN CVATPC
+		ON CVCONO=MWCONO
+		AND CVDIVI=MBDIVI
+		AND CVCSCD=MWCSCD
+		AND CVVTCD=MBVTCS
+		LEFT JOIN ' || cusfdbName || '.ZITBAL
+		ON MBCONO=ZBCONO
+		AND MBWHLO=ZBWHLO
+		AND MBITNO=ZBITNO
+		LEFT JOIN MITAUN 
+			ON MMITNO=MUITNO 
+			AND MUAUS2 = ''1'' 
+			AND MUAUTP = ''1''
+			AND MUCONO = MMCONO
+		WHERE OSCONO = ?
+		AND OSCUNO = ?
+		AND OSFVDT <= ?
+		' || queryVariable || '
+		AND OSLVDT >= ? ';
+
+		IF Environment.Variables.UserInfo.OnlyLimited = 'YES' THEN
+			SET warehouseItemsQuery = splmQueryPart1;
+		ELSE
+			SET warehouseItemsQuery = splmQueryPart1 || ' AND MMACHK = 1 ';
+		END IF;	
+		
+		SET Environment.Variables.ProductData.BusinessChainAssortment.Warehouse.{customerRef.BusinessChain}.{customerRef.Assortment}.Item[] =
+			PASSTHRU(warehouseItemsQuery
+			VALUES (
+			customerRef.BusinessChain,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate,
+			customerRef.Assortment,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate,
+			customerRef.SalesChannelNumber,
+			customerRef.OKWHLO,
+			customerRef.OKCONO,
+			customerRef.OKCUNO,
+			customerRef.CurrentDate,
+			customerRef.CurrentDate
+			));	
+
+
+		DECLARE count INT CARDINALITY(Environment.Variables.ProductData.BusinessChainAssortment.Warehouse.{customerRef.BusinessChain}.{customerRef.Assortment}.Item[]);
+		SET Environment.Variables.ProductData.BusinessChainAssortment.Warehouse.{customerRef.BusinessChain}.{customerRef.Assortment} = count;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

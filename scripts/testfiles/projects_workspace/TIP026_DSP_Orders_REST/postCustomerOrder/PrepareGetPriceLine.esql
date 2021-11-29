@@ -1,0 +1,23 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareGetPriceLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef, orderLineCursor REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderLineIndex INT varRef.orderLineCursorIndex;
+		MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+		MOVE orderLineCursor TO orderLineCursor.Item[orderLineIndex];
+
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = TRIM(orderRef.customerNumber);
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTP = TRIM(orderRef.orderType);
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDT = TRIM(orderRef.requestedDeliveryDate);
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = TRIM(orderLineCursor.sku);
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = TRIM(orderLineCursor.quantity);
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.WHLO = TRIM(orderLineCursor.lostSalesWarehouse);
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

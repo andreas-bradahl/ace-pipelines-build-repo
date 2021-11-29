@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+    <xsd:element name="CurrentProduct"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="ORQA" type="xsd:string"/> 
+        <xsd:element name="ORPN" type="xsd:string"/> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element> 
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="/getProductAvailability/OIZ340MILstSupplSummary.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <output path="/getProductAvailability/getProductAvailabilityRequest.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapCreateProduct">
+        <input path="$var1/mb:msg(OIZ340MILstSupplSummary,assembly,XMLNSC,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Variables/any" qualifier="CurrentProduct" ref="var"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest" path="mb:msg(getProductAvailabilityRequest,assembly,XMLNSC,LocalEnvironment)" var="MessageAssembly1"/>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment/Variables/CurrentProduct[1]/ORPN"/>
+            <output path="$MessageAssembly1/getProductAvailabilityRequest/products/productNumber"/>
+        </move>
+        <convert>
+            <input path="$MessageAssembly/LocalEnvironment/Variables/CurrentProduct[1]/ORQA"/>
+            <output path="$MessageAssembly1/getProductAvailabilityRequest/products/quantity"/>
+        </convert>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment"/>
+            <output path="$MessageAssembly1/LocalEnvironment"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

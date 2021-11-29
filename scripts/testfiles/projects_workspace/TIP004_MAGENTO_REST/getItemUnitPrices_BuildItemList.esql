@@ -1,0 +1,155 @@
+
+
+CREATE COMPUTE MODULE getItemUnitPrices_BuildItemList
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+		DECLARE inputCONO INT CAST(queryParams.CONO AS INT DEFAULT -1);
+		DECLARE inputCUNO CHAR queryParams.CUNO;
+		DECLARE inputUnit CHAR queryParams.UNIT;
+		
+		DECLARE tempList,tempSupplyList, envVariablesRef REFERENCE TO Environment.Variables;
+		CREATE FIELD Environment.Variables.TempListOfItems AS tempList; 
+		CREATE FIELD Environment.Variables.SupplyModelItems;
+		CREATE FIELD Environment.Variables.FullItemsList; 
+		
+		
+		DECLARE parentRef, customerItemsRef REFERENCE TO Environment.Variables.ProductData;
+	
+		-- Add NoneAssortment supply model items to list (if any)
+		MOVE parentRef TO customerItemsRef.NoneAssortment.SupplyModel;
+		IF LASTMOVE(parentRef) THEN
+			MOVE parentRef FIRSTCHILD;
+			WHILE LASTMOVE(parentRef) DO
+				CALL PutItemsInList(parentRef, envVariablesRef);
+				CALL PutItemsInSupplyList(parentRef, envVariablesRef);
+				
+				-- Next priority
+				MOVE parentRef NEXTSIBLING;
+			END WHILE;
+		END IF;		
+		
+		-- Add warehouse items that are available for all customers to list 
+		MOVE parentRef TO customerItemsRef.NoneAssortment.Warehouse;
+		IF LASTMOVE(parentRef) THEN		
+			CALL PutItemsInList(parentRef, envVariablesRef);
+		END IF;
+		
+		-- Add warehouse items that only are available to assortment check customers to list
+		MOVE parentRef TO customerItemsRef.Assortment.Warehouse;
+		IF LASTMOVE(parentRef) THEN		
+			CALL PutItemsInList(parentRef, envVariablesRef);
+		END IF;
+		
+		
+		-- Add Busniess items if any 
+		-- Add warehouse items from business chain
+		MOVE parentRef TO customerItemsRef.BusinessChainAssortment.Warehouse;
+		IF LASTMOVE(parentRef) THEN
+			MOVE parentRef FIRSTCHILD ;
+			X : WHILE LASTMOVE(parentRef) DO
+				DECLARE childRef REFERENCE TO parentRef;
+					MOVE childRef FIRSTCHILD;
+					Y : WHILE LASTMOVE(childRef) DO
+						IF FIELDVALUE(childRef) <> 0 THEN
+							CALL PutItemsInList(childRef, envVariablesRef);
+						END IF;
+						MOVE childRef NEXTSIBLING;
+					END WHILE Y;
+				-- Next business chain
+				MOVE parentRef NEXTSIBLING ;
+			END WHILE X;
+		END IF;
+		
+		
+		
+		
+		-- Add Assortment supply model items to list (if any)
+		MOVE parentRef TO customerItemsRef.Assortment.SupplyModel;
+		IF LASTMOVE(parentRef) THEN
+			MOVE parentRef FIRSTCHILD;
+			WHILE LASTMOVE(parentRef) DO
+				CALL PutItemsInList(parentRef, envVariablesRef);
+				CALL PutItemsInSupplyList(parentRef, envVariablesRef);
+				
+				-- Next priority
+				MOVE parentRef NEXTSIBLING;
+			END WHILE;
+		END IF;
+		
+		-- Add Busniess items if any 
+		-- Add  BusinessChainAssortment supply items from business chain
+		MOVE parentRef TO customerItemsRef.BusinessChainAssortment.SupplyModel;
+		IF LASTMOVE(parentRef) THEN
+			MOVE parentRef FIRSTCHILD ;
+			X : WHILE LASTMOVE(parentRef) DO
+				DECLARE childSRef REFERENCE TO parentRef;
+					MOVE childSRef FIRSTCHILD;
+					Y : WHILE LASTMOVE(childSRef) DO
+						IF FIELDVALUE(childSRef) <> 0 THEN
+							CALL PutItemsInList(childSRef, envVariablesRef);
+							CALL PutItemsInSupplyList(childSRef, envVariablesRef);
+						END IF;
+						MOVE childSRef NEXTSIBLING;
+					END WHILE Y;
+				-- Next business chain
+				MOVE parentRef NEXTSIBLING ;
+			END WHILE X;
+		END IF;
+		
+		
+		-- Add Promotional items that are available for all customers to list 
+		MOVE parentRef TO customerItemsRef.Promational;
+		IF LASTMOVE(parentRef) THEN		
+			CALL PutItemsInList(parentRef, envVariablesRef);
+		END IF;	
+		
+		
+		DECLARE fullItemListRef REFERENCE TO Environment.Variables.FullItemsList;
+		MOVE fullItemListRef FIRSTCHILD;
+		
+		/*
+		
+		WHILE LASTMOVE(fullItemListRef) DO
+			IF fullItemListRef.ITNO = '1396' THEN
+				DECLARE X INTEGER;
+				SET X = 1;
+			END IF;
+			
+			MOVE fullItemListRef NEXTSIBLING;
+		END WHILE;
+		
+		*/
+		
+		
+		IF inputUnit <> 'NONE' THEN
+			
+			PROPAGATE TO TERMINAL 'out2';
+			CREATE FIELD Environment.Variables.Unit; 
+			
+			IF inputUnit = 'BOTH' THEN
+				SET Environment.Variables.Unit = 'D'; 
+				PROPAGATE TO TERMINAL 'out1';
+				SET Environment.Variables.Unit = 'F'; 
+				PROPAGATE TO TERMINAL 'out1';
+			ELSE
+				SET Environment.Variables.Unit = inputUnit;
+				PROPAGATE TO TERMINAL 'out1';
+			END IF;			
+			
+			DELETE FIELD Environment.Variables.Unit; 	
+		END IF;
+		
+--		-- Remove unsorted list of items and supply modle strukrur
+		DELETE FIELD Environment.Variables.ProductData.Assortment;
+		DELETE FIELD Environment.Variables.ProductData.NoneAssortment;
+		DELETE FIELD Environment.Variables.ProductData.BusinessChainAssortment;
+		DELETE FIELD Environment.Variables.ProductData.AgreementProducts;
+		DELETE FIELD Environment.Variables.TempListOfItems;
+		DELETE FIELD Environment.Variables.SupplyModel;
+		
+		RETURN TRUE;
+
+	END;
+END MODULE;

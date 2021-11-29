@@ -1,0 +1,56 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFindSkuValues
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		CREATE FIELD Environment.Variables.skus.skuFound;
+		CREATE FIELD Environment.Variables.skus.skuFoundOtherUnits;
+		DECLARE skuFound BOOLEAN FALSE;
+		DECLARE STKOrDPak BOOLEAN FALSE;
+		
+		DECLARE OrderLineCursor REFERENCE TO InputRoot.JSON.Data.orderLines.Item;
+		WHILE LASTMOVE(OrderLineCursor) DO
+    
+			SET STKOrDPak = ((OrderLineCursor.salesPriceUnit = 'STK' OR OrderLineCursor.salesPriceUnit = 'D') OR (OrderLineCursor.orderLineUnit = 'STK' OR OrderLineCursor.orderLineUnit = 'D'));
+
+				DECLARE skuFoundCursor REFERENCE TO OutputLocalEnvironment.Variables.skuFound.sku;
+	
+				WHILE LASTMOVE(skuFoundCursor) DO
+					
+					IF skuFoundCursor = OrderLineCursor.sku THEN
+						SET skuFound = TRUE;
+					END IF;
+					
+					MOVE skuFoundCursor NEXTSIBLING REPEAT NAME;
+				END WHILE;
+				
+				IF NOT(skuFound) AND STKOrDPak THEN
+					
+					IF NOT EXISTS(SELECT * FROM Environment.Variables.skus.skuFound.sku[] AS s where s = OrderLineCursor.sku) THEN
+						
+						CREATE LASTCHILD OF Environment.Variables.skus.skuFound TYPE NameValue NAME 'sku' VALUE OrderLineCursor.sku;
+						
+					END IF;
+					
+				ELSEIF NOT STKOrDPak OR STKOrDPak IS NULL THEN
+					
+					IF NOT EXISTS(SELECT * FROM Environment.Variables.skus.skuFoundOtherUnits.sku[] AS s where s = OrderLineCursor.sku) THEN
+											
+						CREATE LASTCHILD OF Environment.Variables.skus.skuFoundOtherUnits TYPE NameValue NAME 'sku' VALUE OrderLineCursor.sku;
+						
+					END IF;
+								
+				END IF;
+
+			SET skuFound = FALSE;
+			SET STKOrDPak = FALSE;
+
+			MOVE OrderLineCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

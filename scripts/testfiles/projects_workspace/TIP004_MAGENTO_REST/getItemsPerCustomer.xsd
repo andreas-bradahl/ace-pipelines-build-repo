@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:complexType name="Request">
+    	<xsd:sequence>
+    		<xsd:element name="CONO" type="xsd:string"></xsd:element>
+    		<xsd:element name="CUNO" type="xsd:string"></xsd:element>
+    		<xsd:element name="DATE" type="xsd:string"></xsd:element>
+    		<xsd:element name="ORTP" type="xsd:string"></xsd:element>
+    		<xsd:element name="UNIT" type="xsd:string"></xsd:element>
+    		<xsd:element name="showSellByDateProducts" type="xsd:boolean"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="RequestEnviroment">
+    	<xsd:sequence>
+    		<xsd:element name="Request" type="Request"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="getItemPerCustomerRequestEnviroment"
+    	type="RequestEnviroment">
+    </xsd:element>
+</xsd:schema>

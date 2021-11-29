@@ -1,0 +1,32 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ163MIAddHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ163MI/AddHead';
+		
+		DECLARE RAST CHARACTER REPLACE(Environment.Variables.Global.OriginRequest.ns:firstDeliveryDate, '-', '');
+		DECLARE FDAT CHARACTER REPLACE(Environment.Variables.Global.OriginRequest.ns:validFromDate, '-', '');
+		DECLARE TDAT CHARACTER;
+		
+		IF Environment.Variables.Global.OriginRequest.ns:validToDate = '' THEN
+			SET TDAT = '';
+		ELSE
+			SET TDAT = CAST(CAST(Environment.Variables.Global.OriginRequest.ns:validToDate AS DATE FORMAT 'yyyy-MM-dd') AS CHARACTER FORMAT 'yyyyMMdd');
+		END IF;
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.ns:companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.ns:customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DEWT = Environment.Variables.Global.OriginRequest.ns:deliveryWeekdayNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RAST = RAST;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RADD = Environment.Variables.Global.OriginRequest.ns:deliveryIntervalDays;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = FDAT;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.TDAT = TDAT;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.YREF = Environment.Variables.Global.OriginRequest.ns:customerReference;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

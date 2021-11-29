@@ -1,0 +1,23 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddTemporaryOrderIntoEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE itemRef REFERENCE TO Environment;
+		
+		IF Environment.Variables.TemporaryLines IS NULL THEN
+			CREATE FIELD Environment.Variables.TemporaryLines;
+		END IF;
+		
+		DECLARE temporaryOrder REFERENCE TO InputLocalEnvironment.Variables.TemporaryOrder;
+		
+		CREATE LASTCHILD OF Environment.Variables.TemporaryLines AS itemRef NAME 'Item';
+		SET itemRef = temporaryOrder;
+		
+		DELETE FIELD Environment.Variables.HTTPResponses.GetBatchLine;
+		DELETE FIELD Environment.Variables.HTTPResponses.GetItmBasic;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

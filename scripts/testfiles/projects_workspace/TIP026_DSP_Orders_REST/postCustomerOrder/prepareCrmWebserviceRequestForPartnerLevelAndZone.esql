@@ -1,0 +1,21 @@
+BROKER SCHEMA postCustomerOrder
+
+DECLARE crmBasePath EXTERNAL CHARACTER 'test';
+
+
+CREATE COMPUTE MODULE prepareCrmWebserviceRequestForPartnerLevelAndZone
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE customerNumber CHAR orderRequestRef.customerNumber;
+		DECLARE tailPath CHAR '/baseData';
+		
+		DECLARE fullpath CHAR crmBasePath || 'customers/' || customerNumber || tailPath;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = fullpath;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

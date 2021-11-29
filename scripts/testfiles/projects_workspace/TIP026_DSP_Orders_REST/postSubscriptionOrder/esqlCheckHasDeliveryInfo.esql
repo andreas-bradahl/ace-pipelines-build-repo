@@ -1,0 +1,30 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckHasDeliveryInfo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE OriginRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		
+		DECLARE deliveryIntervalDays CHARACTER OriginRequestRef.ns:deliveryIntervalDays;
+		DECLARE deliveryWeekdayNumber CHARACTER OriginRequestRef.ns:deliveryWeekdayNumber;
+		
+		FOR head AS Environment.Variables.HTTPResponses.OIZ163MI_LstHead.Item[] DO
+						
+			IF head.DEWD = deliveryWeekdayNumber AND head.RADD = deliveryIntervalDays THEN
+				
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				SET OutputRoot.JSON.Data.Response = 'FAILED';
+				SET OutputRoot.JSON.Data.Error_Code = 'DELIVERYDAY_DELIVERYINTERVAL_EXISTS';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+		
+
+		RETURN TRUE;
+	END;
+END MODULE;

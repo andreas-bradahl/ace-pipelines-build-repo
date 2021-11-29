@@ -1,0 +1,21 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ340MILstSupplSummary
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.OrderRequest.Data.customerNumber;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDZ = REPLACE(Environment.OrderRequest.Data.requestedDeliveryDate, '-', '');
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.POPN = InputLocalEnvironment.Variables.sku;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = InputLocalEnvironment.Variables.quantity;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = Environment.Variables.Customer.facility;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPLM = Environment.Variables.Customer.supplyModel;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.BCKO = 2;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.PADL = 2;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

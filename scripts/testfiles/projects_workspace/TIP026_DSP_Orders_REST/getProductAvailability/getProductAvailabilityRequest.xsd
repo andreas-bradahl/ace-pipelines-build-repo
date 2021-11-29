@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest" xmlns:pain="http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest">
+
+    <xsd:simpleType name="requestedDeliveryDate">
+    	<xsd:restriction base="xsd:string">
+    		<xsd:pattern value="\d{8}"></xsd:pattern>
+    		<xsd:pattern value="\d{4}-\d{2}-\d{2}"></xsd:pattern>
+    	</xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="quantity">
+    	<xsd:restriction base="xsd:int"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="productNumber">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+
+
+    <xsd:simpleType name="customerNumber">
+    	<xsd:restriction base="xsd:string">
+    		<xsd:maxLength value="10"></xsd:maxLength>
+    	</xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="m3OrderType">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:complexType name="product">
+    	<xsd:sequence>
+    		<xsd:element name="productNumber" type="pain:productNumber"
+    			maxOccurs="1" minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="quantity" type="pain:quantity"
+    			maxOccurs="1" minOccurs="1">
+    		</xsd:element>
+    		<xsd:element name="unit" type="pain:unit" maxOccurs="1"
+    			minOccurs="0">
+    		</xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+
+
+
+    <xsd:element name="getProductAvailabilityRequest" type="pain:productAvailabilityRequest"></xsd:element>
+
+    <xsd:complexType name="productAvailabilityRequest">
+    	<xsd:sequence>
+    		<xsd:element name="customerNumber"
+    			type="pain:customerNumber">
+    		</xsd:element>
+    		<xsd:element name="m3OrderType" type="pain:m3OrderType"></xsd:element>
+    		<xsd:element name="requestedDeliveryDate"
+    			type="pain:requestedDeliveryDate">
+    		</xsd:element>
+    		<xsd:element name="products" type="pain:product"
+    			maxOccurs="unbounded" minOccurs="1">
+    		</xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:simpleType name="unit">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

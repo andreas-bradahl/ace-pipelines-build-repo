@@ -1,0 +1,17 @@
+
+
+CREATE DATABASE MODULE getESATrueFasleFilterData_getESAExcludeDiscountCampaigns
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE esaQuery CHARACTER '
+		select code from Code c
+		inner join CodeType ct on c.typeId=ct.id
+		where ct.name=''zExcludeDiscountCampaigns''
+		';
+
+		CREATE FIELD Environment.Variables.ProductData.ExcludeDiscounts;
+		SET Environment.Variables.ProductData.ExcludeDiscounts.Row[] = PASSTHRU(esaQuery);
+		RETURN TRUE;
+	END;
+
+END MODULE;

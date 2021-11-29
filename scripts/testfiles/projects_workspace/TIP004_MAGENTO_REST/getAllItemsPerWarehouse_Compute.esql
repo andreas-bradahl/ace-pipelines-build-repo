@@ -1,0 +1,30 @@
+
+CREATE COMPUTE MODULE getAllItemsPerWarehouse_Compute
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE warehouseItemsQuery CHAR
+			'(SELECT MB.MBWHLO AS "WarehouseID", 
+				TRIM(MB.MBITNO) AS "ItemID"
+			FROM MITBAL AS MB
+			LEFT JOIN MITMAS AS MM
+				ON MB.MBCONO = MM.MMCONO
+				AND MB.MBITNO = MM.MMITNO
+			WHERE 
+				MB.MBCONO = ?
+				AND MB.MBSTAT >= ''20''
+				AND MB.MBSTAT <= ''50''
+				AND MM.MMSTAT >= ''20''
+				AND MM.MMSTAT < ''80''
+			ORDER BY MB.MBWHLO, MB.MBITNO)';
+				
+		DECLARE inputCONO INT InputLocalEnvironment.REST.Input.Parameters.CONO;
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+		SET OutputRoot.JSON.Data.WarehousesItems =
+			PASSTHRU(warehouseItemsQuery VALUES (inputCONO));
+
+		RETURN TRUE;
+	END;
+	
+END MODULE;

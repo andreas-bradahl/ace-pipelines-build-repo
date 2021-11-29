@@ -1,0 +1,31 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFetchErrorMessageFromM3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE originRequest REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE tempORNO CHARACTER;
+		
+		FOR temporaryOrder AS InputLocalEnvironment.Variables.HTTPResponses.LstOXCNTRU1.Item[] DO
+			
+			IF temporaryOrder.ORNR = originRequest.orderNumber THEN
+				SET tempORNO = temporaryOrder.ORNO;
+			END IF;
+			
+		END FOR;
+		
+		DECLARE sqlQueryErrorMessage CHAR ' 
+			SELECT EVMSID, EVMDTA, EVTX60       
+			FROM TCERRM
+			WHERE 
+					EVCONO = 100
+				AND EVID05 = ''OIZ100MI''
+				AND EVID03 = ?
+		';
+	
+		SET OutputLocalEnvironment.Variables.SQLQueries.Products.Product[] = PASSTHRU(sqlQueryErrorMessage, tempORNO);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

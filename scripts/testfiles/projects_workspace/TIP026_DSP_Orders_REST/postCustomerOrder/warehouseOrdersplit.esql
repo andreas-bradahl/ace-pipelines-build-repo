@@ -1,0 +1,101 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE warehouseOrdersplit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- TODO list
+		-- backup  Original orderRequest
+		
+		-- split up orderRequest orderLines in two batches
+		
+		-- toggle repeat flag true for loopback
+		-- send out of warehouse order
+		
+		-- toggle repeat flag false for final;
+		-- send in warehouse order
+		
+		-- build response
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		SET Environment.OriginalOrderRequest.Data = orderRequestRef;
+		
+		DECLARE OriginalOrderRequestRef REFERENCE TO Environment.OriginalOrderRequest.Data;
+		
+		DECLARE noExtraOrderCharge BOOLEAN varRef.noExtraOrderCharge;
+		DECLARE nonWarehouseItemsLeadtime INTERVAL  CAST(varRef.Global.orderSplitExtraDeliveryDays AS INTERVAL DAY);
+		DECLARE requestedDeliveryDate DATE CAST(orderRequestRef.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		
+		
+		-- check if enough clips on clipcard if clipcard supplied
+				
+		IF LENGTH(orderRequestRef.clipCard) > 0 THEN
+		
+			PROPAGATE TO TERMINAL 'out1';
+		
+		END IF;
+		
+		DECLARE noClipsLeft BOOLEAN varRef.noClipsLeft; -- set true if customer uses an empty clipcard
+		
+		IF noClipsLeft THEN
+			
+			RETURN FALSE;
+			
+		END IF;
+		
+			
+		SET varRef.Global.nonWarehouseOrder = true;
+		SET orderRequestRef.orderLines.Item[] = SELECT * FROM OriginalOrderRequestRef.orderLines.Item[] AS o WHERE EXISTS(SELECT * FROM varRef.Warehouse.NotExists.Item[] AS i WHERE i.ITNO = o.sku);
+		DECLARE warehouseSplitRequestedDeliveryDate DATE CURRENT_DATE + nonWarehouseItemsLeadtime;
+		SET orderRequestRef.requestedDeliveryDate = CAST(warehouseSplitRequestedDeliveryDate AS CHAR FORMAT 'yyyy-MM-dd');
+		
+		PROPAGATE TO TERMINAL 'out';
+		
+		SET varRef.Global.nonWarehouseOrder = false;
+		SET orderRequestRef.orderLines.Item[] = SELECT * FROM OriginalOrderRequestRef.orderLines.Item[] AS o WHERE EXISTS(SELECT * FROM varRef.Warehouse.Exists.Item[] AS i WHERE i.ITNO = o.sku);
+		SET orderRequestRef.requestedDeliveryDate = CAST(requestedDeliveryDate AS CHAR FORMAT 'yyyy-MM-dd');
+		
+		DECLARE crmRef REFERENCE TO Environment.Variables.CRM;
+		DECLARE extraOrderDiscountIs100 BOOLEAN crmRef.discountIs100;
+		
+		IF varRef.orderTypeHasExtraCharges OR extraOrderDiscountIs100 THEN
+			
+			PROPAGATE TO TERMINAL 'out';
+			SET varRef.Global.isLastOrder = true;
+			
+		ELSE
+			
+			SET varRef.Global.isLastOrder = true;
+			RETURN TRUE;
+			
+		END IF;
+		
+		/*
+		IF varRef.orderTypeHasExtraCharges AND NOT(varRef.extraChargeDone = true) THEN
+			
+			SET varRef.Global.nonWarehouseOrder = false;
+			SET varRef.isExtraOrderCharge = true;
+			
+			IF NOT noExtraOrderCharge THEN
+			
+				PROPAGATE TO TERMINAL 'out';
+			
+			END IF;
+			
+			SET varRef.extraChargeDone = true;
+			SET varRef.isExtraOrderCharge = false;
+			
+		END IF;
+		*/
+		SET varRef.Global.nonWarehouseOrder = false;
+		SET varRef.isExtraOrderCharge = true;
+
+		
+		RETURN TRUE;
+		
+	END;
+	
+	
+END MODULE;

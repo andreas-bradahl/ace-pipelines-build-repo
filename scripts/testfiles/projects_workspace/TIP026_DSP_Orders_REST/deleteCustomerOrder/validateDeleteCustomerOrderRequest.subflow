@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:deleteCustomerOrder_validateCustomerOrder.subflow="deleteCustomerOrder/validateCustomerOrder.subflow" xmlns:deleteCustomerOrder_validateNotTemporary.subflow="deleteCustomerOrder/validateNotTemporary.subflow" xmlns:deleteCustomerOrder_validateOrderLines.subflow="deleteCustomerOrder/validateOrderLines.subflow" xmlns:deleteCustomerOrder_validateTypeStatusDeadline.subflow="deleteCustomerOrder/validateTypeStatusDeadline.subflow"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="deleteCustomerOrder/validateDeleteCustomerOrderRequest.subflow" nsPrefix="deleteCustomerOrder_validateDeleteCustomerOrderRequest.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="validateDeleteCustomerOrderRequest" bundleName="deleteCustomerOrder/validateDeleteCustomerOrderRequest" pluginId="TIP026_DSP_Orders_REST"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj16/validateDeleteCustomerOrderRequest.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj30/validateDeleteCustomerOrderRequest.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="deleteCustomerOrder/validateDeleteCustomerOrderRequest" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="736,20">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.OK" bundleName="deleteCustomerOrder/validateDeleteCustomerOrderRequest" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.NOT%20OK" location="736,101">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.NOT%20OK" bundleName="deleteCustomerOrder/validateDeleteCustomerOrderRequest" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="deleteCustomerOrder_validateCustomerOrder.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="93,20">
+        <translation xmi:type="utility:ConstantString" string="ValidateCustomerOrder"/>
+      </nodes>
+      <nodes xmi:type="deleteCustomerOrder_validateTypeStatusDeadline.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="256,20">
+        <translation xmi:type="utility:ConstantString" string="ValidateTypeStatusDeadline"/>
+      </nodes>
+      <nodes xmi:type="deleteCustomerOrder_validateNotTemporary.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="440,20">
+        <translation xmi:type="utility:ConstantString" string="ValidateNotTemporary"/>
+      </nodes>
+      <nodes xmi:type="deleteCustomerOrder_validateOrderLines.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="598,20">
+        <translation xmi:type="utility:ConstantString" string="ValidateOrderLines"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_5" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="OutTerminal.NOT%20OK" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="OutTerminal.NOT%20OK" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.NOT%20OK" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="OutTerminal.NOT%20OK" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.NOT%20OK" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="OutTerminal.NOT%20OK" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.NOT%20OK" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

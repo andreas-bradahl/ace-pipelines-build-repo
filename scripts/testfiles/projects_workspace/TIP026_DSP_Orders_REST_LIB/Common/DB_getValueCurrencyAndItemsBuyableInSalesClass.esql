@@ -1,0 +1,33 @@
+BROKER SCHEMA Common
+
+
+
+CREATE DATABASE MODULE DB_getValueCurrencyAndItemsBuyableInSalesClass
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE pricelist CHAR;
+		DECLARE currency CHAR;
+		DECLARE itemclass CHAR;
+		
+		DECLARE sqlQuery CHAR 'SELECT value FROM ApplicationData AS a where a.parameter = ?' ;
+		
+		SET Environment.zPriceListOnlyDpak = PASSTHRU(sqlQuery, 'zPriceListOnlyDpak');
+		SET Environment.zCurrencyOnlyDpak = PASSTHRU(sqlQuery, 'zCurrencyOnlyDpak');
+		SET Environment.zProductClassbasicUnit = PASSTHRU(sqlQuery, 'zProductClassbasicUnit');
+		
+		SET pricelist = TRIM(Environment.zPriceListOnlyDpak.value);
+		SET currency = TRIM(Environment.zCurrencyOnlyDpak.value);
+		SET itemclass = TRIM(Environment.zProductClassbasicUnit.value);
+		
+		SET Environment.Variables.pricelist = pricelist;
+		SET Environment.Variables.currency = currency;
+		SET Environment.Variables.itemclass = itemclass;
+		
+		DELETE FIELD Environment.zPriceListOnlyDpak;
+		DELETE FIELD Environment.zCurrencyOnlyDpak;
+		DELETE FIELD Environment.zProductClassbasicUnit;
+
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,79 @@
+
+CREATE DATABASE MODULE getItemsPerCustomer_GetM3PromationalProducts
+	
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		--DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		DECLARE warehouseRef REFERENCE TO Environment.Variables.PromotionalWarehouse.Row;
+		DECLARE queryVariable CHAR '';
+		DECLARE showSellByDateProduct REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		 
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;
+
+		DECLARE M3Query CHAR;
+		SET M3Query =
+		'SELECT
+		TRIM(MMITNO) AS ITNO,MBWHLO, TRIM(ZBSLDT) AS ZBSLDT, CVVTP1, MUCOFA,MMUNMS, MMITCL
+		FROM MITMAS
+		INNER JOIN MITBAL
+			ON MBCONO = MMCONO
+			AND MMITNO = MBITNO
+			AND MBWHLO = ?
+			AND MBSTAT in (''20'',''50'') -- eliminates two items
+		INNER JOIN MITWHL 
+			ON MWCONO=MBCONO
+			AND MWWHLO=MBWHLO
+		INNER JOIN CVATPC 
+			ON CVCONO=MWCONO 
+			AND CVDIVI=MBDIVI 
+			AND CVCSCD=MWCSCD 
+			AND CVVTCD=MBVTCS
+		INNER JOIN OASITN
+			ON OICONO = MBCONO
+			AND OIASCD = ? 
+			AND OIITNO = MBITNO
+		LEFT JOIN ' || cusfdbName || '.ZITBAL
+			ON ZBCONO=MBCONO 
+			AND ZBWHLO=MBWHLO 
+			AND ZBITNO=MBITNO
+		LEFT JOIN MITAUN 
+			ON MMITNO=MUITNO 
+			AND MUAUS2 = ''1'' 
+			AND MUAUTP = ''1''
+			AND MUCONO = MMCONO
+		where OICONO= ?
+		and OIFDAT <= ?
+		' || queryVariable || '
+		and OITDAT>= ?';
+
+		CREATE FIELD Environment.Variables.ProductData.Promational;
+		DECLARE m3Ref REFERENCE TO Environment.Variables.ProductData.Promational;
+		SET m3Ref.Item[] =
+		PASSTHRU(M3Query
+		VALUES (
+		warehouseRef.value,
+		'REKLAM',
+		customerRef.OKCONO,
+		customerRef.CurrentDate,
+		customerRef.CurrentDate
+		));
+		DECLARE count INT CARDINALITY(m3Ref.Item[]);
+		SET m3Ref= count;
+		
+		DELETE FIELD Environment.Variables.PromotionalWarehouse;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

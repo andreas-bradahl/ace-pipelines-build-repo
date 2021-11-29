@@ -1,0 +1,13 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE CalculateAndPrepareResponse_GetChargeCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sqlQuery CHAR 'SELECT val FROM IntegrationConfig WHERE name = ''RECYCLING_CHARGECODE''';
+		SET Environment.Variables.SQLQueries.RecyclingChargeCodes.ChargeCode[] = PASSTHRU(sqlQuery);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

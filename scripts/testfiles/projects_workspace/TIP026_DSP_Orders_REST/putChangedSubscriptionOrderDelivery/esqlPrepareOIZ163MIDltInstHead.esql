@@ -1,0 +1,17 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ163MIDltInstHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ163MI/DltInstHead';
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.ns:companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RORD = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = Environment.Variables.Global.OriginRequest.ns:deliveryDate;
+	
+		RETURN TRUE;
+	END;
+END MODULE;

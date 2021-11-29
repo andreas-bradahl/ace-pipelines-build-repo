@@ -1,0 +1,84 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlUnitCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+				
+		DECLARE sku CHARACTER;
+		DECLARE baseUnit CHARACTER;
+		DECLARE isValidBaseUnit BOOLEAN;
+		DECLARE validBaseUnit CHARACTER;
+		
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			SET sku = orderLine.sku;
+			SET baseUnit = orderLine.orderLineUnit;
+			SET isValidBaseUnit = FALSE;
+			
+			IF baseUnit IS NOT NULL OR NOT(baseUnit = '') THEN
+				
+				DECLARE sqlQueryValidUnits1 CHAR ' 
+					SELECT MMUNMS AS BASEUNIT, MMALUN AS SALESUNIT
+					FROM MITMAS
+					WHERE 
+							MMCONO = 100 
+						AND MMITNO = ?
+				';
+				
+				DECLARE sqlQueryValidUnits2 CHAR ' 
+					SELECT MUALUN AS BASEUNIT
+					FROM MITAUN
+					WHERE 
+							MUCONO = 100
+						AND MUITNO = ?
+				';
+					
+				SET Environment.Variables.SQLQueries.TempValidUnits = PASSTHRU(sqlQueryValidUnits1, sku);
+				SET Environment.Variables.SQLQueries.ValidUnits.SALESUNIT = Environment.Variables.SQLQueries.TempValidUnits.SALESUNIT;
+				SET Environment.Variables.SQLQueries.ValidUnits.BASEUNIT = Environment.Variables.SQLQueries.TempValidUnits.BASEUNIT;
+				
+				SET Environment.Variables.SQLQueries.TempValidUnits = PASSTHRU(sqlQueryValidUnits2, sku);
+				
+				FOR unit AS Environment.Variables.SQLQueries.TempValidUnits[] DO
+					
+					CREATE LASTCHILD OF Environment.Variables.SQLQueries.ValidUnits NAME 'BASEUNIT' VALUE unit.BASEUNIT;
+					
+				END FOR;
+				
+				IF Environment.Variables.SQLQueries.ValidUnits.SALESUNIT = 'D' THEN
+					CREATE LASTCHILD OF orderLine NAME 'sellableInD' VALUE TRUE;
+				ELSE					
+					CREATE LASTCHILD OF orderLine NAME 'sellableInD' VALUE FALSE;				
+				END IF;
+			
+							
+				FOR validBaseUnit AS Environment.Variables.SQLQueries.ValidUnits.BASEUNIT[] DO
+					
+					IF baseUnit = validBaseUnit THEN
+						
+						SET isValidBaseUnit = TRUE;
+						
+					END IF;
+					
+				END FOR;
+							
+				IF NOT isValidBaseUnit THEN
+				
+					DECLARE envRef REFERENCE TO Environment;
+					CALL setErrorMessage(400, 'FAILED', 'INVALID_ORDERLINE_UNIT', envRef);
+					PROPAGATE TO TERMINAL 'out1';
+					RETURN FALSE;
+				
+				END IF;
+				
+			
+			DELETE FIELD Environment.Variables.SQLQueries.ValidUnits;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

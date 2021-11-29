@@ -1,0 +1,79 @@
+
+
+CREATE COMPUTE MODULE getItemPerCustomerPrices_CreateRequest
+	DECLARE M3_BasePath EXTERNAL CHARACTER;
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+		DECLARE unit CHAR Environment.Variables.Unit; -- (F, D from builditemslist)
+		
+		IF unit = 'F' THEN 
+			SET unit = 'STK';
+		END IF ; 
+		
+		DECLARE transactionsRef REFERENCE TO Environment;
+		DECLARE itemRef REFERENCE TO Environment;
+		
+		DECLARE count INTEGER 0;
+		DECLARE numberOfRequests INTEGER CARDINALITY(Environment.Variables.FullItemsList.Item[]);
+		DECLARE lastRequest BOOLEAN FALSE;
+		
+		DECLARE perBatchcount INTEGER 0;
+		DECLARE numberOfRequestsPerBatch INTEGER 25;
+		
+		DECLARE itemListRef, itemListCoursor REFERENCE TO Environment.Variables.FullItemsList;
+		MOVE itemListCoursor FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(itemListCoursor) DO
+									
+			SET count = count + 1;
+			
+			IF count = numberOfRequests THEN
+				SET lastRequest = TRUE;
+			END IF;
+										
+			IF perBatchcount = 0 THEN
+				
+				SET OutputRoot.JSON.Data.program VALUE = 'OIS320MI';
+				SET OutputRoot.JSON.Data.cono VALUE = 100;
+				SET OutputRoot.JSON.Data.divi VALUE = '102';
+				
+				CREATE LASTCHILD OF OutputRoot.JSON.Data AS transactionsRef IDENTITY(JSON.Array)transactions;
+				
+			END IF;
+			
+			IF perBatchcount < numberOfRequestsPerBatch THEN	
+				
+				SET perBatchcount = perBatchcount + 1;		
+				
+				IF unit = 'D' THEN
+				
+					CALL addProductQuery (transactionsRef,customerRef,itemListCoursor,queryParams, COALESCE(itemListCoursor.MUALUN, itemListCoursor.MMALUN), itemListCoursor.MMUNMS);
+					
+				ELSE
+					
+					CALL addProductQuery (transactionsRef,customerRef,itemListCoursor,queryParams, itemListCoursor.MMUNMS, itemListCoursor.MMUNMS);
+					
+				END IF;
+				--CALL addProductQuery (transactionsRef,customerRef,itemListCoursor,queryParams, unit);
+				
+			END IF;
+				
+			IF perBatchcount = numberOfRequestsPerBatch OR lastRequest THEN
+				
+				SET perBatchcount = 0;
+				
+				IF EXISTS(OutputRoot.JSON.Data[]) THEN
+					PROPAGATE TO TERMINAL 'out';
+				END IF;
+				
+			END IF;
+			
+			MOVE itemListCoursor NEXTSIBLING REPEAT NAME;
+		END WHILE;		
+		
+		DELETE FIELD Environment.Variables.ALUNS;
+		RETURN FALSE;
+	END;
+
+END MODULE;

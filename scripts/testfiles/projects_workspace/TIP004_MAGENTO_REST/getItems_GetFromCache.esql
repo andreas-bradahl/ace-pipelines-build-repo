@@ -1,0 +1,60 @@
+
+
+CREATE COMPUTE MODULE getItems_GetFromCache
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+	LOG EVENT SEVERITY 1 VALUES(CACHE.Valid);
+	LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004 GetUpdater checking sku cache status:'||CACHE.Valid);
+	DECLARE sku CHARACTER COALESCE( Environment.Variables.getItemsRequestEnviroment.itemsRequest.sku,'noparam');
+	IF CACHE.Valid IS NULL THEN
+		SET Environment.Cache.Valid = 'NOK';
+		SET OutputRoot.JSON.Data.Status = 'GetItems Cache Needs to be updated';
+	ELSEIF CACHE.Valid ='OK' THEN
+		SET Environment.Cache.Valid = 'OK';
+		
+		
+		IF (sku ='noparam') THEN
+		DECLARE inRef REFERENCE TO CACHE.ItemDataCache.Data;
+		DECLARE outre REFERENCE TO OutputRoot;
+
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004fetch from cache from'||CAST(CACHE.CacheFromDateTime as char));
+		CREATE FIELD OutputRoot.JSON.Data AS outre IDENTITY(JSON.Array);
+	 	SET outre = inRef;
+	 	LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004fetched from cache from'||CAST(CACHE.CacheFromDateTime as char));
+		ELSE
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004 sku param '||sku);
+		END IF;
+	 
+	 		--DECLARE xmlAsBlob BLOB;
+--		SET xmlAsBlob=CACHE.BLOB.BLOB;
+--		CREATE LASTCHILD OF OutputLocalEnvironment as inRef DOMAIN('JSON') PARSE(xmlAsBlob) ;
+		--MOVE inRef FIRSTCHILD;	
+	 	
+	ELSEIF CACHE.Valid ='UpdateInProgress' THEN
+			SET Environment.Cache.Valid = 'NOK';
+			SET OutputRoot.JSON.Data.Status = 'GetItems Cache is updating try again later';
+	ELSEIF  CACHE.Valid ='Updating' THEN
+		
+		IF CACHE.ItemDataCache.Data.Item.sku IS NULL THEN
+			SET Environment.Cache.Valid = 'NOK';
+			SET OutputRoot.JSON.Data.Status = 'GetItems Cache is updating try again later'; 
+		ELSE
+			SET Environment.Cache.Valid = 'OK';
+			IF (sku ='noparam') THEN
+				LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004 fetching from cache despite update');
+				DECLARE inRef REFERENCE TO CACHE.ItemDataCache.Data;
+		 		DECLARE outre REFERENCE TO OutputRoot;
+		 		CREATE FIELD OutputRoot.JSON.Data AS outre IDENTITY(JSON.Array);
+	 			SET outre = inRef;
+	 		ELSE
+				LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004 sku param '||sku);
+	 		END IF;
+		END IF;
+		
+		
+	END IF;
+	 RETURN TRUE;
+	END;
+
+END MODULE;

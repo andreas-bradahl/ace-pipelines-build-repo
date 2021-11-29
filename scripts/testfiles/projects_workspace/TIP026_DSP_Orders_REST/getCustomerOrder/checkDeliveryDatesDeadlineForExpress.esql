@@ -1,0 +1,20 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE checkDeliveryDatesDeadlineForExpress
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE jsonReplyRef REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE requestedDeliveryDate DATE CAST(varRef.Global.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		
+		DECLARE responseCursor REFERENCE TO jsonReplyRef.expressdelivery;
+		
+		SET varRef.Global.deadline = responseCursor;
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;

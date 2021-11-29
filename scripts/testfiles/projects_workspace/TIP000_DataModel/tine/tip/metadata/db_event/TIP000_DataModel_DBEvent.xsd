@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+
+
+
+    <element name="DBEventObject" type="co:DBEventObject"></element>
+    
+    <complexType name="DBEventObject">
+    	<sequence>
+    		<element name="EVENT_ID" type="int" maxOccurs="1" minOccurs="1"></element>
+    		<element name="OBJECT_KEY" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="OBJECT_VERB" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="DATABASE_TABLE" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+</schema>

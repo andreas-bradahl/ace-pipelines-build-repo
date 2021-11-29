@@ -1,0 +1,28 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFindDPakAmount
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE order REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE quantity INTEGER CAST(order.quantity AS INTEGER);
+		DECLARE conversionFactor INT InputLocalEnvironment.Variables.conversionFactor;
+		
+		DECLARE dPakQuantity INTEGER 0;
+		
+		WHILE quantity > conversionFactor-1 DO
+			
+			SET quantity = quantity - conversionFactor;
+			SET dPakQuantity = dPakQuantity + 1;
+			
+		END WHILE;
+		
+		SET order.quantity = quantity;
+		SET OutputLocalEnvironment.Variables.CurrentOrder = order;
+		SET OutputLocalEnvironment.Variables.DPakQuantity = dPakQuantity;
+		SET OutputLocalEnvironment.Variables.OrderNumber = InputLocalEnvironment.Variables.OrderNumber;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

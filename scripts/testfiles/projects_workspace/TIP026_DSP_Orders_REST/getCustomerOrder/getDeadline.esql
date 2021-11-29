@@ -1,0 +1,27 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE getDeadline
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		
+		DECLARE zDeadLine CHAR 'zDeadlineMinutes_';
+		DECLARE whlo CHAR TRIM(Root.JSON.Data.MIRecord.Item.NameValue.Item.Value);
+
+		DECLARE value CHAR getSingleValueFromApplicationData(zDeadLine||whlo, LocalEnvironment);
+		
+		IF value IS NULL THEN
+			
+			SET value = getSingleValueFromApplicationData(zDeadLine||'All', LocalEnvironment);
+			
+		END IF;
+		
+		SET Environment.Variables.EXTI = value;
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

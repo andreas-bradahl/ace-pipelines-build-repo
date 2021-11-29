@@ -1,0 +1,24 @@
+
+CREATE DATABASE MODULE getESATrueFasleFilterData_GetESALeadTimes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+
+		DECLARE esaQuery CHARACTER '
+		select weekDay, orderBefore, leadDays, pickupTime
+		from zLeadTime
+		inner join zSupplyModel supplymodel
+		on supplymodel.id=supplyModelId
+		where supplyModel= ? 
+		AND warehouse= ? 
+		order by weekDay asc
+		';
+
+		CREATE FIELD Environment.Variables.ProductData.LeadTimes;
+		SET Environment.Variables.ProductData.LeadTimes.Row[] = PASSTHRU(esaQuery, customerRef.OKSPLM,customerRef.OKWHLO);
+		
+		RETURN TRUE; 
+	END;
+
+END MODULE;

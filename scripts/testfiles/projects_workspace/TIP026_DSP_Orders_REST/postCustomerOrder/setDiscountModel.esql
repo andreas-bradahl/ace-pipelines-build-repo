@@ -1,0 +1,17 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE setDiscountModel
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE inputDataRef REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE discountModel CHAR GetValueFromNameValueList('DISY', inputDataRef.MIRecord.Item.NameValue);
+		
+		SET varRef.ExtraOrderCharge.discountModel = discountModel;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

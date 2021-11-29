@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var1"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd"/>
+    <namespaces>
+        <namespace kind="extension" prefix="fn" uri="http://www.w3.org/2005/xpath-functions"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="OIZ100MIGetBatchHeadTrim">
+        <input path="$var1/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response" ref="var"/>
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}OIZ100MIGetBatchHeadResponse" ref="var"/>
+        </input>
+        <output path="mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly1/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response" ref="var"/>
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly1/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}OIZ100MIGetBatchHeadResponse" ref="var"/>
+        </output>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment/MDBREADMILstOXCNTRU1Response"/>
+            <output path="$MessageAssembly1/LocalEnvironment/MDBREADMILstOXCNTRU1Response"/>
+        </move>
+        <if>
+            <input path="$MessageAssembly/LocalEnvironment/OIZ100MIGetBatchHeadResponse[1]" var="OIZ100MIGetBatchHeadResponse"/>
+            <output path="$MessageAssembly1/LocalEnvironment/OIZ100MIGetBatchHeadResponse"/>
+            <test lang="xpath">true()</test>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/ORNO" var="ORNO"/>
+                <output path="ORNO"/>
+                <param name="string" value="$ORNO"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/DSTX" var="DSTX"/>
+                <output path="DSTX"/>
+                <param name="string" value="$DSTX"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/WCON" var="WCON"/>
+                <output path="WCON"/>
+                <param name="string" value="$WCON"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/WCTX" var="WCTX"/>
+                <output path="WCTX"/>
+                <param name="string" value="$WCTX"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/RLDT" var="RLDT"/>
+                <output path="RLDT"/>
+                <param name="string" value="$RLDT"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/ORDT" var="ORDT"/>
+                <output path="ORDT"/>
+                <param name="string" value="$ORDT"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/ORSL" var="ORSL"/>
+                <output path="ORSL"/>
+                <param name="string" value="$ORSL"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/ORST" var="ORST"/>
+                <output path="ORST"/>
+                <param name="string" value="$ORST"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/STTX" var="STTX"/>
+                <output path="STTX"/>
+                <param name="string" value="$STTX"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/NTAM" var="NTAM"/>
+                <output path="NTAM"/>
+                <param name="string" value="$NTAM"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/SRCO" var="SRCO"/>
+                <output path="SRCO"/>
+                <param name="string" value="$SRCO"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/WDAY" var="WDAY"/>
+                <output path="WDAY"/>
+                <param name="string" value="$WDAY"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/OBLC" var="OBLC"/>
+                <output path="OBLC"/>
+                <param name="string" value="$OBLC"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/LINT" var="LINT"/>
+                <output path="LINT"/>
+                <param name="string" value="$LINT"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/BLCD" var="BLCD"/>
+                <output path="BLCD"/>
+                <param name="string" value="$BLCD"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/ORTP" var="ORTP"/>
+                <output path="ORTP"/>
+                <param name="string" value="$ORTP"/>
+            </function>
+            <function ref="fn:normalize-space">
+                <input path="$OIZ100MIGetBatchHeadResponse/CUNO" var="CUNO"/>
+                <output path="CUNO"/>
+                <param name="string" value="$CUNO"/>
+            </function>
+        </if>
+    </mappingDeclaration>
+</mappingRoot>

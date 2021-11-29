@@ -1,0 +1,17 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE DATABASE MODULE MakeNoDeleteItemList
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE companyNumber INT CAST(Environment.OrderRequest.companyNumber AS INT);
+		
+		DECLARE sqlQuery CHAR 'SELECT MMITNO
+		FROM MITMAS
+		WHERE MMCONO=? AND MMITCL IN (' || Environment.NoDeleteItemClassList || ')';
+		SET Environment.NoDeleteItemList.Row[] = PASSTHRU(sqlQuery, companyNumber);
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

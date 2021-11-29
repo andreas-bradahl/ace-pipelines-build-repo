@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="OIZ100MIGetBatchHeadData">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response" ref="var1"/>
+        </input>
+        <output path="mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly3">
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly3/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}OIZ100MIGetBatchHeadResponse" ref="var1"/>
+            <cast derivedFrom="MB:JSON_schema_in_json_file" path="$MessageAssembly3/LocalEnvironment/any" qualifier="{http://www.ibm.com/iib/msl/json}MDBREADMILstOXCNTRU1Response" ref="var1"/>
+        </output>
+        <foreach>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item/NameValue/Item" var="Item2"/>
+            <output path="$MessageAssembly3/LocalEnvironment/OIZ100MIGetBatchHeadResponse"/>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value17"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name17"/>
+                <output path="ORNO"/>
+                <param name="input" value="$Value17"/>
+                <test lang="xpath">$Name17 = "ORNO"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value18"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name18"/>
+                <output path="DSTX"/>
+                <param name="input" value="$Value18"/>
+                <test lang="xpath">$Name18 = "DSTX"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value19"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name19"/>
+                <output path="WCON"/>
+                <param name="input" value="$Value19"/>
+                <test lang="xpath">$Name19 = "WCON"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value20"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name20"/>
+                <output path="WCTX"/>
+                <param name="input" value="$Value20"/>
+                <test lang="xpath">$Name20 = "WCTX"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value21"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name21"/>
+                <output path="RLDT"/>
+                <param name="input" value="$Value21"/>
+                <test lang="xpath">$Name21 = "RLDT"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value22"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name22"/>
+                <output path="ORDT"/>
+                <param name="input" value="$Value22"/>
+                <test lang="xpath">$Name22 = "ORDT"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value23"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name23"/>
+                <output path="ORSL"/>
+                <param name="input" value="$Value23"/>
+                <test lang="xpath">$Name23 = "ORSL"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value24"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name24"/>
+                <output path="ORST"/>
+                <param name="input" value="$Value24"/>
+                <test lang="xpath">$Name24 = "ORST"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value25"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name25"/>
+                <output path="STTX"/>
+                <param name="input" value="$Value25"/>
+                <test lang="xpath">$Name25 = "STTX"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value26"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name26"/>
+                <output path="NTAM"/>
+                <param name="input" value="$Value26"/>
+                <test lang="xpath">$Name26 = "NTAM"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value27"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name27"/>
+                <output path="SRCO"/>
+                <param name="input" value="$Value27"/>
+                <test lang="xpath">$Name27 = "SRCO"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value28"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name28"/>
+                <output path="WDAY"/>
+                <param name="input" value="$Value28"/>
+                <test lang="xpath">$Name28 = "WDAY"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value29"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name29"/>
+                <output path="OBLC"/>
+                <param name="input" value="$Value29"/>
+                <test lang="xpath">$Name29 = "OBLC"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value30"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name30"/>
+                <output path="LINT"/>
+                <param name="input" value="$Value30"/>
+                <test lang="xpath">$Name30 = "LINT"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value31"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name31"/>
+                <output path="BLCD"/>
+                <param name="input" value="$Value31"/>
+                <test lang="xpath">$Name31 = "BLCD"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value32"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name32"/>
+                <output path="ORTP"/>
+                <param name="input" value="$Value32"/>
+                <test lang="xpath">$Name32 = "ORTP"</test>
+            </function>
+            <function ref="normalize">
+                <input path="$Item2/Value" var="Value33"/>
+                <input auxiliary="true" path="$Item2/Name" var="Name33"/>
+                <output path="CUNO"/>
+                <param name="input" value="$Value33"/>
+                <test lang="xpath">$Name33 = "CUNO"</test>
+            </function>
+        </foreach>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment/MDBREADMILstOXCNTRU1Response" var="MDBREADMILstOXCNTRU1Response"/>
+            <output path="$MessageAssembly3/LocalEnvironment/MDBREADMILstOXCNTRU1Response"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

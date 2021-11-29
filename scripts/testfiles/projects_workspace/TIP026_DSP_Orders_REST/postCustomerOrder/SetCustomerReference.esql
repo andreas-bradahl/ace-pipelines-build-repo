@@ -1,0 +1,21 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE SetCustomerReference
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE addBatchHeadNameValueList REFERENCE TO Environment.JSONResponse.AddBatchHead.Data.MIRecord.Item.NameValue;
+		
+		SET varRef.AddBatchText.TEXT = orderRef.customerReference;
+		SET varRef.AddBatchText.ORNO = GetValueFromNameValueList('ORNO', addBatchHeadNameValueList);
+		SET varRef.AddBatchText.TYPE = 1; -- 1 = order header text, 2 = order line text
+		SET varRef.AddBatchText.TYTR = 2; -- 1 = pre, 2 = post, 3 = F6
+		SET varRef.AddBatchText.TXHE = 'CO04'; -- CO01 = orderComment, CO04 = customerReference
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

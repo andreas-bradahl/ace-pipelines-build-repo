@@ -1,0 +1,35 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE dbFetchOrderTypes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryExpress CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zMvxOrdertype_express''
+		';
+			
+		SET Environment.Variables.SQLQueries.Express = PASSTHRU(sqlQueryExpress);	
+		
+		DECLARE sqlQueryExtra CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zMvxOrdertype_extra''
+		';
+			
+		SET Environment.Variables.SQLQueries.Extra = PASSTHRU(sqlQueryExtra);
+		
+		DECLARE sqlQueryPickup CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zMvxOrdertype_pickup''
+		';
+			
+		SET Environment.Variables.SQLQueries.Pickup = PASSTHRU(sqlQueryPickup);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

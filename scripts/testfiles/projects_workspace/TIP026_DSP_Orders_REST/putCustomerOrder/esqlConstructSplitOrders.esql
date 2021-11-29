@@ -1,0 +1,183 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlConstructSplitOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+		BEGIN
+		-- Environment.Variables.CustomerWarehouseSkus.sku[]
+		
+		CREATE FIELD Environment.Variables.Global.OrderSplit.customerWarehouseOrder;
+		CREATE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder;
+		
+		DECLARE customerWarehouseOrder REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder;
+		DECLARE otherWarehouseOrder REFERENCE TO Environment.Variables.Global.OrderSplit.otherWarehouseOrder;
+		
+		SET customerWarehouseOrder = Environment.OrderRequest.Data;
+		SET otherWarehouseOrder = Environment.OrderRequest.Data;
+		
+		DELETE FIELD Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DELETE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines;
+		DELETE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderNumber;
+		
+		CREATE FIELD Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		CREATE FIELD Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines;
+	
+		
+		-- Set new requestedDeliveryDate for otherWarehouseOrder
+		DECLARE otherRequestedDeliveryDate DATE CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyy-MM-dd');
+		
+		DECLARE WHLO CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.WHLO;
+		DECLARE SPLM CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.SPLM;
+		DECLARE todaysDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyy-MM-dd');
+		DECLARE weekDay CHARACTER EXTRACT(DAYOFWEEK FROM CURRENT_DATE);
+	
+		DECLARE sqlQueryLeadDays CHAR ' 
+			SELECT ZL.orderBefore, ZL.leadDays, ZL.orderDate
+			FROM zLeadTimeExceptions ZL
+			INNER JOIN zSupplyModel ZS
+			ON ZS.id = ZL.supplyModelId
+			WHERE 
+					ZS.supplyModel = ?
+				AND ZL.warehouse = ?
+				AND ZL.orderDate = ?
+		';
+			
+		SET Environment.Variables.SQLQueries.LeadDays = PASSTHRU(sqlQueryLeadDays, SPLM, WHLO, todaysDate);
+	
+		IF NOT(EXISTS(Environment.Variables.SQLQueries.LeadDays[])) THEN
+		
+			SET sqlQueryLeadDays = ' 
+				SELECT ZL.orderBefore, ZL.leadDays
+				FROM zLeadTime ZL
+				INNER JOIN zSupplyModel ZS
+				ON ZS.id = ZL.supplyModelId
+				WHERE 
+						ZS.supplyModel = ?
+					AND ZL.warehouse = ?
+					AND ZL.weekDay = ?
+			';
+				
+			SET Environment.Variables.SQLQueries.LeadDays = PASSTHRU(sqlQueryLeadDays, SPLM, WHLO, weekDay);
+			
+		END IF;
+		
+		DECLARE orderBefore CHARACTER Environment.Variables.SQLQueries.LeadDays.orderBefore;
+		DECLARE leadDays CHARACTER Environment.Variables.SQLQueries.LeadDays.leadDays;
+		
+		IF CURRENT_TIME < CAST(orderBefore AS TIME FORMAT 'HH:mm') THEN
+			
+			SET otherRequestedDeliveryDate = otherRequestedDeliveryDate + CAST(leadDays AS INTERVAL DAY);
+			SET otherWarehouseOrder.requestedDeliveryDate = CAST(otherRequestedDeliveryDate AS CHARACTER FORMAT 'yyyy-MM-dd');
+			
+		ELSE
+			
+			DECLARE nextWeekDay INTEGER CAST(weekDay AS INTEGER);
+			DECLARE foundNextWeekDay BOOLEAN FALSE;
+			DECLARE amountOfDays INTEGER 0;
+			
+			WHILE NOT(foundNextWeekDay) DO
+				
+				SET nextWeekDay = nextWeekDay + 1;
+				SET amountOfDays = amountOfDays + 1;
+			
+				IF nextWeekDay > 7 THEN
+					SET nextWeekDay = 1;
+				END IF;
+				
+				SET sqlQueryLeadDays = ' 
+					SELECT ZL.orderBefore, ZL.leadDays
+					FROM zLeadTime ZL
+					INNER JOIN zSupplyModel ZS
+					ON ZS.id = ZL.supplyModelId
+					WHERE 
+							ZS.supplyModel = ?
+						AND ZL.warehouse = ?
+						AND ZL.weekDay = ?
+				';
+				
+				SET Environment.Variables.SQLQueries.NextLeadDays = PASSTHRU(sqlQueryLeadDays, SPLM, WHLO, nextWeekDay);
+				
+				IF EXISTS(Environment.Variables.SQLQueries.NextLeadDays[]) THEN
+					
+					SET foundNextWeekDay = TRUE;
+					SET leadDays = Environment.Variables.SQLQueries.NextLeadDays.leadDays;
+					
+					SET otherRequestedDeliveryDate = otherRequestedDeliveryDate + CAST(leadDays AS INTERVAL DAY);
+					SET otherRequestedDeliveryDate = otherRequestedDeliveryDate + CAST(amountOfDays AS INTERVAL DAY);
+					
+					SET otherWarehouseOrder.requestedDeliveryDate = CAST(otherRequestedDeliveryDate AS CHARACTER FORMAT 'yyyy-MM-dd');
+					
+				END IF;
+				
+			END WHILE;
+			
+		END IF;
+		
+		DECLARE customerWarehouseOrderDate DATE CAST(customerWarehouseOrder.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		DECLARE otherWarehouseOrderDate DATE CAST(otherWarehouseOrder.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+				
+		IF customerWarehouseOrderDate < otherWarehouseOrderDate THEN
+		
+			-- Copy orderLines over to their respective orders
+			DECLARE itemRef REFERENCE TO Environment;
+			DECLARE alreadyExistsOther BOOLEAN FALSE;
+			DECLARE alreadyExistsCustomer BOOLEAN FALSE;
+	
+			FOR record AS Environment.OrderRequest.Data.orderLines.Item[] DO
+				
+				SET alreadyExistsCustomer = FALSE;
+				SET alreadyExistsOther = FALSE;
+				
+			 	FOR customerWarehouseSku AS Environment.Variables.CustomerWarehouseSkus.sku[] DO
+					
+					IF NOT(alreadyExistsCustomer) THEN
+				
+						IF record.sku = customerWarehouseSku.sku 
+							AND record.action = customerWarehouseSku.action 
+							AND record.quantity = customerWarehouseSku.quantity 
+							AND record.orderLineUnit = customerWarehouseSku.orderLineUnit 
+							THEN
+							
+							CREATE LASTCHILD OF customerWarehouseOrder.orderLines AS itemRef NAME 'Item';
+							SET itemRef = record;
+							SET alreadyExistsCustomer = TRUE;
+							
+						END IF;
+						
+					END IF;
+						
+				END FOR;
+				
+				IF NOT(alreadyExistsCustomer) THEN
+				
+					FOR otherWarehouseOrderSku AS Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderLines.Item[] DO
+					
+						IF otherWarehouseOrderSku.sku = record.sku
+							AND otherWarehouseOrderSku.action = record.action
+							AND otherWarehouseOrderSku.quantity = record.quantity
+							AND otherWarehouseOrderSku.orderLineUnit = record.orderLineUnit
+							THEN
+							
+							SET alreadyExistsOther = TRUE;
+						
+						END IF;
+							
+					END FOR;
+					
+					IF NOT(alreadyExistsOther) THEN
+						
+						CREATE LASTCHILD OF otherWarehouseOrder.orderLines AS itemRef NAME 'Item';
+						SET itemRef = record;
+						SET alreadyExistsOther = TRUE;
+						
+					END IF;
+						
+				END IF;
+				
+			END FOR;
+		
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

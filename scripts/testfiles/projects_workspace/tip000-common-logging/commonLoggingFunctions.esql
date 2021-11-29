@@ -1,0 +1,22 @@
+CREATE FUNCTION writeLog(IN information CHAR, IN envRef REFERENCE)
+BEGIN
+	
+	DECLARE FlowName CHAR;
+	DECLARE Service CHAR;
+	DECLARE SourceName CHAR;
+	DECLARE MessageIdName CHAR;
+	
+	SET FlowName = 'MessageFlow: '|| MessageFlowLabel;
+	SET Service = 'ServiceName: '|| ApplicationLabel;
+	SET SourceName = 'Source: '||Source;
+	SET MessageIdName = 'MessageId: '||envRef.MessageId;
+	
+	LOG EVENT SEVERITY 1 VALUES('UUID' , envRef.UUID, Service, FlowName, SourceName, MessageIdName, information);
+END;  
+
+
+
+--CREATE FUNCTION writeLogv2(IN information CHAR, IN envRef REFERENCE, IN MessageFlow CHAR, IN ServiceName CHAR, IN Source CHAR)
+--BEGIN
+--	LOG EVENT SEVERITY 1 VALUES('UUID' , envRef.UUID, 'Source', envRef.Source ,'MessageFlow', MessageFlow, 'ServiceName', ServiceName, 'MessageId', MessageId, information);
+--END;

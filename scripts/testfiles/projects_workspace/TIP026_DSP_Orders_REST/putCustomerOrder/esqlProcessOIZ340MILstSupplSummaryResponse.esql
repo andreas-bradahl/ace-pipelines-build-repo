@@ -1,0 +1,51 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlProcessOIZ340MILstSupplSummaryResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF NOT(EXISTS(InputRoot.JSON.Data.MIRecord.Item[])) THEN
+			
+			SET Environment.Variables.isCustomerWarehouse = TRUE;	
+		
+		ELSE
+
+			DECLARE responseCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue.Item;
+			DECLARE responseRef REFERENCE TO Environment;
+			CREATE FIELD OutputLocalEnvironment.Variables.Response.Item AS responseRef;
+			
+			DECLARE Name CHARACTER;
+			DECLARE Value CHARACTER;
+			
+			WHILE LASTMOVE(responseCursor) DO
+				
+				SET Name = responseCursor.Name;
+				SET Value = responseCursor.Value;
+				
+				IF Value IS NULL THEN
+					SET Value = '';
+				END IF;
+				
+				SET responseRef.{Name} = TRIM(Value);
+				
+				MOVE responseCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+			DECLARE WHLO CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.WHLO;		
+			
+			IF responseRef.SWHL = WHLO THEN
+				
+				SET Environment.Variables.isCustomerWarehouse = TRUE;
+				
+			ELSE
+				
+				SET Environment.Variables.isCustomerWarehouse = FALSE;				
+				
+			END IF;
+			
+		END IF;
+	
+		RETURN FALSE;
+	END;
+END MODULE;

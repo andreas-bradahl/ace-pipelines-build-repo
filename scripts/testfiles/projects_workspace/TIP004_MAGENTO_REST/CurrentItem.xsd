@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:element name="CurrentItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="M3">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="productNumber" type="xs:string"/>
+              <xs:element name="promotionalItem" type="xs:string"/>
+              <xs:element name="visible" type="xs:string"/>
+              <xs:element name="weight" type="xs:float"/>
+              <xs:element name="unspsc" type="xs:string"/>
+              <xs:element name="type" type="xs:string"/>
+              <xs:element name="buyableInBaseUnit" type="xs:string"/>
+              <xs:element name="productClass" type="xs:string"/>
+              <xs:element name="baseUnit" type="xs:string"/>
+              <xs:element name="buyableInSalesUnit" type="xs:string"/>
+              <xs:element name="salesUnit" type="xs:string"/>
+              <xs:element name="variableWeight" type="xs:string"/>
+              <xs:element name="conversionFactor" type="xs:float"/>
+              <xs:element name="comparativeUnit" type="xs:string"/>
+              <xs:element name="epdNumber" type="xs:string"/>
+              <xs:element name="name_no" type="xs:string"/>
+              <xs:element name="name_en" type="xs:string"/>
+              <xs:element name="description_no" type="xs:string"/>
+              <xs:element name="description_en" type="xs:string"/>
+              <xs:element name="recyclingCharge" type="xs:float"/>
+              <xs:element name="eanCode" type="xs:string"/>
+              <xs:element name="unit" type="xs:string"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Tine_esa">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="maxQty" type="xs:float"/>
+              <xs:element name="minWeight" type="xs:float"/>
+              <xs:element name="leadTimeMinWeight" type="xs:float"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Riversand">
+          <xs:complexType>
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+              <xs:element name="allergens_no" type="xs:string"/>
+              <xs:element name="allergens_en" type="xs:string"/>
+              <xs:element name="preservable" type="xs:string"/>
+              <xs:element name="ingredients_no" type="xs:string"/>
+              <xs:element name="ingredients_en" type="xs:string"/>
+              <xs:element name="productGroup" type="xs:string"/>
+              <xs:element name="productNumber" type="xs:string"/>
+              <xs:element name="productType" type="xs:string"/>
+              <xs:element name="packaging_no" type="xs:string"/>
+              <xs:element name="packaging_en" type="xs:string"/>
+              <xs:element name="similarProducts">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="product" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="newUntilDate" type="xs:string"/>
+              <xs:element name="storage_no" type="xs:string"/>
+              <xs:element name="storage_en" type="xs:string"/>
+              <xs:element name="expiredUntilDate" type="xs:string"/>
+              <xs:element name="brand" type="xs:string"/>
+              <xs:element name="name_no" type="xs:string"/>
+              <xs:element name="name_en" type="xs:string"/>
+              <xs:element name="certifications">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="certification" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="categoryLevel1" type="xs:string"/>
+              <xs:element name="categoryLevel2" type="xs:string"/>
+              <xs:element name="categoryLevel3" type="xs:string"/>
+              <xs:element name="searchWord">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="word" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="nutritions_no">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="nutrient" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="nutritions_en">
+                <xs:complexType mixed="true">
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="nutrient" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="visibleInStore">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="store" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,53 @@
+DECLARE itemCache SHARED ROW;
+
+CREATE COMPUTE MODULE getItems_ValidateInputParameter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--DECLARE queryParams REFERENCE TO InputLocalEnvironment.HTTP.Input.QueryString;
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemsRequestEnviroment.itemsRequest;
+		
+		SET Environment.Variables.Locale = UPPER(queryParams.locale);
+		If queryParams.sku = 'NULL' THEN 
+			SET Environment.Variables.SKU VALUE = NULL;
+		ELSE
+			SET Environment.Variables.SKU = queryParams.sku;
+		END IF;
+		-- -- If locale is invalid, return status code 400
+		-- IF (Environment.Variables.SKU is NULL) AND
+		-- (itemCache.life > CURRENT_TIMESTAMP) THEN
+		--
+		-- SET OutputRoot.JSON.Data.Item[] = itemCache.Data[];
+		-- -- SET OutputRoot.JSON.Data TYPE = JSON.Array;
+		-- PROPAGATE TO TERMINAL 'out1';
+		--
+		-- RETURN FALSE;
+		--
+		-- ELSE
+		IF (Environment.Variables.Locale <> 'EN' AND Environment.Variables.Locale IS NOT NULL AND Environment.Variables.Locale <> 'NO') THEN
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+
+			PROPAGATE TO TERMINAL 'out1';
+
+			RETURN FALSE;
+		END IF;
+		-- Check for unknown input parameters
+		-- TODO redundant?
+		IF EXISTS(InputLocalEnvironment.HTTP.Input.QueryString.[]) THEN
+			MOVE queryParams FIRSTCHILD;
+			WHILE LASTMOVE (queryParams) DO
+				IF FIELDNAME(queryParams) NOT IN ('sku', 'locale','preferredBaseUnit','preferredSalesUnit') THEN
+					SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+
+					PROPAGATE TO TERMINAL 'out1';
+
+					RETURN FALSE;
+				END IF;
+
+				MOVE queryParams NEXTSIBLING;
+			END WHILE;
+		END IF;
+		--END IF;
+		RETURN TRUE;
+	END;
+END MODULE;

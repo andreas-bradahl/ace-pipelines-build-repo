@@ -1,0 +1,65 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE DB_getItemsBuyableInBaseUnitAndConversionFactor
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DECLARE orderRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE localVarRef REFERENCE TO OutputLocalEnvironment.Variables;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE currentOrderLineRef REFERENCE TO OutputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE companyNumber INT CAST(orderRequestRef.companyNumber AS INT);
+		
+		DECLARE oprbasQuery CHAR 'SELECT COUNT(ODITNO) AS COUNT FROM OPRBAS WHERE ODCONO=? AND ODITNO=? AND ODPRRF=? AND ODCUCD=? AND ODFVDT<=? AND ODLVDT>=?';
+		DECLARE mitmasQuery CHAR 'SELECT MMITCL FROM MITMAS WHERE MMCONO=? AND MMITNO=?';
+		DECLARE mitaunQuery CHAR 'SELECT MUCOFA from MITAUN WHERE MUCONO=? AND MUITNO = ? AND MUAUS2=''1'' AND MUAUTP=''1''';
+		
+		DECLARE currentDate INT CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'yyyyMMdd') AS INT);
+		DECLARE itno CHAR currentOrderLineRef.sku;
+		DECLARE pricelist CHAR varRef.pricelist;
+		DECLARE currency CHAR varRef.currency;
+		DECLARE itemclass CHAR varRef.itemclass;
+		
+		SET Environment.OPRBAS = PASSTHRU(oprbasQuery, companyNumber, itno, pricelist, currency, currentDate, currentDate);
+		SET Environment.MITMAS = PASSTHRU(mitmasQuery, companyNumber, itno);
+		SET Environment.MITAUN = PASSTHRU(mitaunQuery, companyNumber, itno);
+		
+		DECLARE oprbasCount INT Environment.OPRBAS.COUNT;
+		DECLARE mitmas CHAR Environment.MITMAS.MMITCL;
+		DECLARE conversionFactor INT Environment.MITAUN.MUCOFA;
+		
+		DELETE FIELD Environment.OPRBAS;
+		DELETE FIELD Environment.MITMAS;
+		DELETE FIELD Environment.MITAUN;
+		
+		DECLARE buyableInBaseUnit BOOLEAN false;
+		DECLARE buyableInSalesUnit BOOLEAN false;
+		
+		IF oprbasCount > 0 THEN
+			SET buyableInBaseUnit = true;
+		END IF;
+		
+		IF mitmas <> itemclass THEN
+			SET buyableInSalesUnit = true;
+		END IF;
+		
+		SET localVarRef.buyableInBaseUnit = buyableInBaseUnit;
+		SET localVarRef.buyableInSalesUnit = buyableInSalesUnit;
+		SET localVarRef.conversionFactor = conversionFactor;
+		
+		DECLARE order REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+			
+		IF order.orderLineUnit = 'D' THEN
+			
+			DECLARE quantity INTEGER CAST(order.quantity AS INTEGER);
+		
+			SET OutputLocalEnvironment.Variables.CurrentOrder.quantity = quantity * conversionFactor;	
+			SET OutputLocalEnvironment.Variables.CurrentOrder.orderLineUnit = 'STK';
+				
+		END IF;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

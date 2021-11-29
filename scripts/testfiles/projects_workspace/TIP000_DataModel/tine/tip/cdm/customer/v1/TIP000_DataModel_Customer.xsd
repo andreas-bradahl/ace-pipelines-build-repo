@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+    <element name="RecieveCustomer" type="co:RecieveCustomer"></element>
+    
+    <complexType name="RecieveCustomer">
+    	<sequence>
+    		<element name="id" type="int" maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="producerId" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="name" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    		<element name="popularName" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    		<element name="orgNumber" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="adresses" type="co:recieveCustomerAdress"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    		<element name="pickupLocations"
+    			type="co:recieveCustomerPickupLocations" maxOccurs="unbounded"
+    			minOccurs="0">
+    		</element>
+    		<element name="region" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="email" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="phone1" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="phone2" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="fax" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="invoiceEmail" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="warehouseLocation" type="string"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="customerGroup" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="customerGroupDescription" type="string" maxOccurs="1" minOccurs="0"></element>
+    		<element name="customerReference1" type="string"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="customerReference2" type="string"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="lastUpdated" type="date" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="GLN" type="double" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="customerChainId" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="status" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="type" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    		<element name="directorName" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="salesConsultant" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="invoiceEdi" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="dueAmount" type="double" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="portfolioResponsible" type="string"
+    			maxOccurs="1" minOccurs="0">
+    		</element>
+    		<element name="paymentTermsCode" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="limit" type="double" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="startDate" type="date" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    		<element name="connections"
+    			type="co:recieveCustomerConnections" maxOccurs="unbounded"
+    			minOccurs="0">
+    		</element>
+    		<element name="retryCount" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    	</sequence>
+    </complexType>
+
+    <complexType name="recieveCustomerAdress">
+    	<sequence>
+    		<element name="type" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="line1" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="line2" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="line3" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="line4" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="postalCode" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="city" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+    		<element name="country" type="string" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+            <element name="county" type="string" maxOccurs="1" minOccurs="0"></element>
+            <element name="longitude" type="double" maxOccurs="1" minOccurs="0">
+    		</element>
+            <element name="latitude" type="double" maxOccurs="1"
+    			minOccurs="0">
+    		</element>
+
+    	</sequence>
+    </complexType>
+
+
+    <complexType name="recieveCustomerConnections">
+    	<sequence>
+    		<element name="type" type="string" maxOccurs="1" minOccurs="0"></element>
+    		<element name="fromid" type="string" maxOccurs="1" minOccurs="0"></element>
+    		<element name="toId" type="string" maxOccurs="1" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="recieveCustomerPickupLocations">
+    	<sequence>
+    		<element name="type" type="string"></element>
+            <element name="longitude" type="string"></element>
+            <element name="latitude" type="string"></element>
+    	</sequence>
+    </complexType>
+</schema>

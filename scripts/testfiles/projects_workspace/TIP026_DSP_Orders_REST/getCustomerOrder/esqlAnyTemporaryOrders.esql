@@ -1,0 +1,17 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAnyTemporaryOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+			
+		IF EXISTS(Environment.Variables.HTTPResponses.LstBatchLine[]) THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';			
+		END IF;
+	
+		RETURN FALSE;
+	END;
+END MODULE;

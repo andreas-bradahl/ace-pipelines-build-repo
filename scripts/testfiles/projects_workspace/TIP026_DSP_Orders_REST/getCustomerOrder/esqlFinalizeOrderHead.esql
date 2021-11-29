@@ -1,0 +1,22 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFinalizeOrderHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE dataOutRef REFERENCE TO OutputRoot.JSON.Data;
+		
+		DECLARE orderLinesCursor REFERENCE TO OutputRoot.JSON.Data.orderLines.Item;
+		
+		-- Construct CombinedOrderLines			
+		WHILE LASTMOVE(orderLinesCursor) DO
+		
+			SET dataOutRef.orderRecyclingCharge = dataOutRef.orderRecyclingCharge + orderLinesCursor.lineRecyclingCharge;
+			
+			MOVE orderLinesCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+
+    <complexType name="FaultEventObject">
+    	<sequence>
+    		<element name="time" type="dateTime" minOccurs="1"
+    			maxOccurs="1">
+    		</element>
+    		<element name="application" type="string" minOccurs="1"
+    			maxOccurs="1">
+    		</element>
+    		<element name="messageflow" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="severity" type="int" maxOccurs="1"
+    			minOccurs="1">
+    		</element>
+    		<element name="errormessage" type="string" minOccurs="1"
+    			maxOccurs="1">
+    		</element>
+    		<element name="comment" type="string" maxOccurs="1" minOccurs="0"></element>
+    		<element name="uuid" minOccurs="1" maxOccurs="1">
+    			<simpleType>
+    				<restriction base="string">
+    					<length value="36"></length>
+    					<pattern
+    						value="\w{8}(-)\w{4}(-)\w{4}(-)\w{4}(-)\w{12}">
+    					</pattern>
+    				</restriction>
+    			</simpleType>
+    		</element>
+    	</sequence>
+    </complexType>
+
+    <element name="FaultEvent" type="co:FaultEventObject"></element>
+</schema>

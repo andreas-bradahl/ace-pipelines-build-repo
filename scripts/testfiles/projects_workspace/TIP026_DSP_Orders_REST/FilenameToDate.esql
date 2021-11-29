@@ -1,0 +1,14 @@
+
+
+CREATE COMPUTE MODULE FilenameToDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		-- http://www.mqseries.net/phpBB/viewtopic.php?t=59860&sid=99253e2925e60fe0fe650e13a6669c3f
+		SET OutputLocalEnvironment.Destination.File.Name = 
+		CAST (CURRENT_TIMESTAMP AS CHARACTER FORMAT 'YYYYMMdd_HHmmss_')
+		|| 'LOG';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

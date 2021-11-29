@@ -1,0 +1,137 @@
+	
+CREATE PROCEDURE subtractOrAddTimes (IN time1 CHARACTER, IN operation CHARACTER, IN time2 CHARACTER)
+	RETURNS CHARACTER
+	BEGIN
+		
+		DECLARE time1Hours INTEGER CAST(SUBSTRING(time1 BEFORE ':') AS INTEGER);
+		DECLARE time1Minutes INTEGER CAST(SUBSTRING(SUBSTRING(time1 AFTER ':') BEFORE ':') AS INTEGER);
+		DECLARE time1Seconds INTEGER CAST(SUBSTRING(SUBSTRING(SUBSTRING(time1 AFTER ':') AFTER ':') BEFORE '.') AS INTEGER);
+		DECLARE time1MilliSeconds INTEGER CAST(SUBSTRING(SUBSTRING(SUBSTRING(time1 AFTER ':') AFTER ':') AFTER '.') AS INTEGER);
+		
+		DECLARE time2Hours INTEGER CAST(SUBSTRING(time2 BEFORE ':') AS INTEGER);
+		DECLARE time2Minutes INTEGER CAST(SUBSTRING(SUBSTRING(time2 AFTER ':') BEFORE ':') AS INTEGER);
+		DECLARE time2Seconds INTEGER CAST(SUBSTRING(SUBSTRING(SUBSTRING(time2 AFTER ':') AFTER ':') BEFORE '.') AS INTEGER);
+		DECLARE time2MilliSeconds INTEGER CAST(SUBSTRING(SUBSTRING(SUBSTRING(time2 AFTER ':') AFTER ':') AFTER '.') AS INTEGER);
+		
+		DECLARE deltaHours INTEGER;
+		DECLARE deltaMinutes INTEGER;
+		DECLARE deltaSeconds INTEGER;
+		DECLARE deltaMilliseconds INTEGER;
+		
+		DECLARE returnHours CHARACTER;
+		DECLARE returnMinutes CHARACTER;
+		DECLARE returnSeconds CHARACTER;
+		DECLARE returnMilliseconds CHARACTER;
+		
+		IF operation = '+' THEN
+			
+			SET deltaMilliseconds = time1MilliSeconds + time2MilliSeconds;
+			SET deltaSeconds = time1Seconds + time2Seconds;
+			SET deltaMinutes = time1Minutes + time2Minutes;
+			SET deltaHours = time1Hours + time2Hours;
+			
+			IF deltaMilliseconds >= 1000 THEN
+				
+				SET deltaSeconds = deltaSeconds + 1;
+				SET returnMilliseconds = CAST(deltaMilliseconds - 1000 AS CHARACTER);
+				
+			ELSE
+				SET returnMilliseconds = CAST(deltaMilliseconds AS CHARACTER);
+			END IF;
+			
+			IF deltaSeconds >= 60 THEN
+				
+				SET deltaMinutes = deltaMinutes + 1;
+				SET returnSeconds = CAST(deltaSeconds - 60 AS CHARACTER);
+				
+			ELSE
+				SET returnSeconds = CAST(deltaSeconds AS CHARACTER);	
+			END IF;
+			
+			IF deltaMinutes > 60 THEN
+				
+				SET returnHours = CAST(deltaHours + 1 AS CHARACTER);
+				SET returnMinutes = CAST(deltaMinutes - 60 AS CHARACTER);
+			
+			ELSE
+				SET returnMinutes = CAST(deltaMinutes AS CHARACTER);
+				SET returnHours = CAST(deltaHours AS CHARACTER);				
+			END IF;
+			
+		ELSEIF operation = '-' THEN
+			
+			SET deltaMilliseconds = time1MilliSeconds - time2MilliSeconds;
+			SET deltaSeconds = time1Seconds - time2Seconds;
+			SET deltaMinutes = time1Minutes - time2Minutes;
+			SET deltaHours = time1Hours - time2Hours;
+			
+			IF deltaMilliseconds < 0 THEN
+				
+				SET deltaSeconds = deltaSeconds - 1;
+				SET returnMilliseconds = CAST(deltaMilliseconds + 1000 AS CHARACTER);
+				
+			ELSE
+				SET returnMilliseconds = CAST(deltaMilliseconds AS CHARACTER);
+			END IF;
+			
+			IF deltaSeconds < 0 THEN
+				
+				SET deltaMinutes = deltaMinutes - 1;
+				SET returnSeconds = CAST(deltaSeconds + 60 AS CHARACTER);
+				
+			ELSE
+				SET returnSeconds = CAST(deltaSeconds AS CHARACTER);
+			END IF;
+			
+			IF deltaMinutes < 0 THEN
+				
+				SET returnHours = CAST(deltaHours - 1 AS CHARACTER);
+				SET returnMinutes = CAST(deltaMinutes + 60 AS CHARACTER);
+			
+			ELSE
+				SET returnMinutes = CAST(deltaMinutes AS CHARACTER);
+				SET returnHours = CAST(deltaHours AS CHARACTER);	
+			END IF;
+			
+		END IF;
+		
+		IF returnHours = '0' THEN
+			SET returnHours = '00';
+		END IF;
+		
+		IF returnMinutes = '0' THEN
+			SET returnMinutes = '00';
+		END IF;
+		
+		IF returnSeconds = '0' THEN
+			SET returnSeconds = '00';
+		END IF;
+		
+		IF returnMilliseconds = '0' THEN
+			SET returnMilliseconds = '000';
+		END IF;
+		--__________________________________________________________
+		IF LENGTH(returnHours) = 1 THEN
+			SET returnHours = '0' || returnHours;
+		END IF;
+		
+		IF LENGTH(returnMinutes) = 1 THEN
+			SET returnMinutes = '0' || returnMinutes;
+		END IF;
+		
+		IF LENGTH(returnSeconds) = 1 THEN
+			SET returnSeconds = '0' || returnSeconds;
+		END IF;
+		
+		IF LENGTH(returnMilliseconds) = 2 THEN
+			SET returnMilliseconds = '0' || returnMilliseconds;
+		END IF;
+		
+		IF LENGTH(returnMilliseconds) = 1 THEN
+			SET returnMilliseconds = '00' || returnMilliseconds;
+		END IF;
+							
+		DECLARE returnTime CHARACTER returnHours || ':' || returnMinutes || ':' || returnSeconds || '.' || returnMilliseconds;
+		
+		RETURN returnTime;
+	END;

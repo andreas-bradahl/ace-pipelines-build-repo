@@ -1,0 +1,141 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE checkDeliveryDatesDeadline
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE jsonReplyRef REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE isPickupOrder BOOLEAN varRef.isPickupOrder;
+		DECLARE isExpressOrder BOOLEAN varRef.isExpressOrder;
+		DECLARE isExtraDelivery BOOLEAN varRef.isExtraDelivery;
+		
+		DECLARE requestedDeliveryDateChar CHAR orderRequestRef.requestedDeliveryDate;
+		DECLARE requestedDeliveryDate DATE  CAST(requestedDeliveryDateChar AS DATE FORMAT 'yyyy-MM-dd');
+		
+		
+		DECLARE path CHAR '';
+		
+		IF isPickupOrder THEN
+			
+			SET path  = 'pickupdeliverydates';
+			DECLARE requestedDeliveryTime CHAR orderRequestRef.requestedDeliveryTime;
+			-- SET requestedDeliveryTime = '10:00';
+			
+			SET OutputLocalEnvironment.{path}.Item[] = SELECT * FROM jsonReplyRef.{path}.Item[] AS e WHERE e.pickUpTime >= requestedDeliveryDateChar;
+			
+			DECLARE pickupdeliveryRef REFERENCE TO OutputLocalEnvironment.{path};
+			DECLARE entryCursor REFERENCE TO pickupdeliveryRef.Item;
+			
+			--DECLARE deliveryDate DATE CAST(entryCursor.deadline AS DATE FORMAT 'yyyy-MM-dd');
+			DECLARE deadlineGMT GMTTIMESTAMP getDeadlineGmtTimestamp(entryCursor.deadline);
+			DECLARE pickUpTime GMTTIMESTAMP getDeadlineGmtTimestamp(entryCursor.pickUpTime);
+			DECLARE deliveryDate DATE CAST(deadlineGMT AS DATE);
+			
+			DECLARE wip BOOLEAN true;
+			
+			DECLARE currentGMTTimestamp GMTTIMESTAMP CURRENT_GMTTIMESTAMP;
+			
+			IF deadlineGMT < currentGMTTimestamp OR deadlineGMT IS NULL THEN
+				
+				SET Environment.Variables.HTTPCode = 400;
+				SET Environment.Variables.Response = 'FAILED';
+				SET Environment.Variables.Error_Reason = 'ORDER_DEADLINE';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			ELSE
+				
+				RETURN TRUE;
+				
+			END IF;
+			
+			RETURN FALSE;
+				
+		ELSEIF isExpressOrder THEN
+				
+			SET path = 'expressdelivery';
+			
+			DECLARE deliveryDate DATE CAST(jsonReplyRef.{path}.deliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+			DECLARE deadlineGMT GMTTIMESTAMP getDeadlineGmtTimestamp(jsonReplyRef.{path}.deadline);
+			
+			DECLARE deliveryPrice CHAR jsonReplyRef.{path}.price;
+			
+			IF isWithinDeadline(requestedDeliveryDate, deliveryDate, deadlineGMT) THEN
+				
+				RETURN true;
+				
+			ELSE
+				
+				SET Environment.Variables.HTTPCode = 400;
+				SET Environment.Variables.Response = 'FAILED';
+				SET Environment.Variables.Error_Reason = 'ORDER_DEADLINE';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+				
+			END IF;
+				
+		ELSEIF isExtraDelivery THEN
+				
+			SET path = 'extradeliverydates';
+			
+			DECLARE price INT 0;
+			DECLARE plusprice INT 0;
+			
+			SET OutputLocalEnvironment.{path}.Item[] = SELECT * FROM jsonReplyRef.{path}.Item[] AS e WHERE e.deliveryDate = requestedDeliveryDateChar;
+			
+			DECLARE extraDeliveryDateRef REFERENCE TO OutputLocalEnvironment.{path};
+			DECLARE entryCursor REFERENCE TO extraDeliveryDateRef.Item;
+			
+			DECLARE deliveryDate DATE CAST(entryCursor.deliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+			DECLARE deadlineGmtTimestamp GMTTIMESTAMP getDeadlineGmtTimestamp(entryCursor.deadlineDate);
+			SET price = entryCursor.price;
+			SET plusprice = entryCursor.plusprice;
+			
+			IF isWithinDeadline(requestedDeliveryDate, deliveryDate, deadlineGmtTimestamp) THEN
+						
+				RETURN true;
+				
+			ELSE
+				
+				SET Environment.Variables.HTTPCode = 400;
+				SET Environment.Variables.Response = 'FAILED';
+				SET Environment.Variables.Error_Reason = 'ORDER_DEADLINE';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			
+			END IF;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+	
+CREATE FUNCTION isWithinDeadline (IN requestedDeliveryDate DATE, IN deliveryDate DATE, IN deadlineGmtTimestamp GMTTIMESTAMP) RETURNS BOOLEAN
+	BEGIN
+		
+		IF requestedDeliveryDate <= deliveryDate AND CURRENT_GMTTIMESTAMP <= deadlineGmtTimestamp THEN
+		
+			RETURN true;
+			
+			ELSE
+				
+			RETURN false;
+			
+		END IF;
+	END;
+	
+CREATE FUNCTION getDeadlineGmtTimestamp (IN deadline CHAR) RETURNS GMTTIMESTAMP
+	BEGIN
+		DECLARE iibFormatedDeadline CHAR deadline;
+		SET iibFormatedDeadline = OVERLAY(iibFormatedDeadline PLACING ':' FROM LENGTH(iibFormatedDeadline)-1 FOR 0);
+		
+		RETURN CAST(iibFormatedDeadline AS GMTTIMESTAMP FORMAT 'I' );
+	END ;
+
+END MODULE;

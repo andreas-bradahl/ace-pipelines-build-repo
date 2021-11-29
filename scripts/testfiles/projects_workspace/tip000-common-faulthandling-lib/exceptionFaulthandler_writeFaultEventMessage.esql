@@ -1,0 +1,32 @@
+
+
+CREATE COMPUTE MODULE exceptionFaulthandler_writeFaultEventMessage
+	
+	--DECLARE UDP_CCSID EXTERNAL INT;
+	
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN        
+        
+        DECLARE inRef REFERENCE TO InputRoot;
+		DECLARE expRef REFERENCE TO InputExceptionList;
+		DECLARE outRef REFERENCE TO OutputRoot;
+		DECLARE exceptionFaultHandlerRef REFERENCE TO Environment.Variables.exceptionFaultHandler;
+		
+		DECLARE uuid CHARACTER Environment.Variables.Logging.UUID;
+		
+		DECLARE messageflow CHARACTER expRef.*[1].Label;
+        DECLARE severity INTEGER expRef.*[1].Severity;
+        DECLARE comment CHARACTER expRef.*[1].Type;
+        
+		DECLARE inputListChar CHAR exceptionFaultHandlerRef.inputString;
+		DECLARE exceptionMessageChar CHAR exceptionFaultHandlerRef.exceptionString;
+		
+		LOG EVENT SEVERITY 1 VALUES('TIP000 Faulthandling Exception ',inputListChar,exceptionMessageChar,'UUID', Environment.Variables.Logging.UUID, 'Source',Source, 'MessageFlow', MessageFlowLabel, 'ServiceName', ApplicationLabel);
+        CALL writeErrorMessage(OutputRoot, CURRENT_GMTTIMESTAMP, ApplicationLabel, messageflow, severity, inputListChar, exceptionMessageChar, comment, uuid);
+
+
+		
+        
+        RETURN TRUE;
+    END;
+END MODULE;

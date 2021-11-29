@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">                   
+                                                                                                                     <xsd:element name="fromDate" type="xsd:string"/>             
+    <xsd:element name="toDate" type="xsd:string"/>             
+    <xsd:element name="typeOfOrder" type="xsd:string"/>             
+    <xsd:element name="toStatus" type="xsd:string"/>             
+    <xsd:element name="fromStatus" type="xsd:string"/>             
+    <xsd:element name="orderName" type="xsd:string"/>             
+    <xsd:element name="orderNumber" type="xsd:string"/>             
+    <xsd:element name="customerNumber" type="xsd:string"/>             
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var6"/>
+    <input path="/getCustomerOrderList/OriginRequest.xsd" var="var1"/>
+    <input path="/getCustomerOrderList/OriginRequest.xsd" var="var2"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var7"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <imports>
+        <import kind="esql" namespace="/Common.esql"/>
+    </imports>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="extension" prefix="Common" uri="/Common.esql"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="OriginRequestIntoEnv">
+        <input path="$var6/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="OriginRequest" ref="var1"/>
+        </input>
+        <input path="$var7/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="customerNumber" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderNumber" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderName" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="fromDate" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="toDate" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="fromStatus" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="toStatus" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="typeOfOrder" ref="var3"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast path="Variables/any" qualifier="OriginRequest" ref="var1"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <assign value="999">
+                    <output path="Variables/OriginRequest/ANTP" var="ANTP"/>
+                </assign>
+                <assign value="100">
+                    <output path="Variables/OriginRequest/CONO" var="CONO"/>
+                </assign>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/customerNumber[1]"/>
+                    <output path="Variables/OriginRequest/CUNO"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/orderNumber[1]"/>
+                    <output path="Variables/OriginRequest/ORNO"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/orderName[1]"/>
+                    <output path="Variables/OriginRequest/DSTX"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/fromStatus[1]"/>
+                    <output path="Variables/OriginRequest/ORSL"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/toStatus[1]"/>
+                    <output path="Variables/OriginRequest/ORST"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/typeOfOrder[1]" var="typeOfOrder"/>
+                    <output path="Variables/OriginRequest/ORTY"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/toDate[1]"/>
+                    <output path="Variables/OriginRequest/ORDT"/>
+                </move>
+                <condition>
+                    <if>
+                        <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/fromDate[1]" var="fromDate1"/>
+                        <output path="Variables/OriginRequest/ORDF" var="ORDF"/>
+                        <test lang="xpath">fn:string-length($fromDate1) &gt; 0</test>
+                        <move>
+                            <input path="$fromDate1/.[1]" var="fromDate2"/>
+                            <output path="$ORDF/."/>
+                        </move>
+                    </if>
+                    <elseif>
+                        <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/fromDate" var="fromDate"/>
+                        <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/orderName" var="orderName"/>
+                        <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/orderNumber" var="orderNumber"/>
+                        <output path="Variables/OriginRequest/ORDF"/>
+                        <test lang="xpath">fn:string-length($fromDate) = 0 and fn:string-length($orderName) = 0 and fn:string-length($orderNumber) = 0</test>
+                        <customFunction lang="esql" ref="Common:getDateAsyyyyMMdd">
+                            <output path="."/>
+                        </customFunction>
+                    </elseif>
+                    <else>
+                        <output path="Variables/OriginRequest/ORDF"/>
+                        <assign value="19710101">
+                            <output path="."/>
+                        </assign>
+                    </else>
+                </condition>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

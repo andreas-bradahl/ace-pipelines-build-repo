@@ -1,0 +1,27 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE Common_CheckResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- Check if Order exists:
+		IF OrderExists(InputRoot) THEN
+			CREATE FIELD Environment.Variables.Global.requestedDeliveryDate VALUE '';
+			
+			SET Environment.Variables.Global.requestedDeliveryDate = CAST(TRIM(GetValueFromNameValueList('RLDT', InputRoot.JSON.Data.MIRecord.Item.NameValue)) AS DATE FORMAT 'yyyyMMdd');
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			/*
+			SET Environment.Variables.HTTPCode = 404;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'NOT_FOUND';
+			*/
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

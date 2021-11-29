@@ -1,0 +1,24 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlOriginPromoOrderFilter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderType REFERENCE TO Environment.OrderRequest.Data.orderType;
+		CREATE FIELD Environment.Variables.Global.Flags.OriginPromo;
+		
+		IF orderType = Environment.Variables.SQLQueries.PromotionalOrderCode.value THEN
+			
+			SET Environment.Variables.Global.Flags.OriginPromo = TRUE;
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			
+			SET Environment.Variables.Global.Flags.OriginPromo = FALSE;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

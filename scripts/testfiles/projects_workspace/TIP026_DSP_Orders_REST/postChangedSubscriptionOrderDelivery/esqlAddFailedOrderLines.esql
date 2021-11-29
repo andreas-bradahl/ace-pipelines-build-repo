@@ -1,0 +1,39 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlAddFailedOrderLines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderLineRef REFERENCE TO InputLocalEnvironment.Variables.CurrentOrderLine;
+		DECLARE failedOrderLineRef REFERENCE TO Environment;
+		
+		IF InputRoot.JSON.Data."@code" IS NOT NULL OR InputRoot.JSON.Data.Message IS NOT NULL THEN
+			
+			SET Environment.Variables.FailedVariables.OrderLinesFailed = TRUE;
+			
+			CREATE LASTCHILD OF Environment.Variables.FailedVariables AS failedOrderLineRef NAME 'failedOrderLine';
+			
+			SET failedOrderLineRef.orderLine = orderLineRef;
+			
+			IF InputRoot.JSON.Data."@code" IS NOT NULL THEN
+				SET failedOrderLineRef.errorCode = InputRoot.JSON.Data."@code";			
+			ELSE
+				SET failedOrderLineRef.errorCode = '';
+			END IF;
+			
+			IF InputRoot.JSON.Data.Message IS NOT NULL THEN
+				SET failedOrderLineRef.errorMessage = InputRoot.JSON.Data.Message;			
+			ELSE
+				SET failedOrderLineRef.errorMessage = '';
+			END IF; 
+			
+		ELSE
+			
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+	
+		RETURN FALSE;
+	END;
+END MODULE;

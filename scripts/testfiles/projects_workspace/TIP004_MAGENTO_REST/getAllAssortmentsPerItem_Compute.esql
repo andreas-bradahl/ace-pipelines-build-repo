@@ -1,0 +1,32 @@
+
+
+CREATE COMPUTE MODULE getAllAssortmentsPerItem_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE assortmentsItemsQuery CHAR
+			'(SELECT 
+				TRIM(OIASCD) "AssortmentID", 
+				TRIM(OIITNO) "ItemID"
+			FROM OASITN
+			LEFT OUTER JOIN MITMAS
+				ON OIITNO = MMITNO
+			WHERE OIFDAT <= ?
+				AND OITDAT >= ?
+				AND MMSTAT >= ''20'' AND MMSTAT < ''80''
+				AND OICONO = ?
+				AND MMCONO = ?
+			ORDER BY OIASCD, OIITNO)';
+				
+		DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		DECLARE inputCONO INT InputLocalEnvironment.REST.Input.Parameters.CONO;
+				
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+		SET OutputRoot.JSON.Data.AssortmentsItems =
+			PASSTHRU(assortmentsItemsQuery
+			VALUES (currentDate, currentDate, inputCONO, inputCONO));
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

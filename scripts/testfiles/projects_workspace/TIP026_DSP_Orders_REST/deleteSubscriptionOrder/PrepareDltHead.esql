@@ -1,0 +1,11 @@
+BROKER SCHEMA deleteSubscriptionOrder
+
+CREATE COMPUTE MODULE PrepareDltInstHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RORD = Environment.Variables.deleteOrderRequest.orderNumber; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.deleteOrderRequest.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = Environment.Variables.deleteOrderRequest.companyNumber;		
+	END;
+END MODULE;

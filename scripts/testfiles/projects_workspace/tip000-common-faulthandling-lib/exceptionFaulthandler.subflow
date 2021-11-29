@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmResetContentDescriptor.msgnode="ComIbmResetContentDescriptor.msgnode" xmlns:ComIbmValidate.msgnode="ComIbmValidate.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:outgoingMQ.subflow="outgoingMQ.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="exceptionFaulthandler.subflow" nsPrefix="exceptionFaulthandler.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_CCSID" name="UDP_CCSID" lowerBound="1" defaultValueLiteral="1208">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="exceptionFaulthandler" bundleName="exceptionFaulthandler" pluginId="tip000-common-faulthandling-lib"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip000-common-faulthandling-lib/icons/full/obj16/exceptionFaulthandler.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/tip000-common-faulthandling-lib/icons/full/obj30/exceptionFaulthandler.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="exceptionFaulthandler" pluginId="tip000-common-faulthandling-lib"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="1104,202" queueName="TIP082.FAULT.ERRORLOGGING" validateMaster="contentAndValue">
+        <translation xmi:type="utility:ConstantString" string="TIP082.FAULT.ERRORLOGGING"/>
+      </nodes>
+      <nodes xmi:type="ComIbmValidate.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="704,202" domain="XMLNSC" checkDomain="true" checkSet="true" checkType="true" validateMaster="contentAndValue">
+        <translation xmi:type="utility:ConstantString" string="Validate"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="221,202" computeExpression="esql://routine/#exceptionFaulthandler_writeFaultEventMessage.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="writeFaultEventMessage"/>
+      </nodes>
+      <nodes xmi:type="outgoingMQ.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="892,202">
+        <translation xmi:type="utility:ConstantString" string="outgoingMQ"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="449,20" computeExpression="esql://routine/#exceptionFaulthandler_exceptionTreeAsXMLNSC.Main">
+        <translation xmi:type="utility:ConstantString" string="exceptionTreeAsXMLNSC"/>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="690,20" messageDomain="BLOB" resetMessageDomain="true">
+        <translation xmi:type="utility:ConstantString" string="castToBLOB"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="825,20" computeExpression="esql://routine/#exceptionFaulthandler_castExceptionBLOBtoEnvString.Main">
+        <translation xmi:type="utility:ConstantString" string="castExceptionBLOBtoEnvString"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="466,111" computeExpression="esql://routine/#exceptionFaulthandler_inputDataASXMLNSC.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="inputTreeAsXMLNSC"/>
+      </nodes>
+      <nodes xmi:type="ComIbmResetContentDescriptor.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="685,111" messageDomain="BLOB" resetMessageDomain="true">
+        <translation xmi:type="utility:ConstantString" string="castToBLOB2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="93,20">
+        <translation xmi:type="utility:ConstantString" string="Flow Order"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="266,20">
+        <translation xmi:type="utility:ConstantString" string="Flow Order1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="842,111" computeExpression="esql://routine/#exceptionFaulthandler_castInputBLOBtoEnvString.Main">
+        <translation xmi:type="utility:ConstantString" string="castInputBLOBtoEnvString"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="506,202" computeExpression="esql://routine/#exceptionFaulthandler_setMQMD.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="setMQMD"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.match" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_14" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_CCSID">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_CCSID" bundleName="exceptionFaulthandler" pluginId="tip000-common-faulthandling-lib"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

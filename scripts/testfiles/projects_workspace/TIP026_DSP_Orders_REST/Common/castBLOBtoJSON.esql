@@ -1,0 +1,26 @@
+BROKER SCHEMA Common
+
+
+CREATE COMPUTE MODULE castBLOBtoJSON
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE inputRef REFERENCE TO InputRoot.BLOB.BLOB;
+		
+		IF LASTMOVE(inputRef) THEN
+			
+			CREATE LASTCHILD OF OutputRoot DOMAIN('JSON') PARSE(inputRef);
+			DECLARE responseCodeCur REFERENCE TO InputRoot.HTTPResponseHeader;
+			MOVE responseCodeCur FIRSTCHILD NAME 'X-Original-HTTP-Status-Code';
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = FIELDVALUE(responseCodeCur);
+			
+		ELSE
+			
+			SET OutputRoot = InputRoot;
+			SET OutputLocalEnvironment = InputLocalEnvironment;
+			
+		END IF;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

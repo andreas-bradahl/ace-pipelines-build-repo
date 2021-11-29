@@ -1,0 +1,68 @@
+BROKER SCHEMA getChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlConstructOrderHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD OutputRoot.XMLNSC;
+		DECLARE outputRootRef REFERENCE TO OutputRoot.XMLNSC;
+		DECLARE optimizedOrderLinesRef REFERENCE TO Environment;
+		DECLARE orderHeadRef REFERENCE TO Environment;
+		
+		DECLARE originRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		DECLARE OIZ163MI_GetHeadRef REFERENCE TO Environment.Variables.HTTPResponses.OIZ163MI_GetInstHead.Item;
+		
+		DECLARE orderStatusIs20 BOOLEAN;
+		
+		IF OIZ163MI_GetHeadRef.STAT = '20' THEN
+			SET orderStatusIs20 = TRUE;
+		ELSE
+			SET orderStatusIs20 = FALSE;
+		END IF;
+		
+		CREATE LASTCHILD OF outputRootRef AS orderHeadRef NAMESPACE(ns) NAME 'getChangedSubscriptionOrderDeliveryResponse';
+		
+		SET orderHeadRef.ns:companyNumber = originRequestRef.ns:companyNumber;
+		SET orderHeadRef.ns:orderNumber = OIZ163MI_GetHeadRef.RORD;
+		SET orderHeadRef.ns:customerNumber = OIZ163MI_GetHeadRef.CUNO;
+		SET orderHeadRef.ns:customerReference = OIZ163MI_GetHeadRef.YREF;
+		SET orderHeadRef.ns:orderStatus = OIZ163MI_GetHeadRef.STAT;
+		SET orderHeadRef.ns:requestedDeliveryDate = CAST(CAST(originRequestRef.ns:requestedDeliveryDate AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+		SET orderHeadRef.ns:firstDeliveryDate = CAST(CAST(OIZ163MI_GetHeadRef.RAST AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+		SET orderHeadRef.ns:validFromDate = CAST(CAST(OIZ163MI_GetHeadRef.FDAT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+		
+		CREATE FIELD orderHeadRef.ns:validToDate;
+		IF OIZ163MI_GetHeadRef.TDAT = '99999999' THEN
+			
+			SET orderHeadRef.ns:validToDate = '';
+			
+		ELSE
+			
+			IF OIZ163MI_GetHeadRef.TDAT = NULL THEN
+				SET orderHeadRef.ns:validToDate = '';
+			ELSE
+				SET orderHeadRef.ns:validToDate = CAST(CAST(OIZ163MI_GetHeadRef.TDAT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+			END IF;
+			
+		END IF;
+		
+		SET orderHeadRef.ns:deliveryWeekdayNumber = OIZ163MI_GetHeadRef.DEWD;
+		SET orderHeadRef.ns:deliveryIntervalDays = OIZ163MI_GetHeadRef.RADD;
+		SET orderHeadRef.ns:canUpdate = orderStatusIs20;
+		SET orderHeadRef.ns:canDelete = orderStatusIs20;
+		SET orderHeadRef.ns:canAddOrderlines = orderStatusIs20;
+		SET orderHeadRef.ns:canSendComplaint = FALSE;
+		SET orderHeadRef.ns:canAddPromotionalProducts = FALSE;
+		SET orderHeadRef.ns:canCopyOrder = TRUE;
+		
+		FOR optimizedOrderLines AS InputRoot.XMLNSC.ns:getChangedSubscriptionOrderDeliveryResponse.ns:optimizedOrderLines[] DO
+			
+			CREATE LASTCHILD OF orderHeadRef AS optimizedOrderLinesRef NAMESPACE(ns) NAME 'optimizedOrderLines';
+			SET optimizedOrderLinesRef = optimizedOrderLines;
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

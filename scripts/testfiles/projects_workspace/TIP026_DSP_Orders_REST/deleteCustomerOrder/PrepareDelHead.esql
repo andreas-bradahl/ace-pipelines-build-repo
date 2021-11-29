@@ -1,0 +1,14 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareDelHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest;
+		
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = orderRequestRef.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO =  orderRequestRef.orderNumber;
+		
+	END;
+END MODULE;

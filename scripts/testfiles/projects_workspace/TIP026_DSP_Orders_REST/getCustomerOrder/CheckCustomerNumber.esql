@@ -1,0 +1,22 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckCustomerNumber
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF Environment.Variables.HTTPResponses.GetHead.CUNO = Environment.Variables.Global.customer_number THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'WRONG_CUSTOMER';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

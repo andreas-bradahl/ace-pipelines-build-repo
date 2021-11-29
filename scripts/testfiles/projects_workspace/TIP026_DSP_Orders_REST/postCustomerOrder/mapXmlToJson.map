@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postCustomerOrder" version="8.0.5.0" xmlns:map="postCustomerOrder">
+    <input path="/putCustomerOrder/customerOrder.xsd"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://TIP026_DSP_Orders_REST/customerOrder"/>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapXmlToJson">
+        <input namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="mb:msg(newOrder,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_newOrder"/>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="ComIbmMessageAssembly_JSON">
+            <cast derivedFrom="MB:JSON_operation_response" path="$ComIbmMessageAssembly_JSON/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}NewOrder" ref="var1"/>
+        </output>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/Properties"/>
+            <output path="$ComIbmMessageAssembly_JSON/Properties"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/companyNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/companyNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/customerNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/customerWarehouse"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerWarehouse"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/orderType"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderType"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/requestedDeliveryDate"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/requestedDeliveryDate"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/estimatedOrderAmount"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/estimatedOrderAmount"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/customerOrderNumber"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerOrderNumber"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/customerReference"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerReference"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/orderName"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderName"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/TINEReference"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/TINEReference"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/orderComment"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderComment"/>
+        </move>
+        <foreach>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/orderLines" var="orderLines"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderLines/Item"/>
+            <condition>
+                <if>
+                    <input path="$orderLines/lostSale" var="lostSale"/>
+                    <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderLines/Item"/>
+                    <test lang="xpath">fn:boolean($lostSale/in:isLostSales ) =  fn:true()</test>
+                    <move>
+                        <input path="$lostSale/sku" var="sku"/>
+                        <output path="sku"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/quantity" var="quantity"/>
+                        <output path="quantity"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/lostSalesWarehouse" var="lostSalesWarehouse"/>
+                        <output path="lostSalesWarehouse"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/orderLineUnit" var="orderLineUnit"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine1" var="discountLine1"/>
+                        <output path="discountLine1"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine2" var="discountLine2"/>
+                        <output path="discountLine2"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine3" var="discountLine3"/>
+                        <output path="discountLine3"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine4" var="discountLine4"/>
+                        <output path="discountLine4"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine5" var="discountLine5"/>
+                        <output path="discountLine5"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/discountLine6" var="discountLine6"/>
+                        <output path="discountLine6"/>
+                    </move>
+                    <move>
+                        <input path="$lostSale/isLostSales" var="isLostSales"/>
+                        <output path="isLostSales"/>
+                    </move>
+                </if>
+                <else>
+                    <input path="$orderLines/notLostSale"/>
+                    <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderLines/Item"/>
+                    <move>
+                        <input path="sku"/>
+                        <output path="sku"/>
+                    </move>
+                    <move>
+                        <input path="quantity"/>
+                        <output path="quantity"/>
+                    </move>
+                    <move>
+                        <input path="lostSalesWarehouse"/>
+                        <output path="lostSalesWarehouse"/>
+                    </move>
+                    <move>
+                        <input path="orderLineUnit"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="discountLine1"/>
+                        <output path="discountLine1"/>
+                    </move>
+                    <move>
+                        <input path="discountLine2"/>
+                        <output path="discountLine2"/>
+                    </move>
+                    <move>
+                        <input path="discountLine3"/>
+                        <output path="discountLine3"/>
+                    </move>
+                    <move>
+                        <input path="discountLine4"/>
+                        <output path="discountLine4"/>
+                    </move>
+                    <move>
+                        <input path="discountLine5"/>
+                        <output path="discountLine5"/>
+                    </move>
+                    <move>
+                        <input path="discountLine6"/>
+                        <output path="discountLine6"/>
+                    </move>
+                    <move>
+                        <input path="isLostSales"/>
+                        <output path="isLostSales"/>
+                    </move>
+                </else>
+            </condition>
+        </foreach>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/clipCard"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/clipCard"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_newOrder/newOrder/prevOrderType"/>
+            <output path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/prevOrderType"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

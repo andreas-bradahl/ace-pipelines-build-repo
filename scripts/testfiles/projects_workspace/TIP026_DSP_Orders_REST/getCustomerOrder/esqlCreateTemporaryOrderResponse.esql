@@ -1,0 +1,61 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCreateTemporaryOrderResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputRoot.JSON.Data;
+		
+		DECLARE outRef REFERENCE TO OutputRoot.JSON.Data;
+		DECLARE globalRef REFERENCE TO Environment.Variables.Global;
+		DECLARE getBatchHeadRef REFERENCE TO Environment.Variables.HTTPResponses.GetBatchHead.Item;
+		
+		SET outRef.orderNumber = getBatchHeadRef.ORNO;
+		SET outRef.containsTempLines = TRUE; 
+		SET outRef.isTemporaryOrder = TRUE;
+		SET outRef.companyNumber = globalRef.company_number;
+		SET outRef.customerNumber = globalRef.customer_number;
+		SET outRef.customerOrderNumber = getBatchHeadRef.CUOR;
+		SET outRef.customerReference = getBatchHeadRef.YREF;
+		SET outRef.TINEReference = getBatchHeadRef.OREF;
+		SET outRef.orderName = getBatchHeadRef.DSTX;
+		SET outRef.orderStatusLowest = getBatchHeadRef.ORSL;
+		SET outRef.orderStatusHighest = getBatchHeadRef.ORST; 
+		SET outRef.orderType = getBatchHeadRef.ORTP; 
+		SET outRef.requestedDeliveryDate = CAST(getBatchHeadRef.RLDT AS DATE FORMAT 'yyyyMMdd');
+		SET outRef.canUpdate = FALSE; 
+		SET outRef.canDelete = FALSE;
+		
+		DECLARE orderLinesRef REFERENCE TO Environment;
+		DECLARE itemRef REFERENCE TO Environment;
+		
+		CREATE LASTCHILD OF outRef AS orderLinesRef IDENTITY(JSON.Array)orderLines;
+		
+		FOR temporaryOrder AS Environment.Variables.TemporaryLines.Item[] DO
+			
+			CREATE LASTCHILD OF orderLinesRef AS itemRef NAME 'Item';
+			
+			SET itemRef.orderLineNumber = temporaryOrder.PONR;
+			SET itemRef.orderLineSuffix = temporaryOrder.POSX;
+			SET itemRef.sku = temporaryOrder.ITNO;
+			SET itemRef.itemDescription = temporaryOrder.ITDS;
+			
+			IF CONTAINS(temporaryOrder.ORQT, '.') THEN
+				SET itemRef.quantityOrderLineUnit = SUBSTRING(temporaryOrder.ORQT BEFORE '.');
+			ELSE
+				SET itemRef.quantityOrderLineUnit = temporaryOrder.ORQT;
+			END IF;
+			
+			SET itemRef.orderLineUnit = temporaryOrder.ALUN;
+			SET itemRef.deliveryDate = outRef.requestedDeliveryDate;
+			
+			SET itemRef.canIncrease = FALSE;
+			SET itemRef.canDecrease = FALSE;
+			SET itemRef.canDelete = FALSE;
+			SET itemRef.addInReview = TRUE;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

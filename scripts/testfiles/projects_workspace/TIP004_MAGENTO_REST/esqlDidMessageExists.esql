@@ -1,0 +1,23 @@
+
+
+CREATE COMPUTE MODULE esqlDidMessageExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		IF Environment.Variables.Flags.MessageExists THEN		
+			
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Message Exists');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+		
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+						
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Message Doesnt Exists');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+					
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

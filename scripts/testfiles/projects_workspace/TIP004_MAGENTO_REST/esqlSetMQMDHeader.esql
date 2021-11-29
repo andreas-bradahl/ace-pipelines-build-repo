@@ -1,0 +1,26 @@
+
+
+CREATE COMPUTE MODULE esqlSetMQMDHeader
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.Properties = InputRoot.Properties;
+        SET OutputRoot.Properties.CodedCharSetId = 1208;
+        CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD' NAME 'MQMD';
+
+        SET OutputRoot.MQMD.Version = MQMD_VERSION_2;
+        SET OutputRoot.MQMD.Encoding = MQENC_NATIVE;
+        SET OutputRoot.MQMD.CodedCharSetId = 1208;
+        SET OutputRoot.MQMD.Format =  MQFMT_STRING;
+        SET OutputRoot.MQMD.Persistence = MQPER_PERSISTENT;
+        SET OutputRoot.MQMD.MsgType = 8; 
+
+        SET OutputRoot.MQMD.CorrelId = MQMI_NONE;
+        SET OutputRoot.MQMD.Offset = CAST ('0' AS INTEGER);
+        SET OutputRoot.MQMD.MsgFlags = CAST ('0' AS INTEGER);
+        SET OutputRoot.MQMD.OriginalLength = CAST ('-1' AS INTEGER);  
+        SET OutputRoot.JSON = InputRoot.JSON;
+
+        RETURN TRUE;
+	END;
+END MODULE;

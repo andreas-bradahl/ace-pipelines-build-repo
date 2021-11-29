@@ -1,0 +1,247 @@
+BROKER SCHEMA getCustomerOrder
+
+-- TODO : add to properties
+CREATE DATABASE MODULE checkOrderTypeAndSetBooleanValues
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		
+		DECLARE orderType CHAR Environment.Variables.HTTPResponses.GetHead.ORTP;
+		
+		DECLARE companyNumber CHAR globalVarRef.company_number;
+		DECLARE customerNumber CHAR globalVarRef.customer_number;
+		DECLARE paymentMethod CHAR globalVarRef.paymentMethod;
+		
+		DECLARE noTempLines BOOLEAN NOT COALESCE(globalVarRef.haveTempLines, false);
+		
+		DECLARE canUpdate BOOLEAN noTempLines;
+		DECLARE canIncrease BOOLEAN noTempLines;
+		DECLARE canDecrease BOOLEAN noTempLines;
+		DECLARe canDelete BOOLEAN noTempLines;
+		DECLARE canAddOPEXProducts BOOLEAN noTempLines;
+		DECLARE canCopyOrder BOOLEAN true;
+		DECLARE canSendComplaint BOOLEAN true;
+		DECLARE canAddOrderline BOOLEAN noTempLines;
+		
+		DECLARE zNoChange CHAR 'zNoChangeOrderTypeTIP';
+		DECLARE zCanOnlyLower CHAR 'zCanOnlyLowerOrderType';
+		DECLARE zNoDelete CHAR 'zNoDeleteItemClass';
+		DECLARE zCreditCard CHAR 'zKreditkortsBetalningsmetod';
+		DECLARE zNoAddOpex CHAR 'zCantAddOPEXItemsOrderType';
+		DECLARE zNoCopy CHAR 'zNoCopyOrderType';
+		DECLARE zNoComplaint CHAR 'zOrderTypesWithoutComplaintsLink';
+		DECLARE zComplaintMinStatus CHAR 'zComplaintMinStatus';
+		DECLARE zComplaintMaxStatus CHAR 'zComplaintMaxStatus';
+		DECLARE zExtraDelivery CHAR 'zMvxOrdertype_extra';
+		DECLARE zExpressDelivery CHAR 'zMvxOrdertype_express';
+		
+		DECLARE match BOOLEAN;
+		
+		-- orderTypes that can't be changed
+		SET match = queryAndMatch(orderType, zNoChange);
+		IF match THEN
+			SET canAddOrderline = canAddOrderline AND NOT match;
+			SET canUpdate = canUpdate AND NOT match;
+			SET canDelete = canDelete AND NOT match;
+		END IF; 
+		
+		-- orderTypes that can only be decreased or deleted
+		SET match = queryAndMatch(orderType, zCanOnlyLower);
+		IF match THEN
+			SET canAddOrderline = canAddOrderline AND NOT match;
+			SET canUpdate =  canUpdate AND match;
+			SET canDelete = canDelete AND match;
+			SET canIncrease = canIncrease AND NOT match;
+			SET canDecrease = canDecrease AND match;
+			SET canDelete = canDelete AND match;
+		END IF;
+		
+		-- store a list of no delete items in environment
+		CREATE FIELD Environment.Variables.Global.noDeleteItems;
+		
+		IF canDelete THEN
+			
+			DECLARE noDeleteItemsRef REFERENCE TO Environment.Variables.Global.noDeleteItems;
+			 
+			FOR entry AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+				
+				DECLARE itno CHAR entry.ITNO;
+				
+				IF NOT EXISTS(SELECT i FROM noDeleteItemsRef.ITNO[] AS i WHERE i = itno) 
+					AND isNoDeleteItem(itno, orderType, zNoDelete) 
+					AND NOT EXISTS(SELECT i FROM noDeleteItemsRef.ITNO[] AS i WHERE i = itno) THEN --TODO check
+					
+					CREATE LASTCHILD OF noDeleteItemsRef NAME 'ITNO' VALUE itno;
+					
+				END IF; 
+				
+			END FOR;
+			
+		END IF;
+		
+		-- check if customer is a creditCard Customer
+		IF isCreditCardCustomer(paymentMethod, zCreditCard) THEN
+			SET canAddOrderline = false;
+			SET canUpdate = canUpdate AND true;
+			SET canIncrease = false;
+			SET canDelete = canDelete AND true;
+			SET canDecrease = canDecrease AND true;
+			
+		END IF;
+		
+		-- check if orderType can't add OPEX products
+		SET canAddOPEXProducts = canAddOPEXProducts AND allowedOrderType(orderType, zNoAddOpex);
+		
+		-- check if orderType can't be copied
+		SET canCopyOrder = canCopyOrder AND allowedOrderType(orderType, zNoCopy);
+		
+		-- check if orderType can send complaint
+		SET canSendComplaint = canSendComplaint AND allowedOrderType(orderType, zNoComplaint);
+		
+		-- check if date is within allowed range for sending a complaint
+		SET canSendComplaint = canSendComplaint AND isComplaintWithinDateRange(globalVarRef.requestedDeliveryDate);
+		
+		-- set orderLineComplaint status;
+		SET globalVarRef.orderLineComplaintMinStatus = getSingleValueFromApplicationData(zComplaintMinStatus, LocalEnvironment);
+		SET globalVarRef.orderLineComplaintMaxStatus = getSingleValueFromApplicationData(zComplaintMaxStatus, LocalEnvironment);
+		
+		
+		-- store variables in environment
+		SET globalVarRef.canUpdate = canUpdate;
+		SET globalVarRef.canIncrease = canIncrease;
+		SET globalVarRef.canDecrease = canDecrease;
+		SET globalVarRef.canDelete = canDelete;
+		SET globalVarRef.canAddOPEXProducts = canAddOPEXProducts;
+		SET globalVarRef.canCopyOrder = canCopyOrder;
+		SET globalVarRef.canSendComplaint = canSendComplaint;
+		SET globalVarRef.canAddOrderline = canAddOrderline;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE FUNCTION isComplaintWithinDateRange(IN datum DATE) RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE offsetDate DATE getDateByOffset(1, true, datum);
+		IF CURRENT_DATE > offsetDate THEN
+			RETURN FALSE;
+		ELSE
+			RETURN TRUE;
+		END IF;
+		 
+	
+	
+	END;
+	
+CREATE FUNCTION allowedOrderType(IN orderType CHAR, IN parameter CHAR) RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD LocalEnvironment.{parameter};
+		DECLARE allowedOrderTypeRef REFERENCE TO LocalEnvironment.{parameter};
+				
+		DECLARE allowedOrderType BOOLEAN true;
+		
+		DECLARE sqlQuery CHAR 'select code from Code code inner join CodeType codetype on codetype.id=code.typeId where [name]=?';
+		
+		SET allowedOrderTypeRef.code[] = PASSTHRU(sqlQuery, parameter);
+		
+		FOR entry AS allowedOrderTypeRef.code[] DO
+		
+			SET entry = FIELDVALUE(entry.code);
+		 	DELETE FIELD entry.code;
+			 	
+		END FOR;
+		
+		FOR code AS allowedOrderTypeRef.code[] DO
+			
+			IF orderType = code THEN
+				
+				SET allowedOrderType = false;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN allowedOrderType;
+	END;
+	
+CREATE FUNCTION isCreditCardCustomer(IN paymentMethod CHAR, IN parameter CHAR) RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD LocalEnvironment.isCreditCardCustomer;
+		DECLARE isCreditCardCustomerRef REFERENCE TO LocalEnvironment.isCreditCardCustomer;
+				
+		DECLARE isCreditCardCustomer BOOLEAN false;
+		
+		DECLARE sqlQuery CHAR 'select value from ApplicationData where parameter=?';
+		
+		SET isCreditCardCustomerRef = PASSTHRU(sqlQuery, parameter);
+		
+		FOR value AS isCreditCardCustomerRef.value[] DO
+			
+			IF paymentMethod = value THEN
+				SET isCreditCardCustomer = true;
+			END IF;
+			
+		END FOR;
+		
+		RETURN isCreditCardCustomer;
+	END;
+	
+CREATE FUNCTION isNoDeleteItem (IN itno CHAR, IN orderType CHAR, IN zNoDelete CHAR) RETURNS BOOLEAN
+	BEGIN
+		DECLARE noDeleteItem BOOLEAN false;
+		
+		DECLARE noDeleteItemClassesQueryRef, noDeleteItemClassesQueryItemCursor REFERENCE TO LocalEnvironment.noDeleteItemClassesQueries;
+		DECLARE noDeleteItemClassesRef, noDeleteItemClassesItemCursor REFERENCE TO Environment.Variables.Global.noDeleteItemClasses;
+		
+		IF NOT LASTMOVE(noDeleteItemClassesQueryRef) THEN
+			
+			CREATE FIELD LocalEnvironment.noDeleteItemClassesQueries AS noDeleteItemClassesQueryRef;
+			MOVE noDeleteItemClassesQueryItemCursor TO noDeleteItemClassesQueryRef;
+			
+		END IF;
+		
+		MOVE noDeleteItemClassesQueryItemCursor FIRSTCHILD NAME itno;
+		IF NOT LASTMOVE(noDeleteItemClassesQueryItemCursor) THEN
+			
+			DECLARE databaseQuery CHAR 'SELECT code as itemClass FROM Code code INNER JOIN CodeType on code.typeId = codeType.id WHERE name = ?';
+			SET noDeleteItemClassesQueryItemCursor.{itno}.itemClass[] = PASSTHRU(databaseQuery, zNoDelete);
+			
+			FOR entry AS noDeleteItemClassesQueryRef.{itno}.itemClass[] DO
+				
+				SET entry = FIELDVALUE(entry.itemClass);
+			 	DELETE FIELD entry.itemClass;
+			 	
+			END FOR;
+			
+		END IF;
+		
+		FOR itemclass AS Environment.Variables.Global.ItemClasses.{itno}.ITEMCLASS[] DO
+			
+			IF EXISTS(SELECT i FROM noDeleteItemClassesQueryRef.{itno}.itemClass[] AS i WHERE i = itemclass) THEN
+				 
+				SET noDeleteItem = true;
+				RETURN noDeleteItem;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN noDeleteItem;
+	END;
+	
+CREATE FUNCTION queryAndMatch (IN orderType CHAR, IN databaseKeyword CHAR) RETURNS BOOLEAN
+	BEGIN
+		DECLARE databaseQuery CHAR 'SELECT code AS orderType FROM Code code INNER JOIN CodeType on code.typeId = codeType.id WHERE name = ?';
+		
+		SET LocalEnvironment.queryAndMatch.result[] = PASSTHRU(databaseQuery, databaseKeyword);
+		
+		DECLARE matchFound BOOLEAN EXISTS(SELECT r.* FROM LocalEnvironment.queryAndMatch.result[] AS r WHERE r.orderType = orderType);
+		
+		DELETE FIELD LocalEnvironment.queryAndMatch;
+		
+		
+		RETURN matchFound;
+	END;
+END MODULE;

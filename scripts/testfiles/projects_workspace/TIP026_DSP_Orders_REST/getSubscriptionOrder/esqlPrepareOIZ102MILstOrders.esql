@@ -1,0 +1,24 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ102MILstOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ102MI/LstOrders';
+		
+		DECLARE requestedDeliveryDateDATE DATE CAST(Environment.Variables.Global.OriginRequest.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		DECLARE requestedDeliveryDateCHARACTER CHARACTER CAST(requestedDeliveryDateDATE AS CHARACTER FORMAT 'yyyyMMdd');
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.companyNumber; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = Environment.Variables.Global.OriginRequest.orderNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORDF = requestedDeliveryDateCHARACTER;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RLDT = requestedDeliveryDateCHARACTER;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTY = 'F';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ANTP = '999';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

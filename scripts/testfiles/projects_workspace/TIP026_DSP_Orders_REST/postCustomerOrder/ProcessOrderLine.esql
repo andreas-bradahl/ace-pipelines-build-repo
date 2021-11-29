@@ -1,0 +1,59 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE ProcessOrderLine
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef, orderLineCursor REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE addBatchHeadNameValueList REFERENCE TO Environment.JSONResponse.AddBatchHead.Data.MIRecord.Item.NameValue;
+		DECLARE ORNO CHAR GetValueFromNameValueList('ORNO', addBatchHeadNameValueList);
+		MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+		MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+		DECLARE orderLineCursorIndex INT 0;
+		
+		SET Environment.Variables.invalidOrderLine = FALSE;
+		
+		DECLARE optimizeOrderLines BOOLEAN varRef.optimizeOrderLines;
+		
+		WHILE LASTMOVE(orderLineCursor) DO
+			
+			IF Environment.Variables.invalidOrderLine THEN
+				RETURN FALSE;
+			END IF;
+						
+			SET orderLineCursorIndex = orderLineCursorIndex + 1;
+			SET varRef.orderLineCursorIndex = orderLineCursorIndex;
+			DECLARE canOptimizeOrderLine BOOLEAN orderLineCursor.canOptimizeOrderLine;
+			
+			SET varRef.optimizeOrderLines = optimizeOrderLines AND canOptimizeOrderLine;
+
+			IF orderLineCursor.isLostSales THEN
+				SET varRef.isLostSales = 1;
+				SET OutputLocalEnvironment.Destination.HTTP.QueryString.LSLS = 1;
+				PROPAGATE TO TERMINAL 'out1';
+				
+			ELSE
+				SET varRef.isLostSales = 0;
+				SET OutputLocalEnvironment.Destination.HTTP.QueryString.LSLS = 0;
+				PROPAGATE TO TERMINAL 'out1';
+				
+			END IF;
+			
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+		
+		IF Environment.Variables.invalidOrderLine THEN
+			RETURN FALSE;
+		END IF;
+		
+		SET varRef.optimizeOrderLines = optimizeOrderLines;
+
+		DELETE FIELD varRef.isLostSales;
+		DELETE FIELD varRef.orderLineCursorIndex;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

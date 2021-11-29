@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse" xmlns:paout="http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse">
+    <xsd:simpleType name="productNumber">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="plannedAvailableDate">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="availableQuantity">
+    	<xsd:restriction base="xsd:int"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="warehouse">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="available">
+    	<xsd:restriction base="xsd:boolean"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="partialAvailable">
+    	<xsd:restriction base="xsd:boolean"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="delayedDeliveryDate">
+    	<xsd:restriction base="xsd:string"></xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="product">
+    	<xsd:sequence>
+    		<xsd:element name="productNumber"
+    			type="paout:productNumber">
+    		</xsd:element>
+    		<xsd:element name="plannedAvailableDate"
+    			type="paout:plannedAvailableDate">
+    		</xsd:element>
+    		<xsd:element name="delayedDeliveryDate"
+    			type="paout:delayedDeliveryDate">
+    		</xsd:element>
+    		<xsd:element name="availableQuantity"
+    			type="paout:availableQuantity">
+    		</xsd:element>
+    		<xsd:element name="warehouse" type="paout:warehouse"></xsd:element>
+    		<xsd:element name="available" type="paout:available"></xsd:element>
+    		<xsd:element name="partialAvailable"
+    			type="paout:partialAvailable">
+    		</xsd:element>
+    		<xsd:element name="supplyingWarehouse" type="xsd:string"></xsd:element>
+    		<xsd:element name="atCustomersWarehouse"
+    			type="xsd:boolean">
+    		</xsd:element>
+
+    		<xsd:element name="unit" type="xsd:string" maxOccurs="1" minOccurs="0"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="getProductAvailabilityResponse" type="paout:getProductAvailabilityResponse"></xsd:element>
+
+    <xsd:complexType name="getProductAvailabilityResponse">
+    	<xsd:sequence>
+    		<xsd:element name="product" type="paout:product" maxOccurs="unbounded" minOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

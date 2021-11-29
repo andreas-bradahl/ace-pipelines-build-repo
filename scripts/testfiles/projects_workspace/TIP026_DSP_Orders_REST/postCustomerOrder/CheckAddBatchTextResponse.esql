@@ -1,0 +1,16 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckAddBatchTextResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE responseMIRecordRef REFERENCE TO InputRoot.JSON.Data.MIRecord;
+		
+		IF NOT LASTMOVE(responseMIRecordRef) THEN
+			SET Environment.Variables.prepareAddBatchTextLoopControl = false;
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

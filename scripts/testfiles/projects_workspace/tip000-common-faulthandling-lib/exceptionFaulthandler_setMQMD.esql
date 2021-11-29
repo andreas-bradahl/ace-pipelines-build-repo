@@ -1,0 +1,26 @@
+
+
+CREATE COMPUTE MODULE exceptionFaulthandler_setMQMD
+
+	DECLARE UDP_CCSID EXTERNAL INTEGER;
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+  		SET OutputRoot = InputRoot;
+
+  		SET OutputRoot.Properties.CodedCharSetId = UDP_CCSID;
+        CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD' NAME 'MQMD';
+
+        SET OutputRoot.MQMD.Version = MQMD_VERSION_2;
+        SET OutputRoot.MQMD.Encoding = MQENC_NATIVE;
+        SET OutputRoot.MQMD.CodedCharSetId = UDP_CCSID;
+        SET OutputRoot.MQMD.Format =  MQFMT_STRING;
+        SET OutputRoot.MQMD.Persistence = MQPER_PERSISTENT;
+        SET OutputRoot.MQMD.MsgType = 8;
+
+        SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.CorrelId;
+        SET OutputRoot.MQMD.Offset= CAST ('0' AS INTEGER);
+        SET OutputRoot.MQMD.MsgFlags = CAST ('0' AS INTEGER);
+        SET OutputRoot.MQMD.OriginalLength = CAST ('-1' AS INTEGER);  
+	END;
+END MODULE;

@@ -1,0 +1,25 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ340MILstSupplSummary
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ340MI/LstSupplSummary';
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.ns:customerNumber;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDZ = Environment.Variables.Global.OriginRequest.ns:deliveryDate;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.POPN = InputLocalEnvironment.Variables.sku;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = InputLocalEnvironment.Variables.quantity;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = Environment.Variables.HTTPResponses.MDBREADMI_GetOCUSMA00.Item.FACI;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPLM = Environment.Variables.HTTPResponses.MDBREADMI_GetOCUSMA00.Item.SPLM;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.BCKO = 2;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.PADL = 2;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,19 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlIterateOverOrderLineNumbers
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		FOR orderLineNumber AS InputLocalEnvironment.Variables.CurrentOrderLine.ns:orderLineNumbers[] DO
+			
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine.ns:sku = InputLocalEnvironment.Variables.CurrentOrderLine.ns:sku;
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine.ns:action = InputLocalEnvironment.Variables.CurrentOrderLine.ns:action;
+			SET OutputLocalEnvironment.Variables.CurrentOrderLine.ns:orderLineNumbers = orderLineNumber;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END FOR;
+
+		RETURN FALSE;
+	END;
+END MODULE;

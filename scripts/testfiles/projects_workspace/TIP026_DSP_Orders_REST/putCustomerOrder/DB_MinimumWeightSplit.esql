@@ -1,0 +1,96 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE DB_MinimumWeightSplit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE error BOOLEAN FALSE;
+		DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+		
+		DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+			SET error = minimumWeight(customerWarehouseOrderRef);
+		END IF;
+			
+		IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+			SET error = minimumWeight(promotionalOrder);
+		END IF;
+	
+		IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+			SET error = minimumWeight(normalOrder);	
+		END IF;
+		
+		IF error THEN
+			
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'MINIMUM_WEIGHT', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE minimumWeight (IN orderLinesRef REFERENCE)
+RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQuery CHAR	'
+								SELECT minweight.minimumWeight, item.weight FROM zMinimumWeight minweight
+								INNER JOIN Item item ON item.id=minweight.itemId
+								WHERE itemnumber = ?
+								';
+		SET sqlQuery = TRIM(sqlQuery);
+		DECLARE minimumWeightCheck BOOLEAN true;
+		DECLARE productNumber CHAR '';
+		DECLARE zero DECIMAL 0;
+		DECLARE action CHAR '';
+		DECLARE validAction1 CHAR 'add';
+		DECLARE validAction2 CHAR 'upd';
+		DECLARE isValidAction BOOLEAN;
+		DECLARE isLostSales BOOLEAN;
+		
+		FOR orderLine AS orderLinesRef.orderLines.Item[] DO
+			SET action = LOWER(TRIM(orderLine.action));
+			SET isLostSales = orderLine.isLostSales;
+			
+			IF NOT isLostSales AND (action = validAction1 OR action = validAction2)  THEN
+				SET isValidAction = true;
+			ELSE
+				SET isValidAction = false;
+			END IF;	
+			
+			IF isValidAction AND minimumWeightCheck THEN
+				SET productNumber = orderLine.sku;
+				SET orderLine.minimumWeight = PASSTHRU(sqlQuery, productNumber);
+				SET orderLine.minimumWeight = CAST(COALESCE(FIELDVALUE(orderLine.minimumWeight.minimumWeight), 0) AS DECIMAL);
+				SET orderLine.unitWeight = COALESCE(FIELDVALUE(orderLine.minimumWeight.weight), zero);
+				DECLARE totalWt DECIMAL CAST(FIELDVALUE(orderLine.quantity) AS DECIMAL) * FIELDVALUE(orderLine.unitWeight);
+				
+				IF orderLine.minimumWeight > totalWt THEN
+					SET minimumWeightCheck = FALSE;
+				END IF;
+				
+				DELETE FIELD orderLine.minimumWeight.minimumWeight;
+			END IF;
+		END FOR;
+		
+		IF minimumWeightCheck THEN			
+		ELSE
+	
+			RETURN TRUE;
+			
+		END IF;
+			
+		RETURN FALSE;
+			
+	END;
+
+END MODULE;

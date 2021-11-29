@@ -1,0 +1,20 @@
+BROKER SCHEMA getChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckOrderInM3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF NOT(EXISTS(Environment.Variables.HTTPResponses.OIZ163MI_GetInstHead.Item[])) OR Environment.Variables.HTTPResponses.OIZ163MI_GetInstHead.Item.CUNO = '' THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'CHANGED_ORDER_NOT_FOUND';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

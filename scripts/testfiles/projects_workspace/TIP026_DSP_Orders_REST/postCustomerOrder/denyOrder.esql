@@ -1,0 +1,12 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE denyOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'PRODUCT_NOT_VALID_FOR_EXPRESS';
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,13 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ100MIDelHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.Variables.Global.OriginRequest;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = orderRequestRef.orderNumber;
+				
+		RETURN TRUE;
+	END;
+END MODULE;

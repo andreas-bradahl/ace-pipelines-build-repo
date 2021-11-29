@@ -1,0 +1,38 @@
+
+
+CREATE COMPUTE MODULE storeMessage
+	
+	DECLARE UDP_storeMessage EXTERNAL BOOLEAN;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyEntireMessage();
+		
+		IF UDP_storeMessage THEN
+		
+			CALL StoreEntireMessage();
+			CALL StoreEntireLocalEnvironment();
+			
+		ELSE
+			
+			SET Environment.Common.Logging.Input.Root = 'disabled';
+			SET Environment.Common.Logging.Input.LocalEnvironment = 'disabled';
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+	
+	CREATE PROCEDURE StoreEntireMessage() BEGIN
+		SET Environment.Common.Logging.Input.Root = InputRoot;
+	END;
+	
+	CREATE PROCEDURE StoreEntireLocalEnvironment() BEGIN
+		SET Environment.Common.Logging.Input.LocalEnvironment = InputLocalEnvironment;
+	END;
+END MODULE;

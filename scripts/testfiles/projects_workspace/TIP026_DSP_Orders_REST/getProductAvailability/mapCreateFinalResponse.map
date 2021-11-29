@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <inlinedXMLSchema targetNamespace="http://www.ibm.com/iib/msl/json"><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/iib/msl/json" xmlns:Q1="http://www.ibm.com/iib/msl/json">         
+            <xsd:include schemaLocation="/swagger.json"/>         
+    <xsd:complexType block="#all" name="JSONArray_1">         
+    <xsd:sequence>         
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="Item" nillable="true" type="Q1:getProductAvailabilityResponseObject"/>         
+    </xsd:sequence>         
+  </xsd:complexType>         
+</xsd:schema>]]></inlinedXMLSchema>
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="element1" type="xsd:string"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <input path="/getProductAvailabilityResponse.xsd" var="var"/>
+    <input path="/getProductAvailabilityResponse.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" targetNamespace="http://www.ibm.com/iib/msl/json" var="var6"/>
+    <input inlinedXMLSchema="true" path="../schema_1.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_1.xsd" var="var2"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var7"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var5"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse"/>
+        <namespace kind="supplement" prefix="io2" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapCreateFinalResponse">
+        <input path="$var3/mb:env(Environment)">
+            <cast path="Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse}getProductAvailabilityResponse" ref="var" var="any"/>
+        </input>
+        <output path="$var7/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="{http://TIP026_DSP_Orders_REST/getProductAvailabilityResponse}getProductAvailabilityResponse" ref="var" var="any1"/>
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="element1" ref="var1" var="any2"/>
+        </output>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var5/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}JSONArray_1" ref="var6" var="anyType"/>
+        </output>
+        <passthrough>
+            <input path="."/>
+            <output path="$Environment/."/>
+            <updates/>
+        </passthrough>
+        <foreach>
+            <input path="Variables/getProductAvailabilityResponse/product" var="product"/>
+            <output path="$MessageAssembly/JSON/spath('Data',2)/Item"/>
+            <move>
+                <input path="$product/productNumber" var="productNumber"/>
+                <output path="productNumber" var="productNumber1"/>
+            </move>
+            <move>
+                <input path="$product/plannedAvailableDate" var="plannedAvailableDate"/>
+                <output path="plannedAvailableDate" var="plannedAvailableDate1"/>
+            </move>
+            <move>
+                <input path="$product/delayedDeliveryDate" var="delayedDeliveryDate"/>
+                <output path="delayedDeliveryDate" var="delayedDeliveryDate1"/>
+            </move>
+            <condition>
+                <if>
+                    <input path="$product/availableQuantity" var="availableQuantity"/>
+                    <output path="availableQuantity" var="availableQuantity1"/>
+                    <test lang="xpath">fn:string-length(xs:string($availableQuantity)) &gt; 0</test>
+                    <convert>
+                        <input path="$availableQuantity/." var="availableQuantity"/>
+                        <output path="$availableQuantity1/." var="availableQuantity4"/>
+                    </convert>
+                </if>
+                <else>
+                    <output path="availableQuantity" var="availableQuantity3"/>
+                    <assign value="0">
+                        <output path="$availableQuantity3/." var="availableQuantity5"/>
+                    </assign>
+                </else>
+            </condition>
+            <move>
+                <input path="$product/warehouse" var="warehouse1"/>
+                <output path="customerWarehouse"/>
+            </move>
+            <move>
+                <input path="$product/available" var="available1"/>
+                <output path="available" var="available"/>
+            </move>
+            <move>
+                <input path="$product/partialAvailable" var="partialAvailable1"/>
+                <output path="partialAvailable" var="partialAvailable"/>
+            </move>
+            <move>
+                <input path="$product/atCustomersWarehouse" var="atCustomersWarehouse1"/>
+                <output path="atCustomersWarehouse" var="atCustomersWarehouse"/>
+            </move>
+            <move>
+                <input path="$product/supplyingWarehouse"/>
+                <output path="supplyingWarehouse"/>
+            </move>
+            <move>
+                <input path="$product/supplyingWarehouse"/>
+                <output path="warehouse"/>
+            </move>
+            <if>
+                <input path="$product/unit" var="unit"/>
+                <output path="unit"/>
+                <test lang="xpath">fn:string-length($unit) &gt; 0</test>
+                <move>
+                    <input path="$unit/."/>
+                    <output path="."/>
+                </move>
+            </if>
+        </foreach>
+    </mappingDeclaration>
+</mappingRoot>

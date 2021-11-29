@@ -1,0 +1,26 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckCurrentTimeAndOrderDeadline
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE chkDelDateRef REFERENCE TO Environment.JSONResponse.ChkDelDate;
+		DECLARE todaysTS TIMESTAMP CURRENT_TIMESTAMP;
+		-- DECLARE requestedDeliveryTS TIMESTAMP getDeadline(chkDelDateRef); -- keeping this for readability
+		DECLARE DCHK CHAR GetValueFromNameValueList('DCHK', chkDelDateRef.Data.MIRecord.Item.NameValue);
+		
+		IF DCHK = '1' OR todaysTS >= getDeadline(chkDelDateRef) THEN
+			SET Environment.Variables.DeadLineCheckPass = false;
+			
+		ELSE
+			SET Environment.Variables.DeadLineCheckPass = true;
+			
+		END IF;
+		
+		DELETE FIELD chkDelDateRef;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+

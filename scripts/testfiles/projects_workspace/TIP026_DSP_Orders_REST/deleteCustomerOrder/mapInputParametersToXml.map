@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="deleteCustomerOrder" version="8.0.5.0" xmlns:map="deleteCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">   
+          <xsd:element name="orderNumber" type="xsd:string"/>   
+    <xsd:element name="customerNumber" type="xsd:string"/>   
+    <xsd:element name="companyNumber" type="xsd:string"/>   
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var3"/>
+    <output path="/putCustomerOrder/customerOrder.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="supplement" prefix="out" uri="http://TIP026_DSP_Orders_REST/customerOrder"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputParametersToXml">
+        <input path="$var4/mb:msg(BLOB,assembly,BLOB,LocalEnvironment,Properties)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="companyNumber" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="customerNumber" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderNumber" ref="var3"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="mb:msg(deleteOrder,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_deleteOrder"/>
+        <function ref="normalize">
+            <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/companyNumber" var="companyNumber"/>
+            <output path="$ComIbmMessageAssembly_deleteOrder/deleteOrder/companyNumber"/>
+            <param name="input" value="$companyNumber"/>
+        </function>
+        <function ref="normalize">
+            <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/customerNumber" var="customerNumber"/>
+            <output path="$ComIbmMessageAssembly_deleteOrder/deleteOrder/customerNumber"/>
+            <param name="input" value="$customerNumber"/>
+        </function>
+        <function ref="normalize">
+            <input path="$MessageAssembly/LocalEnvironment/REST/Input/Parameters/orderNumber" var="orderNumber"/>
+            <output path="$ComIbmMessageAssembly_deleteOrder/deleteOrder/orderNumber"/>
+            <param name="input" value="$orderNumber"/>
+        </function>
+        <move>
+            <input path="$MessageAssembly/Properties"/>
+            <output path="$ComIbmMessageAssembly_deleteOrder/Properties"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

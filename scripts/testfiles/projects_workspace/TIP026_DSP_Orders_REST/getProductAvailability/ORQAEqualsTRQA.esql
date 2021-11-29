@@ -1,0 +1,16 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE ORQAEqualsTRQA
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+				
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.available TYPE NameValue VALUE TRUE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.partialAvailable TYPE NameValue VALUE FALSE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.warehouse TYPE NameValue VALUE '';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

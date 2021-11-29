@@ -1,0 +1,19 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE DATABASE MODULE dbGetPromoM3Type
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryPromotionalType CHAR ' 
+			SELECT value 
+			FROM ApplicationData
+			WHERE parameter = ''zPromotionalM3OrderType''
+		';
+			
+		SET Environment.Variables.SQLQueries.PromotionalType = PASSTHRU(sqlQueryPromotionalType);	
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

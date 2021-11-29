@@ -1,0 +1,22 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE ValidateAddBatchHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE addBatchHeadRef REFERENCE TO Environment.JSONResponse.AddBatchHead;
+		IF LASTMOVE(addBatchHeadRef) THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'ORDER_DENIED';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

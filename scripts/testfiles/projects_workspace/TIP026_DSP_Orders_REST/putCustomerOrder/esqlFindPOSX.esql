@@ -1,0 +1,26 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFindPOSX
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE CurrentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+			
+		FOR lstLine2Order AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+			
+			IF lstLine2Order.PONR = CurrentOrder.PONR AND lstLine2Order.ITNO = CurrentOrder.sku THEN
+			
+				SET OutputRoot.XMLNSC.Values.PONR = lstLine2Order.PONR;	
+				SET OutputRoot.XMLNSC.Values.POSX = lstLine2Order.POSX;
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+				
+			END IF;
+			
+		END FOR;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

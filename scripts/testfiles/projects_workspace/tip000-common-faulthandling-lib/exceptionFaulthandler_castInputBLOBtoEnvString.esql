@@ -1,0 +1,15 @@
+
+
+CREATE COMPUTE MODULE exceptionFaulthandler_castInputBLOBtoEnvString
+	
+	DECLARE UDP_CCSID EXTERNAL INTEGER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE inputString CHAR CAST(InputRoot.BLOB.BLOB AS CHAR CCSID UDP_CCSID);
+		SET Environment.Variables.exceptionFaultHandler.inputString = inputString;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

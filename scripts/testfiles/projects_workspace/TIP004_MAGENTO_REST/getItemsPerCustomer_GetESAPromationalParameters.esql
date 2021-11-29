@@ -1,0 +1,17 @@
+
+
+CREATE DATABASE MODULE getItemsPerCustomer_GetESAPromationalParameters
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.PromotionalWarehouse;
+		DECLARE tineESARef, tineESACursor REFERENCE TO Environment.Variables.PromotionalWarehouse;
+		
+		DECLARE tineESAQuery CHARACTER '
+		select value from ApplicationData where parameter =''zReklamartiklerWHLO''
+		';
+		
+		SET tineESARef.Row[] = PASSTHRU(tineESAQuery);
+		RETURN TRUE;
+	END;
+
+END MODULE;

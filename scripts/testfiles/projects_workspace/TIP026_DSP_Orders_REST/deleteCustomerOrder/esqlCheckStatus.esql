@@ -1,0 +1,19 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckStatus
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE ORST INTEGER CAST(GetValueFromNameValueList('ORST', Environment.GetHeadRecord.Item.NameValue) AS INTEGER);
+					
+		IF ORST > 33 THEN
+			
+			Call setErrorMessage (400, 'FAILED','TOO_HIGH_STATUS', Environment);
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

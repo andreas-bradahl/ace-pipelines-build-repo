@@ -1,0 +1,54 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE splitOrderWithPromotionalProducts_markPromotionalProducts 
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE companyNumber CHAR Environment.OrderRequest.Data.companyNumber;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+
+		DECLARE itemNumber CHAR;
+		DECLARE productType ROW;
+		 
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderContainsPromotionalProducts BOOLEAN false;		
+		DECLARE unifiedOrder BOOLEAN false; -- meaning every orderline is either promo or not promo.
+		DECLARE promoProductCounter INT 0;
+		DECLARE orderLineCounter INT 0;		
+		
+		FOR orderLine AS orderRequestRef.orderLines.Item[] DO
+			
+			DECLARE sqlQuery CHAR 'SELECT MMITTY FROM MITMAS WHERE MMCONO = ? AND MMITNO = ?';
+			
+			SET orderLineCounter = orderLineCounter + 1;
+			SET itemNumber = orderLine.sku; 
+			 
+			SET productType = PASSTHRU(sqlQuery, companyNumber, itemNumber);
+						
+			IF (productType.MMITTY = varRef.promoProductIdentifier) THEN
+				
+				SET promoProductCounter = promoProductCounter + 1;
+				SET orderContainsPromotionalProducts = true;				 
+				CREATE LASTCHILD OF orderLine TYPE NameValue NAME 'promotionalProduct' VALUE true;
+								
+			ELSE
+				
+				CREATE LASTCHILD OF orderLine TYPE NameValue NAME 'promotionalProduct' VALUE false;				
+				 
+			END IF;		
+			
+		END FOR;
+		
+		IF promoProductCounter = orderLineCounter OR promoProductCounter = 0 THEN
+			
+			SET unifiedOrder = true;
+			
+		END IF;
+		
+		SET varRef.unifiedOrder = unifiedOrder;
+		SET varRef.orderContainsPromotionalProducts = orderContainsPromotionalProducts;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

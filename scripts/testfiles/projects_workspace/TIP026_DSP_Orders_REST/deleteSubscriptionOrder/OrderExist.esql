@@ -1,0 +1,23 @@
+BROKER SCHEMA deleteSubscriptionOrder
+
+CREATE COMPUTE MODULE OrderExist
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 	 
+		IF (Environment.Variables.HTTPResponses.GetHeadRecord.Item.RORD <> '') THEN    	 		 
+			
+			IF Environment.Variables.HTTPResponses.GetHeadRecord.Item.CUNO = Environment.Variables.deleteOrderRequest.customerNumber THEN  
+				PROPAGATE TO TERMINAL 'out';
+			ELSE
+				--Will this evere happen ????
+				Call setErrorMessage (400, 'FAILED','WRONG_CUSTOMER', Environment);
+				PROPAGATE TO TERMINAL 'out1';				
+			END IF;					
+		ELSE				
+			Call setErrorMessage (400, 'FAILED','ORDER_NOT_FOUND', Environment); 
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;		
+		END IF;
+		RETURN FALSE;
+	END;
+END MODULE;
+

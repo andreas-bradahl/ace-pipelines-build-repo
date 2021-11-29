@@ -1,0 +1,27 @@
+
+CREATE DATABASE MODULE getItemUnitPrices_GetAllAlternativeConversionFactors
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE query CHAR '
+			SELECT DISTINCT
+				TRIM(MMITNO) AS ITNO,
+				MUCOFA AS COFA
+			FROM
+				MITMAS
+			INNER JOIN MITAUN ON
+				MUITNO = MMITNO
+				AND MMCONO = MUCONO
+			WHERE
+				MMUNMS <> ''STK''
+				AND MUALUN = ''STK''
+				AND MUCONO = 100
+		';
+		
+		CREATE FIELD Environment.Variables.AllAlternativeConversionFactors;
+		SET Environment.Variables.AllAlternativeConversionFactors.Item[] = PASSTHRU(query);
+
+	END;
+
+END MODULE;
+
+

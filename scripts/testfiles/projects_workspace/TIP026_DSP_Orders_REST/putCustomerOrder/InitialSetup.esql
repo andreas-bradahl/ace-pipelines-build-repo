@@ -1,0 +1,43 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE InitialSetup
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.OrderRequest = InputRoot.JSON;
+		-- Set basic HTTP headers:
+		SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json';
+		-- Fill in default values for missing optional fields
+		/*
+		DECLARE zero DECIMAL 0;
+
+		DECLARE orderLineCursor, orderLineCursorDeleteCursor REFERENCE TO Environment.OrderRequest.Data;
+		MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+		MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(orderLineCursor) DO
+			MOVE orderLineCursorDeleteCursor TO orderLineCursor;
+			
+			SET orderLineCursor.lostSalesWarehouse = COALESCE(orderLineCursor.lostSalesWarehouse, '');
+			SET orderLineCursor.orderLineUnit  = COALESCE(orderLineCursor.orderLineUnit , '');
+			SET orderLineCursor.discountLine1 = COALESCE(orderLineCursor.discountLine1, zero);
+			SET orderLineCursor.discountLine2 = COALESCE(orderLineCursor.discountLine2, zero);
+			SET orderLineCursor.discountLine3 = COALESCE(orderLineCursor.discountLine3, zero);
+			SET orderLineCursor.discountLine4 = COALESCE(orderLineCursor.discountLine4, zero);
+			SET orderLineCursor.discountLine5 = COALESCE(orderLineCursor.discountLine5, zero);
+			SET orderLineCursor.discountLine6 = COALESCE(orderLineCursor.discountLine6, zero);
+			SET orderLineCursor.isLostSales = COALESCE(orderLineCursor.isLostSales, false);
+			SET orderLineCursor.action = COALESCE(orderLineCursor.action, '');
+			SET orderLineCursor.lostSalesUniqueId = COALESCE(orderLineCursor.lostSalesUniqueId, '');
+			SET orderLineCursor.orderLineNumber = COALESCE(orderLineCursor.orderLineNumber.Item[1], 0); -- TODO revisit when doing full implementation
+
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		*/
+		DECLARE optimizeOrderLines BOOLEAN InputLocalEnvironment.REST.Input.Parameters.optimizeOrderLines;
+		CREATE FIELD Environment.Variables.Global.optimizeOrderLines;
+		SET Environment.Variables.Global.optimizeOrderLines = optimizeOrderLines;
+		
+		RETURN TRUE;
+	END;
+	
+END MODULE;

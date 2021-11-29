@@ -1,0 +1,20 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE customerNotFound
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Response;
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Error_Code;
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.HTTPCode;
+		
+		DECLARE errorMessageRef REFERENCE TO OutputLocalEnvironment.Variables.ErrorMessage;
+		
+		
+		SET errorMessageRef.Response = 'FAILED';
+		SET errorMessageRef.Error_Code = 'CUSTOMER_NOT_FOUND';
+		SET errorMessageRef.HTTPCode = '404';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

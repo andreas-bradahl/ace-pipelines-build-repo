@@ -1,0 +1,26 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlHandleOIZ163MIAddLineResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		
+		IF Environment.Variables.HTTPResponses.OIZ163MI_AddInstLine.Item.RETV = '' THEN
+			
+			-- OK
+			DELETE FIELD Environment.Variables.HTTPResponses.OIZ163MI_AddInstLine;
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			
+			-- NOK
+			DELETE FIELD Environment.Variables.HTTPResponses.OIZ163MI_AddInstLine;
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

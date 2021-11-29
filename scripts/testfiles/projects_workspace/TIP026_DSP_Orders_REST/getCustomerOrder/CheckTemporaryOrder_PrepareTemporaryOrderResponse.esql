@@ -1,0 +1,56 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckTemporaryOrder_PrepareTemporaryOrderResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- store response
+		CALL CopyJsonTreeTo(InputRoot.JSON.Data, Environment);
+		DECLARE batchHeadRef REFERENCE TO Environment.JSONResponse.GetBatchHead;
+		DECLARE lstBatchLine REFERENCE TO Environment.JSONResponse.LstBatchLine; 
+		-- forward user auth
+		SET OutputRoot.HTTPRequestHeader.Authorization = InputRoot.HTTPRequestHeader.Authorization;
+		-- forward HTTP HEADERS
+		SET OutputRoot.HTTPRequestHeader."Accept" = InputRoot.HTTPRequestHeader."Accept";
+		
+		CALL writeTemporaryOrderResponse(batchHeadRef, lstBatchLine, Environment.Variables.company_number, Environment.Variables.customer_number, Environment.Variables.order_number);
+		
+		
+		RETURN TRUE;
+	END;
+	
+CREATE PROCEDURE writeTemporaryOrderResponse (IN batchHeadRef REFERENCE, IN lstBatchLine REFERENCE, IN companyNumber CHAR, IN customerNumber CHAR, IN orderNumber CHAR)
+BEGIN
+		DECLARE batchHeadNameValueListRef REFERENCE TO batchHeadRef.Data.MIRecord.Item.NameValue;
+		DECLARE JSONDataRef REFERENCE TO OutputRoot;
+		CREATE FIELD OutputRoot.JSON.Data AS JSONDataRef IDENTITY (JSON.Object)Data;
+		
+		SET JSONDataRef.orderNumber = TRIM(orderNumber);
+		SET JSONDataRef.containsTempLines = true;
+		SET JSONDataRef.isTemporaryOrder = true;
+		SET JSONDataRef.companyNumber = TRIM(companyNumber);
+		SET JSONDataRef.customerNumber = TRIM(customerNumber);
+		SET JSONDataRef.customerOrderNumber = TRIM(GetValueFromNameValueList('CUOR', batchHeadNameValueListRef));
+		SET JSONDataRef.customerReference = TRIM(GetValueFromNameValueList('YREF', batchHeadNameValueListRef));
+		SET JSONDataRef.TINEReference = TRIM(GetValueFromNameValueList('OREF', batchHeadNameValueListRef));
+		SET JSONDataRef.orderStatusLowest = TRIM(GetValueFromNameValueList('ORSL', batchHeadNameValueListRef));
+		SET JSONDataRef.orderStatusHighest = TRIM(GetValueFromNameValueList('ORST', batchHeadNameValueListRef));
+		SET JSONDataRef.orderType = TRIM(GetValueFromNameValueList('ORTP', batchHeadNameValueListRef));
+		SET JSONDataRef.requestedDeliveryDate = CAST(TRIM(GetValueFromNameValueList('RLDT', batchHeadNameValueListRef)) AS DATE FORMAT 'yyyyMMdd');
+		SET JSONDataRef.canUpdate =  false;
+		SET JSONDataRef.canDelete = false;
+		
+		CREATE FIELD JSONDataRef.orderLines IDENTITY(JSON.Array);
+		DECLARE orderLineRef, newOrderLineItemCursor REFERENCE TO JSONDataRef.orderLines;
+		DECLARE orderHeadLock BOOLEAN false;
+		DECLARE orderLineCursor REFERENCE TO lstBatchLine.Data.MIRecord;
+				
+		MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(orderLineCursor) DO
+			CREATE LASTCHILD OF orderLineRef AS newOrderLineItemCursor NAME 'Item';
+			SET orderHeadLock = writeTemporaryOrderLine(orderLineCursor.NameValue, newOrderLineItemCursor);
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+END;
+END MODULE;

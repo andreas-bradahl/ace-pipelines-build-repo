@@ -1,0 +1,47 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCreateResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		CREATE FIELD OutputRoot.XMLNSC;
+		DECLARE outputRef REFERENCE TO OutputRoot.XMLNSC;
+		
+		DECLARE failedOrderLineRef REFERENCE TO Environment;
+		
+		IF InputRoot.XMLNSC.errorMessage = 'ORDER_DENIED' THEN
+			
+			SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseError.ns:success = InputRoot.XMLNSC.success;
+			SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseError.ns:errorMessage = InputRoot.XMLNSC.errorMessage;
+			
+		ELSE
+
+			IF NOT(Environment.Variables.FailedVariables.OrderLinesFailed) THEN
+				
+				SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseOK.ns:orderNumber = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+				SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseOK.ns:success = TRUE;
+				
+			ELSE
+				
+				SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseFailed.ns:orderNumber = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+				SET outputRef.ns:postChangedSubscriptionOrderDeliveryResponseFailed.ns:success = FALSE;
+
+				FOR failedOrderLine AS Environment.Variables.FailedVariables.failedOrderLine[] DO
+								
+					CREATE LASTCHILD OF outputRef.ns:postChangedSubscriptionOrderDeliveryResponseFailed AS failedOrderLineRef NAMESPACE(ns) NAME 'failedOrderLines';
+				
+					SET failedOrderLineRef.ns:sku = failedOrderLine.orderLine.ns:sku;
+					SET failedOrderLineRef.ns:quantity = failedOrderLine.orderLine.ns:quantity;
+					SET failedOrderLineRef.ns:orderLineUnit = failedOrderLine.orderLine.ns:orderLineUnit;
+					SET failedOrderLineRef.ns:errorCode = failedOrderLine.errorCode;
+					SET failedOrderLineRef.ns:errorMessage = failedOrderLine.errorMessage;
+					
+				END FOR;
+				
+			END IF;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

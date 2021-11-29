@@ -1,0 +1,42 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE checkDeliveryDatesDeadlineForPickUp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE jsonReplyRef REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE requestedDeliveryDate DATE CAST(varRef.Global.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		
+		DECLARE responseCursor REFERENCE TO jsonReplyRef.pickupdeliverydates;
+
+		DECLARE matchFound BOOLEAN false;
+		MOVE responseCursor FIRSTCHILD NAME 'Item';
+		DECLARE matchCursor REFERENCE TO responseCursor;
+		
+		WHILE LASTMOVE(responseCursor) AND NOT matchFound DO
+			
+			DECLARE responseDate DATE CAST(SUBSTRING(responseCursor.pickUpTime FROM 1 FOR 10) AS DATE FORMAT 'yyyy-MM-dd');
+			
+			IF requestedDeliveryDate >= responseDate THEN
+				
+				MOVE matchCursor TO responseCursor;
+			 	
+			ELSE
+			 	
+			 	SET matchFound = true;
+			 	
+			END IF;
+			
+			MOVE responseCursor NEXTSIBLING REPEAT NAME;
+			 
+		END WHILE;
+		
+		SET varRef.Global.deadline = matchCursor;
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;

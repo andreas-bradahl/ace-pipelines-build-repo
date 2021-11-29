@@ -1,0 +1,29 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE enrichResultFromLstLine2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE itemIndex INT Environment.Variables.Global.ItemIndex;
+		DECLARE msgNameValueList REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue;
+		DECLARE itemBaseUnit CHAR '';
+		DECLARE itemSalesUnit CHAR '';
+		
+	--	IF EXISTS(SELECT * FROM msgNameValueList.Item.Name[] AS n WHERE n = 'UNMS') THEN
+			
+			SET itemBaseUnit = GetValueFromNameValueList('UNMS', msgNameValueList);
+			
+	--	END IF;
+		
+	--	IF EXISTS(SELECT * FROM msgNameValueList.Item.Name[] AS n WHERE n = 'SPUN') THEN
+			
+			SET itemSalesUnit = GetValueFromNameValueList('SPUN', msgNameValueList);
+			
+	--	END IF;
+		
+		SET Environment.Variables.HTTPResponses.LstLine2.Item[itemIndex].UNMS = itemBaseUnit;
+		SET Environment.Variables.HTTPResponses.LstLine2.Item[itemIndex].SPUN = itemSalesUnit;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,21 @@
+
+
+CREATE DATABASE MODULE dbGetSalesPriceUnitToRunExtraPriceCallFor
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQuerySalesPriceUnitToRunExtraPriceCallFor CHAR ' 
+			SELECT code
+			FROM Code code
+			INNER JOIN CodeType codeType
+			ON code.typeId = codeType.id
+			WHERE 
+					codeType.name = ''zSalesPriceUnitToRunExtraPriceCallFor''
+					';
+			
+		SET Environment.Variables.SQLQueries.SalesPriceUnitToRunExtraPriceCallFor = PASSTHRU(sqlQuerySalesPriceUnitToRunExtraPriceCallFor);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

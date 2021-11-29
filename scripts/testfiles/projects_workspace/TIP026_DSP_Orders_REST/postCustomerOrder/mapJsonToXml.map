@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postCustomerOrder" version="8.0.5.0" xmlns:map="postCustomerOrder">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <output path="/putCustomerOrder/customerOrder.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="supplement" prefix="out" uri="http://TIP026_DSP_Orders_REST/customerOrder"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapJsonToXml">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="ComIbmMessageAssembly_JSON">
+            <cast derivedFrom="MB:JSON_operation_request" path="$ComIbmMessageAssembly_JSON/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}NewOrder" ref="var1"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="mb:msg(newOrder,assembly,XMLNSC,Properties)" var="ComIbmMessageAssembly_newOrder"/>
+        <move>
+            <input path="$ComIbmMessageAssembly_JSON/Properties" var="Properties"/>
+            <output path="$ComIbmMessageAssembly_newOrder/Properties"/>
+        </move>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/companyNumber" var="companyNumber"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/companyNumber"/>
+            <param name="input" value="$companyNumber"/>
+        </function>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerNumber" var="customerNumber"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/customerNumber"/>
+            <param name="input" value="$customerNumber"/>
+        </function>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerWarehouse" var="customerWarehouse"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/customerWarehouse"/>
+            <test lang="xpath">fn:exists($customerWarehouse ) and fn:nilled($customerWarehouse ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$customerWarehouse/." var="customerWarehouse"/>
+                <output path="."/>
+                <param name="input" value="$customerWarehouse"/>
+            </function>
+        </if>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderType" var="orderType"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/orderType"/>
+            <param name="input" value="$orderType"/>
+        </function>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/requestedDeliveryDate" var="requestedDeliveryDate"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/requestedDeliveryDate"/>
+            <param name="input" value="$requestedDeliveryDate"/>
+        </function>
+        <move>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/estimatedOrderAmount" var="estimatedOrderAmount"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/estimatedOrderAmount"/>
+        </move>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerOrderNumber" var="customerOrderNumber"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/customerOrderNumber"/>
+            <test lang="xpath">fn:exists($customerOrderNumber ) and fn:nilled($customerOrderNumber ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$customerOrderNumber/." var="customerOrderNumber"/>
+                <output path="."/>
+                <param name="input" value="$customerOrderNumber"/>
+            </function>
+        </if>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/customerReference" var="customerReference"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/customerReference"/>
+            <test lang="xpath">fn:exists($customerReference ) and fn:nilled($customerReference ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$customerReference/." var="customerReference"/>
+                <output path="."/>
+                <param name="input" value="$customerReference"/>
+            </function>
+        </if>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderName" var="orderName"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/orderName"/>
+            <test lang="xpath">fn:exists($orderName ) and fn:nilled($orderName ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$orderName/." var="orderName"/>
+                <output path="."/>
+                <param name="input" value="$orderName"/>
+            </function>
+        </if>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/TINEReference" var="TINEReference"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/TINEReference"/>
+            <test lang="xpath">fn:exists($TINEReference ) and fn:nilled($TINEReference ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$TINEReference/." var="TINEReference"/>
+                <output path="."/>
+                <param name="input" value="$TINEReference"/>
+            </function>
+        </if>
+        <if>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderComment" var="orderComment"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/orderComment"/>
+            <test lang="xpath">fn:exists($orderComment ) and fn:nilled($orderComment ) = fn:false()</test>
+            <function ref="normalize">
+                <input path="$orderComment/." var="orderComment"/>
+                <output path="."/>
+                <param name="input" value="$orderComment"/>
+            </function>
+        </if>
+        <foreach>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/orderLines/Item" var="Item1"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/orderLines"/>
+            <condition>
+                <if>
+                    <input path="$Item1/." var="Item"/>
+                    <output path="lostSale"/>
+                    <test lang="xpath">xs:string($Item/isLostSales) = 'true'</test>
+                    <function ref="normalize">
+                        <input path="$Item/sku" var="sku"/>
+                        <output path="sku"/>
+                        <param name="input" value="$sku"/>
+                    </function>
+                    <function ref="normalize">
+                        <input path="$Item/quantity" var="quantity"/>
+                        <output path="quantity"/>
+                        <param name="input" value="$quantity"/>
+                    </function>
+                    <function ref="normalize">
+                        <input path="$Item/lostSalesWarehouse" var="lostSalesWarehouse"/>
+                        <output path="lostSalesWarehouse"/>
+                        <param name="input" value="$lostSalesWarehouse"/>
+                    </function>
+                    <if>
+                        <input path="$Item/orderLineUnit" var="orderLineUnit"/>
+                        <output path="orderLineUnit"/>
+                        <test lang="xpath">fn:exists($orderLineUnit ) and fn:nilled($orderLineUnit ) = fn:false()</test>
+                        <function ref="normalize">
+                            <input path="$orderLineUnit/." var="orderLineUnit"/>
+                            <output path="."/>
+                            <param name="input" value="$orderLineUnit"/>
+                        </function>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine1" var="discountLine1"/>
+                        <output path="discountLine1"/>
+                        <test lang="xpath">fn:exists($discountLine1 ) and fn:nilled($discountLine1 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine1/." var="discountLine1"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine2" var="discountLine2"/>
+                        <output path="discountLine2"/>
+                        <test lang="xpath">fn:exists($discountLine2 ) and fn:nilled($discountLine2 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine2/." var="discountLine2"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine3" var="discountLine3"/>
+                        <output path="discountLine3"/>
+                        <test lang="xpath">fn:exists($discountLine3 ) and fn:nilled($discountLine3 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine3/." var="discountLine3"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine4" var="discountLine4"/>
+                        <output path="discountLine4"/>
+                        <test lang="xpath">fn:exists($discountLine4 ) and fn:nilled($discountLine4 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine4/." var="discountLine4"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine5" var="discountLine5"/>
+                        <output path="discountLine5"/>
+                        <test lang="xpath">fn:exists($discountLine5 ) and fn:nilled($discountLine5 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine5/." var="discountLine5"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/discountLine6" var="discountLine6"/>
+                        <output path="discountLine6"/>
+                        <test lang="xpath">fn:exists($discountLine6 ) and fn:nilled($discountLine6 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine6/." var="discountLine6"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item/isLostSales" var="isLostSales"/>
+                        <output path="isLostSales"/>
+                        <test lang="xpath">fn:exists($isLostSales ) and fn:nilled($isLostSales ) = fn:false()</test>
+                        <move>
+                            <input path="$isLostSales/." var="isLostSales"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                </if>
+                <else>
+                    <input path="$Item1/." var="Item2"/>
+                    <output path="notLostSale"/>
+                    <function ref="normalize">
+                        <input path="$Item2/sku" var="sku1"/>
+                        <output path="sku"/>
+                        <param name="input" value="$sku1"/>
+                    </function>
+                    <function ref="normalize">
+                        <input path="$Item2/quantity" var="quantity1"/>
+                        <output path="quantity"/>
+                        <param name="input" value="$quantity1"/>
+                    </function>
+                    <if>
+                        <input path="$Item2/lostSalesWarehouse" var="lostSalesWarehouse1"/>
+                        <output path="lostSalesWarehouse"/>
+                        <test lang="xpath">fn:exists($lostSalesWarehouse1 ) and fn:nilled($lostSalesWarehouse1 ) = fn:false()</test>
+                        <function ref="normalize">
+                            <input path="$lostSalesWarehouse1/." var="lostSalesWarehouse1"/>
+                            <output path="."/>
+                            <param name="input" value="$lostSalesWarehouse1"/>
+                        </function>
+                    </if>
+                    <if>
+                        <input path="$Item2/orderLineUnit" var="orderLineUnit1"/>
+                        <output path="orderLineUnit"/>
+                        <test lang="xpath">fn:exists($orderLineUnit1 ) and fn:nilled($orderLineUnit1 ) = fn:false()</test>
+                        <function ref="normalize">
+                            <input path="$orderLineUnit1/." var="orderLineUnit1"/>
+                            <output path="."/>
+                            <param name="input" value="$orderLineUnit1"/>
+                        </function>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine1" var="discountLine11"/>
+                        <output path="discountLine1"/>
+                        <test lang="xpath">fn:exists($discountLine11 ) and fn:nilled($discountLine11 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine11/." var="discountLine11"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine2" var="discountLine21"/>
+                        <output path="discountLine2"/>
+                        <test lang="xpath">fn:exists($discountLine21 ) and fn:nilled($discountLine21 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine21/." var="discountLine21"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine3" var="discountLine31"/>
+                        <output path="discountLine3"/>
+                        <test lang="xpath">fn:exists($discountLine31 ) and fn:nilled($discountLine31 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine31/." var="discountLine31"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine4" var="discountLine41"/>
+                        <output path="discountLine4"/>
+                        <test lang="xpath">fn:exists($discountLine41 ) and fn:nilled($discountLine41 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine41/." var="discountLine41"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine5" var="discountLine51"/>
+                        <output path="discountLine5"/>
+                        <test lang="xpath">fn:exists($discountLine51 ) and fn:nilled($discountLine51 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine51/." var="discountLine51"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/discountLine6" var="discountLine61"/>
+                        <output path="discountLine6"/>
+                        <test lang="xpath">fn:exists($discountLine61 ) and fn:nilled($discountLine61 ) = fn:false()</test>
+                        <move>
+                            <input path="$discountLine61/." var="discountLine61"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item2/isLostSales" var="isLostSales1"/>
+                        <output path="isLostSales"/>
+                        <test lang="xpath">fn:exists($isLostSales1 ) and fn:nilled($isLostSales1 ) = fn:false()</test>
+                        <move>
+                            <input path="$isLostSales1/." var="isLostSales1"/>
+                            <output path="."/>
+                        </move>
+                    </if>
+                </else>
+            </condition>
+        </foreach>
+        <function ref="normalize">
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/clipCard" var="clipCard"/>
+            <output path="$ComIbmMessageAssembly_newOrder/newOrder/clipCard"/>
+            <param name="input" value="$clipCard"/>
+        </function>
+        <condition>
+            <if>
+                <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)/prevOrderType" var="prevOrderType"/>
+                <output path="$ComIbmMessageAssembly_newOrder/newOrder/prevOrderType"/>
+                <test lang="xpath">fn:string-length($prevOrderType) &gt; 0</test>
+                <move>
+                    <input path="$prevOrderType/."/>
+                    <output path="."/>
+                </move>
+            </if>
+            <else>
+                <output path="$ComIbmMessageAssembly_newOrder/newOrder/prevOrderType"/>
+                <assign>
+                    <output path="."/>
+                </assign>
+            </else>
+        </condition>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getChangedSubscriptionOrderDelivery" version="8.0.5.0" xmlns:map="getChangedSubscriptionOrderDelivery">
+    <input path="/subscriptionOrder.xsd"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var4"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var5"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapResponseToJSON">
+        <input namespace="http://TIP026_DSP_Orders_REST" path="mb:msg(getChangedSubscriptionOrderDeliveryResponse,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var4/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}getChangedSubscriptionOrderDeliveryResponse" ref="var5"/>
+        </output>
+        <move>
+            <input path="$MessageAssembly/Properties"/>
+            <output path="$MessageAssembly1/Properties"/>
+        </move>
+        <local>
+            <input path="$MessageAssembly/getChangedSubscriptionOrderDeliveryResponse"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)"/>
+            <move>
+                <input path="companyNumber"/>
+                <output path="companyNumber"/>
+            </move>
+            <move>
+                <input path="orderNumber"/>
+                <output path="orderNumber"/>
+            </move>
+            <move>
+                <input path="customerNumber"/>
+                <output path="customerNumber"/>
+            </move>
+            <move>
+                <input path="customerReference"/>
+                <output path="customerReference"/>
+            </move>
+            <move>
+                <input path="orderStatus"/>
+                <output path="orderStatus"/>
+            </move>
+            <move>
+                <input path="requestedDeliveryDate"/>
+                <output path="requestedDeliveryDate"/>
+            </move>
+            <move>
+                <input path="firstDeliveryDate"/>
+                <output path="firstDeliveryDate"/>
+            </move>
+            <move>
+                <input path="validFromDate"/>
+                <output path="validFromDate"/>
+            </move>
+            <move>
+                <input path="validToDate"/>
+                <output path="validToDate"/>
+            </move>
+            <move>
+                <input path="deliveryWeekdayNumber"/>
+                <output path="deliveryWeekdayNumber"/>
+            </move>
+            <move>
+                <input path="deliveryIntervalDays"/>
+                <output path="deliveryIntervalDays"/>
+            </move>
+            <move>
+                <input path="canUpdate"/>
+                <output path="canUpdate"/>
+            </move>
+            <move>
+                <input path="canDelete"/>
+                <output path="canDelete"/>
+            </move>
+            <move>
+                <input path="canAddOrderlines"/>
+                <output path="canAddOrderlines"/>
+            </move>
+            <move>
+                <input path="canSendComplaint"/>
+                <output path="canSendComplaint"/>
+            </move>
+            <move>
+                <input path="canAddPromotionalProducts"/>
+                <output path="canAddPromotionalProducts"/>
+            </move>
+            <move>
+                <input path="canCopyOrder"/>
+                <output path="canCopyOrder"/>
+            </move>
+            <foreach>
+                <input path="optimizedOrderLines"/>
+                <output path="optimizedOrderLines/Item"/>
+                <move>
+                    <input path="sku"/>
+                    <output path="sku"/>
+                </move>
+                <move>
+                    <input path="itemDescription"/>
+                    <output path="itemDescription"/>
+                </move>
+                <foreach>
+                    <input path="combinedOrderLineNumbers"/>
+                    <output path="combinedOrderLineNumbers/Item"/>
+                    <convert defaultValue="0">
+                        <input path="."/>
+                        <output path="."/>
+                    </convert>
+                </foreach>
+                <convert defaultValue="0">
+                    <input path="totalQuantity"/>
+                    <output path="totalQuantity"/>
+                </convert>
+                <move>
+                    <input path="totalQuantityUnit"/>
+                    <output path="totalQuantityUnit"/>
+                </move>
+                <move>
+                    <input path="canIncrease"/>
+                    <output path="canIncrease"/>
+                </move>
+                <move>
+                    <input path="canDecrease"/>
+                    <output path="canDecrease"/>
+                </move>
+                <move>
+                    <input path="canDelete"/>
+                    <output path="canDelete"/>
+                </move>
+                <move>
+                    <input path="canSendComplaint"/>
+                    <output path="canSendComplaint"/>
+                </move>
+                <foreach>
+                    <input path="combinedOrderlines"/>
+                    <output path="combinedOrderlines/Item"/>
+                    <convert defaultValue="0">
+                        <input path="orderLineNumber"/>
+                        <output path="orderLineNumber"/>
+                    </convert>
+                    <move>
+                        <input path="sku"/>
+                        <output path="sku"/>
+                    </move>
+                    <convert defaultValue="0">
+                        <input path="quantityOrderLineBaseUnit"/>
+                        <output path="quantityOrderLineBaseUnit"/>
+                    </convert>
+                    <convert defaultValue="0">
+                        <input path="quantityOrderLineUnit"/>
+                        <output path="quantityOrderLineUnit"/>
+                    </convert>
+                    <move>
+                        <input path="orderLineBaseUnit"/>
+                        <output path="orderLineBaseUnit"/>
+                    </move>
+                    <move>
+                        <input path="orderLineUnit"/>
+                        <output path="orderLineUnit"/>
+                    </move>
+                    <move>
+                        <input path="canIncrease"/>
+                        <output path="canIncrease"/>
+                    </move>
+                    <move>
+                        <input path="canDecrease"/>
+                        <output path="canDecrease"/>
+                    </move>
+                    <move>
+                        <input path="canDelete"/>
+                        <output path="canDelete"/>
+                    </move>
+                    <move>
+                        <input path="canSendComplaint"/>
+                        <output path="canSendComplaint"/>
+                    </move>
+                </foreach>
+            </foreach>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,36 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE doExtraOrderCharge
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef, orderLineItemCursor REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE extraOrderVarRef REFERENCE TO varRef.ExtraOrderCharge;
+		
+		DELETE FIELD orderRequestRef.orderLines;
+		CREATE FIELD orderRequestRef.orderLines AS orderLineItemCursor IDENTITY(JSON.Array);
+		CREATE FIELD orderLineItemCursor.Item AS orderLineItemCursor;
+		
+		SET orderRequestRef.orderType = extraOrderVarRef.chargeOrderType;
+		
+		SET orderLineItemCursor.sku = extraOrderVarRef.itemNumber;
+		SET orderLineItemCursor.quantity = '1';
+		SET orderRequestRef.customerReference = getCustomerReferenceField(varRef.WarehouseOrdersplit);
+				
+		RETURN TRUE;
+	END;
+	
+CREATE FUNCTION getCustomerReferenceField (IN warehouseOrdersplitItemsRef REFERENCE) RETURNS CHAR
+BEGIN
+	DECLARE customerReferenceField CHAR 'CustomerReference Here';
+	DECLARE orderCount INT CARDINALITY(warehouseOrdersplitItemsRef.Item[]);
+	
+	SET customerReferenceField = warehouseOrdersplitItemsRef.Item[orderCount].orderNumber;
+	
+	
+	RETURN customerReferenceField;
+END;
+
+END MODULE;

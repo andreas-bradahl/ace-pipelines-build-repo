@@ -1,0 +1,14 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE prepareGetOrderInfo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = orderRequestRef.customerNumber;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

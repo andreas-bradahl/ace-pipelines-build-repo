@@ -1,0 +1,18 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE TRQAOverZero
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		
+		DECLARE WHLO CHAR InputRoot.XMLNSC.OIZ340MILstSupplSummary.Item.WHLO;
+				
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.available TYPE NameValue VALUE FALSE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.partialAvailable TYPE NameValue VALUE TRUE;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.warehouse TYPE NameValue VALUE WHLO;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,253 @@
+-- Get value of itemName from a list of values (typical M3 REST API response):
+
+CREATE FUNCTION getSingleValueFromApplicationData(IN keyWord CHAR, IN destinationRef REFERENCE) RETURNS CHAR -- tine_esa
+	BEGIN
+		
+		CREATE FIELD destinationRef.ApplicationData.{keyWord};
+		DECLARE replyRef REFERENCE TO destinationRef.ApplicationData.{keyWord};
+		
+		DECLARE sqlQuery CHAR 'select value from ApplicationData where parameter=?';
+		
+		SET replyRef.value[] = PASSTHRU(sqlQuery, keyWord);
+		
+		FOR entry AS replyRef.value[] DO
+		
+			SET entry = FIELDVALUE(entry.value);
+		 	DELETE FIELD entry.value;
+			 	
+		END FOR;
+		
+		RETURN TRIM(CAST(replyRef.value AS CHAR));
+		
+	END;
+	
+CREATE FUNCTION GetValueFromNameValueList(IN itemName CHAR, IN nameValueListRef REFERENCE) RETURNS CHAR
+BEGIN
+	DECLARE bolFound BOOLEAN FALSE;
+	
+	MOVE nameValueListRef FIRSTCHILD NAME 'Item';	
+	WHILE LASTMOVE(nameValueListRef) IS TRUE AND bolFound IS FALSE DO
+		
+		IF nameValueListRef.Name = itemName THEN
+			SET bolFound = TRUE;
+			RETURN nameValueListRef.Value;
+			
+		END IF;
+		
+		MOVE nameValueListRef NEXTSIBLING REPEAT NAME;
+	END WHILE;
+	
+	
+	RETURN NULL;
+END;
+
+
+-- CREATE LASTCHILD OF Environment.Response.GetBatchHead FROM InputRoot.JSON.Data;
+CREATE PROCEDURE CopyJsonTreeTo(IN source REFERENCE, IN destination REFERENCE)
+BEGIN
+	DECLARE topnode CHAR 'JSONResponse';
+	DECLARE transaction CHAR TRIM(FIELDVALUE(source.Transaction));
+	
+	IF transaction IS NULL THEN
+		RETURN;
+	END IF;
+	
+	DECLARE destinationCursor REFERENCE TO destination;
+	MOVE destinationCursor FIRSTCHILD NAME topnode;
+	
+	IF NOT(LASTMOVE(destinationCursor)) THEN
+		CREATE LASTCHILD OF destination AS destinationCursor NAME topnode;
+	END IF;
+	
+	CREATE LASTCHILD OF destinationCursor AS destinationCursor NAME transaction;
+	CREATE LASTCHILD OF destinationCursor FROM source;
+END;
+
+CREATE FUNCTION OrderExists (IN inputRootRef REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE MIRecordRef REFERENCE TO inputRootRef.JSON.Data.MIRecord;
+	
+	IF LASTMOVE(MIRecordRef) THEN
+		RETURN TRUE;
+	ELSE
+		RETURN FALSE;
+	END IF;
+END;
+
+CREATE FUNCTION getOrderText (IN MIRecordRef REFERENCE) RETURNS CHAR
+BEGIN
+	DECLARE itemText CHAR '';
+	DECLARE itemCursor REFERENCE TO MIRecordRef;
+	
+	MOVE itemCursor FIRSTCHILD NAME 'Item';
+	WHILE LASTMOVE(itemCursor) DO
+		
+		IF TRIM(GetValueFromNameValueList('TXV9', itemCursor.NameValue)) = 'CO01' THEN
+			SET itemText = itemText || GetValueFromNameValueList('TX60', itemCursor.NameValue);
+		END IF;
+		
+		MOVE itemCursor NEXTSIBLING REPEAT NAME;
+	END WHILE;
+	
+	
+	RETURN TRIM(itemText);
+END;
+	
+CREATE FUNCTION logicalAND(IN bool1 BOOLEAN, IN bool2 BOOLEAN) RETURNS BOOLEAN
+BEGIN
+	IF bool1 AND bool2 THEN
+		RETURN true;
+	ELSE
+		RETURN false;
+	END IF;
+END;
+
+CREATE FUNCTION logicalOR(In bool1 BOOLEAN, IN bool2 BOOLEAN) RETURNS BOOLEAN
+BEGIN
+	IF bool1 OR bool2 THEN
+		RETURN true;
+	ELSE
+		RETURN false;
+	END IF;
+END;
+
+CREATE FUNCTION writeTemporaryOrderLine (IN sourceRef REFERENCE, IN destinationRef REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE orderHeadLock BOOLEAN false;
+	DECLARE destinationCursor REFERENCE TO destinationRef;
+	
+	SET destinationCursor.orderLineNumber = CAST(TRIM(GetValueFromNameValueList('PONR', sourceRef)) AS INT);
+	SET destinationCursor.orderLineSuffix = CAST(TRIM(GetValueFromNameValueList('POSX', sourceRef)) AS INT);
+	SET destinationCursor.sku = TRIM(GetValueFromNameValueList('ITNO', sourceRef));
+	SET destinationCursor.itemDescription = TRIM(GetValueFromNameValueList('ITDS', sourceRef));
+	SET destinationCursor.quantitySalesPriceUnit = CAST(CAST(TRIM(GetValueFromNameValueList('ORQT', sourceRef)) AS DECIMAL) AS INTEGER);
+	SET destinationCursor.deliveryDate = TRIM(GetValueFromNameValueList('RLDT', sourceRef));
+	SET destinationCursor.canIncrease = false;
+	SET destinationCursor.canDecrease = false;
+	SET destinationCursor.canDelete = false;
+	
+	-- check OPT info
+	DECLARE opt1cursor REFERENCE TO sourceRef;
+	MOVE opt1cursor PARENT;
+	MOVE opt1cursor PARENT;
+	MOVE opt1cursor PARENT;
+	MOVE opt1cursor FIRSTCHILD NAME 'OPT1';
+	
+	IF FIELDVALUE(opt1cursor) LIKE '1' THEN
+		SET destinationCursor.addInReview = true;
+		SET orderHeadLock = true;
+		
+	END IF;
+	
+	
+	RETURN orderHeadLock;	
+END;
+
+CREATE FUNCTION getDeadline (IN chkDelDateRef REFERENCE) RETURNS TIMESTAMP
+BEGIN
+	DECLARE deadlineDate CHAR TRIM(GetValueFromNameValueList('LMDT', chkDelDateRef.Data.MIRecord.Item.NameValue));
+	DECLARE deadlineTime CHAR TRIM(GetValueFromNameValueList('LMTM', chkDelDateRef.Data.MIRecord.Item.NameValue));
+	
+	SET deadlineTime = fixTime(deadlineTime);
+	DECLARE pattern CHAR 'yyyyMMddHHmm';
+	DECLARE deadline TIMESTAMP CAST(deadlineDate||deadlineTime AS TIMESTAMP FORMAT pattern);
+	
+	
+	RETURN deadline;
+END;
+
+CREATE FUNCTION fixTime (IN timeOfDay char) RETURNS CHAR
+BEGIN
+	DECLARE fixedTime CHAR timeOfDay;
+	WHILE LENGTH(fixedTime) < 4 DO
+		SET fixedTime = '0' || fixedTime;
+		
+	END WHILE;
+	
+	
+	RETURN fixedTime;	
+END;
+
+CREATE FUNCTION minimumINT (IN arg1 INT, IN arg2 INT) RETURNS INT
+BEGIN
+	IF arg1 < arg2 THEN
+		RETURN arg1;
+	ELSE
+		RETURN arg2;
+	END IF;
+END;
+
+CREATE FUNCTION maximumINT (IN arg1 INT, IN arg2 INT) RETURNS INT
+BEGIN
+	IF arg1 > arg2 THEN
+		RETURN arg1;
+	ELSE
+		RETURN arg2;
+	END IF;
+END;
+
+CREATE FUNCTION getDateAsyyyyMMdd () RETURNS CHARACTER
+BEGIN
+	DECLARE currentDate CHARACTER CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMdd');
+	
+	
+	RETURN currentDate;
+END;
+
+CREATE FUNCTION formatStringToDate (IN inputString CHARACTER) RETURNS CHARACTER
+BEGIN
+	DECLARE tempDate DATE CAST(inputString AS DATE FORMAT 'yyyyMMdd');
+	DECLARE outputDate CHARACTER CAST(tempDate AS CHARACTER FORMAT 'yyyy-MM-dd');
+	
+	
+	RETURN outputDate;
+END;
+
+CREATE FUNCTION castFloatToDecimal(IN valueToCast FLOAT) RETURNS DECIMAL
+BEGIN
+	DECLARE returnValue DECIMAL;
+	SET returnValue = CAST(valueToCast AS DECIMAL(20,2));
+	
+	
+	RETURN returnValue;
+END;
+
+CREATE FUNCTION createErrorMessage(IN errorMessageRef REFERENCE, IN response CHARACTER, IN errorCode CHARACTER, IN httpCode CHARACTER)
+BEGIN
+	SET errorMessageRef.Response = response;
+	SET errorMessageRef.Error_Code = errorCode;
+	SET errorMessageRef.HTTPCode = httpCode;
+END;
+
+CREATE FUNCTION getOrderLineNumber (IN orderLineRef REFERENCE) RETURNS INT
+BEGIN
+	DECLARE orderLineNumber INT CAST(TRIM(orderLineRef.orderLineNumber) AS INTEGER);
+		IF orderLineNumber < 1 THEN
+			SET orderLineNumber = 1;
+		END IF;
+	RETURN orderLineNumber;
+END;
+
+CREATE FUNCTION convertToProperTimezoneFormat (IN inTimestamp REFERENCE) RETURNS GMTTIMESTAMP
+BEGIN
+	DECLARE temp CHARACTER;
+	DECLARE tempPre CHARACTER;
+	DECLARE tempPost1 CHARACTER;
+	DECLARE tempPost2 CHARACTER;
+	DECLARE returnValue GMTTIMESTAMP;
+	
+	SET tempPre = SUBSTRING(inTimestamp BEFORE '+');
+	SET tempPost1 = SUBSTRING(SUBSTRING(inTimestamp AFTER '+') FROM 1 FOR 2);
+	SET tempPost2 = SUBSTRING(SUBSTRING(inTimestamp AFTER '+') FROM 3 FOR 2);
+	SET temp = tempPre || '+' || tempPost1 || ':' || tempPost2;
+	
+	SET returnValue = CAST(temp AS GMTTIMESTAMP FORMAT 'I');
+	
+	RETURN returnValue;
+		
+END;
+
+CREATE PROCEDURE mapNameValuePair (IN NameValueItemRef REFERENCE, IN targetRef REFERENCE)
+BEGIN
+	CREATE LASTCHILD OF targetRef NAME FIELDVALUE(NameValueItemRef.Name) VALUE FIELDVALUE(NameValueItemRef.Value);
+END;

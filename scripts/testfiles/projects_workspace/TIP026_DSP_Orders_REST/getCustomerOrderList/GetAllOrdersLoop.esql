@@ -1,0 +1,152 @@
+BROKER SCHEMA getCustomerOrderList
+
+CREATE COMPUTE MODULE GetAllOrdersLoop
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.AllItemsLoop.OrdersToDelete;
+		CREATE FIELD OutputLocalEnvironment.Variables.AllItemsLoop.AllOrders;
+		CREATE FIELD OutputLocalEnvironment.Variables.AllItemsLoop.ORDT;
+		CREATE FIELD OutputLocalEnvironment.Variables.AllItemsLoop.ORNO;
+		
+		DECLARE ordersToDeleteRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.OrdersToDelete;
+		DECLARE allOrdersRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.AllOrders;
+		DECLARE ordtRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.ORDT;
+		
+		DECLARE orderToAddCursor REFERENCE TO Environment;
+		
+		DECLARE amountExpected INT;
+		DECLARE countOrders INT;
+		DECLARE hasMoreOrders BOOLEAN;
+		DECLARE deliveryDate CHARACTER;
+		DECLARE orderNumber CHARACTER;
+		DECLARE deliveryDateTemp CHARACTER;
+		DECLARE orderNumberTemp CHARACTER;
+		DECLARE willBeDuplicate BOOLEAN;
+		
+		SET amountExpected = Environment.Variables.OriginRequest.ANTP;
+		SET countOrders = CARDINALITY(InputRoot.JSON.Data.MIRecord.Item[]);
+		
+		SET hasMoreOrders = (amountExpected = countOrders);
+		
+		IF hasMoreOrders THEN
+			
+			SET deliveryDate = AddOrdersToLocalEnv();
+			
+			IF deliveryDate = 'DUPLICATE' THEN 		
+				-- Throw error: 999 orders with same deliverydate
+				CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Response;
+				CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Error_Code;
+				CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.HTTPCode;
+			
+				DECLARE errorMessageRef REFERENCE TO OutputLocalEnvironment.Variables.ErrorMessage;
+				
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = '999 ORDERS WITH THE SAME DELIVERY_DATE';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out2';
+			ELSE
+				SET ordtRef = deliveryDate;
+				PROPAGATE TO TERMINAL 'out1';
+			END IF;
+			
+		ELSE
+			
+			SET deliveryDate = AddOrdersToLocalEnv();	
+			
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+		
+		
+CREATE FUNCTION AddOrdersToLocalEnv() RETURNS CHARACTER
+	BEGIN
+		
+		DECLARE ordersToDeleteRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.OrdersToDelete;
+		DECLARE allOrdersRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.AllOrders;
+		DECLARE ordtRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.ORDT;
+		DECLARE ornoRef REFERENCE TO OutputLocalEnvironment.Variables.AllItemsLoop.ORNO;
+		
+		DECLARE orderToAddCursor REFERENCE TO Environment;
+		
+		DECLARE orderNumber CHARACTER;
+		DECLARE checkDuplicateOrderNumber CHARACTER;
+		DECLARE checkDuplicateDeliveryDate CHARACTER;
+		DECLARE deliveryDate CHARACTER;
+		DECLARE sameDataAsPreviousHTTPCall BOOLEAN;
+		
+		DECLARE checkDuplicateCursor REFERENCE TO InputRoot.JSON.Data.MIRecord;
+		MOVE checkDuplicateCursor LASTCHILD NAME 'Item';
+		
+		SET checkDuplicateOrderNumber = TRIM(GetValueFromNameValueList('ORNO', checkDuplicateCursor.NameValue));
+		SET checkDuplicateDeliveryDate = TRIM(GetValueFromNameValueList('RLDT', checkDuplicateCursor.NameValue));
+		
+		SET sameDataAsPreviousHTTPCall = ((checkDuplicateOrderNumber = ornoRef) AND (checkDuplicateDeliveryDate = ordtRef));
+		
+		IF sameDataAsPreviousHTTPCall THEN
+			RETURN 'DUPLICATE';
+		END IF;
+		
+		DECLARE orderCursor REFERENCE TO InputRoot.JSON.Data.MIRecord;
+		MOVE orderCursor FIRSTCHILD NAME 'Item';
+		
+		WHILE LASTMOVE(orderCursor) DO
+			
+			IF NOT(IsDuplicateOrder(orderCursor)) THEN
+				CREATE LASTCHILD OF allOrdersRef AS orderToAddCursor NAME 'Item';
+				SET orderToAddCursor = orderCursor;
+			END IF;
+			
+			MOVE orderCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		SET orderNumber = TRIM(GetValueFromNameValueList('ORNO', orderCursor.NameValue));
+		SET ornoRef = orderNumber;
+		
+		SET deliveryDate = TRIM(GetValueFromNameValueList('RLDT', orderCursor.NameValue));
+		RETURN deliveryDate;
+	END;
+
+CREATE FUNCTION IsDuplicateOrder(IN orderRef REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE allOrdersRef REFERENCE TO InputLocalEnvironment.Variables.AllItemsLoop.AllOrders;
+		
+		DECLARE orderORNOOne CHARACTER;
+		DECLARE orderRLDFOne CHARACTER;
+		
+		DECLARE orderORNOTwo CHARACTER;
+		DECLARE orderRLDFTwo CHARACTER;
+		
+		DECLARE sameORNO BOOLEAN;
+		DECLARE sameRLDF BOOLEAN;
+		
+		SET orderORNOTwo = TRIM(GetValueFromNameValueList('ORNO', orderRef.NameValue));
+		SET orderRLDFTwo = TRIM(GetValueFromNameValueList('RLDT', orderRef.NameValue));
+		
+		MOVE allOrdersRef FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(allOrdersRef) DO
+
+			SET orderORNOOne = TRIM(GetValueFromNameValueList('ORNO', allOrdersRef.NameValue));
+			SET orderRLDFOne = TRIM(GetValueFromNameValueList('RLDT', allOrdersRef.NameValue));
+
+			SET sameORNO = orderORNOOne = orderORNOTwo;
+			SET sameRLDF = orderRLDFOne = orderRLDFTwo;
+			
+			IF sameORNO AND sameRLDF THEN
+				RETURN TRUE;
+			END IF;	
+			
+			SET orderORNOOne = NULL;
+			SET orderRLDFOne = NULL;
+			MOVE allOrdersRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

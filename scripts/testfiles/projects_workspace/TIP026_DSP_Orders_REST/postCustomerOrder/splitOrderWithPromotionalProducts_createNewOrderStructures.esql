@@ -1,0 +1,50 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE splitOrderWithPromotionalProducts_createNewOrderStructures
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest;
+		CREATE FIELD Environment.PromoOrder;
+		CREATE FIELD Environment.NormalOrder;
+		
+		SET Environment.PromoOrder = Environment.OrderRequest.Data;
+		SET Environment.NormalOrder = Environment.OrderRequest.Data;
+		
+		DECLARE PromotionalOrderRequestRef REFERENCE TO Environment.PromoOrder;
+		DECLARE PromotionalOrderRequestRefCursor REFERENCE TO Environment.PromoOrder.orderLines.Item;
+		
+		DECLARE promoProductOrderType CHAR Environment.Variables.promoProductOrderType;
+		
+		SET PromotionalOrderRequestRef.orderType = promoProductOrderType;
+		SET PromotionalOrderRequestRef.customerOrderNumber = '';
+		
+		DECLARE promoOrderIndex INTEGER 1; 
+		DECLARE normalOrderIndex INTEGER 1; 
+				
+		IF Environment.Variables.unifiedOrder = false THEN 
+			DELETE FIELD Environment.NormalOrder.orderLines;
+			DELETE FIELD Environment.PromoOrder.orderLines;
+		END IF;
+		
+		FOR orderLineItem AS orderRequestRef.Data.orderLines.Item[] DO   
+			
+			IF (orderLineItem.promotionalProduct = true) THEN 
+				CREATE FIELD Environment.PromoOrder.orderLines.Item[promoOrderIndex];
+				SET Environment.PromoOrder.orderLines.Item[promoOrderIndex] = orderLineItem; 
+				SET promoOrderIndex = promoOrderIndex + 1;
+				
+			ELSEIF (orderLineItem.promotionalProduct = false) THEN 
+				CREATE FIELD Environment.NormalOrder.orderLines.Item[normalOrderIndex];
+				SET Environment.NormalOrder.orderLines.Item[normalOrderIndex] = orderLineItem;
+				SET normalOrderIndex = normalOrderIndex + 1; 
+				
+			END IF;
+			
+		END FOR;		
+		 
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,52 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE warehouseSupplying CHARACTER Environment.Variables.HTTPResponses.OIZ340MI_LstSupplSummary.Item.SWHL;
+		DECLARE warehouseDefault CHARACTER Environment.Variables.HTTPResponses.MDBREADMI_GetOCUSMA00.Item.WHLO;
+		
+		DECLARE sku CHARACTER InputLocalEnvironment.Variables.sku;
+
+		DECLARE ZBSLDT CHARACTER;
+		DECLARE ZBSLDTDate DATE;
+		
+		DECLARE sqlQuerySellByDate CHAR ' 
+			SELECT ZBSLDT
+			FROM ZITBAL
+			WHERE 
+					ZBCONO = ''100''
+				AND ZBWHLO = ? 
+				AND ZBITNO = ?
+		';
+		
+		IF warehouseSupplying IS NOT NULL THEN
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseSupplying, sku);
+		ELSE
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseDefault, sku);
+		END IF;
+	
+		SET ZBSLDT = CAST(Environment.Variables.SQLQueries.SellByDate.ZBSLDT AS CHARACTER);
+	
+		IF NOT(ZBSLDT = 0) THEN
+			
+			SET ZBSLDTDate = CAST(ZBSLDT AS DATE FORMAT 'yyyyMMdd');
+			
+			IF ZBSLDTDate < Environment.Variables.Global.OriginRequest.ns:deliveryDate THEN
+				
+				SET Environment.Variables.Global.SellByDateError = TRUE;
+			
+				SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				SET OutputRoot.JSON.Data.Response = 'FAILED';
+				SET OutputRoot.JSON.Data.Error_Code = 'SELL_BY_DATE';
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+			
+			END IF;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

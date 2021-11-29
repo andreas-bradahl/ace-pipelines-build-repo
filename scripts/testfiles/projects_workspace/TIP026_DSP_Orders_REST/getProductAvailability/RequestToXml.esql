@@ -1,0 +1,76 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE RequestToXml
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST/getProductAvailabilityRequest';
+		
+		DECLARE customerNumber CHAR InputLocalEnvironment.REST.Input.Parameters.customerNumber;
+		DECLARE m3OrderType CHAR InputLocalEnvironment.REST.Input.Parameters.m3OrderType;
+		DECLARE requestedDeliveryDate CHAR InputLocalEnvironment.REST.Input.Parameters.requestedDeliveryDate;
+		DECLARE products CHAR InputLocalEnvironment.REST.Input.Parameters.products;
+		DECLARE unit CHAR;
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.customerNumber TYPE NameValue VALUE customerNumber;
+		CREATE FIELD OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.m3OrderType TYPE NameValue VALUE m3OrderType;
+		CREATE FIELD OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.requestedDeliveryDate TYPE NameValue VALUE requestedDeliveryDate;
+		
+		
+		DECLARE index INTEGER 1;
+		DECLARE moreProducts BOOLEAN TRUE;
+		
+		DECLARE restOfProducts CHAR products;
+		DECLARE productString CHAR;
+		
+		DECLARE productNumber CHAR;
+		DECLARE quantity INTEGER;
+		
+		WHILE moreProducts DO
+						
+			IF NOT(CONTAINS(restOfProducts, '|')) THEN
+				
+				SET productNumber = SUBSTRING(restOfProducts BEFORE '*');
+				SET restOfProducts = REPLACE(restOfProducts, productNumber||'*', '');
+				IF CONTAINS(restOfProducts, '*') THEN 
+					SET quantity = CAST(SUBSTRING(restOfProducts BEFORE '*') AS INTEGER);
+				ELSE 
+					SET quantity = restOfProducts;
+				END IF;
+				SET unit = SUBSTRING(restOfProducts AFTER '*');
+			
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'productNumber' VALUE productNumber;
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'quantity' VALUE quantity;
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'unit' VALUE unit;
+				
+				SET moreProducts = FALSE;
+			ELSE
+			
+				SET productString = SUBSTRING(restOfProducts BEFORE '|');
+				
+				SET productNumber = SUBSTRING(productString BEFORE '*');
+				SET productString = REPLACE(productString, productNumber||'*', ''); 
+				IF CONTAINS(productString, '*') THEN
+					SET quantity = CAST(SUBSTRING(productString BEFORE '*') AS INTEGER);
+				ELSE
+					SET quantity = productString;
+				END IF;
+				SET unit = SUBSTRING(productString AFTER '*');
+				
+				SET productString = SUBSTRING(restOfProducts BEFORE '|');
+			
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'productNumber' VALUE productNumber;
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'quantity' VALUE quantity;
+				CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.products[index] NAME 'unit' VALUE unit;
+				
+				SET restOfProducts = SUBSTRING(restOfProducts AFTER '|');
+				SET index = index + 1;
+			END IF;
+			
+		END WHILE;
+		--CREATE FIELD OutputRoot.XMLNSC.ns:getProductAvailabilityRequest.unit TYPE NameValue VALUE unit;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,43 @@
+
+
+CREATE COMPUTE MODULE esqlGetPreferredBaseUnit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+		DECLARE skuRef CHAR;
+		DECLARE baseUnit CHAR;
+		DECLARE salesUnit CHAR;
+		SET skuRef = Environment.Variables.getItemsRequestEnvironment.itemsRequest.sku;
+		SET baseUnit = Environment.Variables.getItemsRequestEnviroment.itemsRequest.preferredBaseUnit;
+		--SET salesUnit = Environment.Variables.getItemsRequestEnviroment.itemsRequest.preferredSalesUnit;
+		
+		IF skuRef IS NOT NULL THEN
+			DECLARE preferredRef REFERENCE TO CACHE.preferredDataCache.{skuRef}.Preferred.preferredBaseUnit;
+			MOVE preferredRef FIRSTCHILD;
+			WHILE LASTMOVE(preferredRef) DO
+				IF preferredRef.ALUN = baseUnit THEN
+			 		SET Environment.Variables.Preferred.preferredBaseUnit = preferredRef.ALUN;
+				END IF;
+				MOVE preferredRef NEXTSIBLING;
+			END WHILE;
+		ELSE
+			DECLARE itemRef REFERENCE TO CACHE.preferredDataCache;
+			MOVE itemRef FIRSTCHILD;
+			WHILE LASTMOVE(itemRef) DO
+				DECLARE basepreferredRef REFERENCE TO itemRef.Preferred.preferredBaseUnit;
+				MOVE basepreferredRef FIRSTCHILD NAME 'Unit';
+				WHILE LASTMOVE(basepreferredRef) DO
+					IF basepreferredRef.ALUN = baseUnit THEN
+						SET Environment.Variables.Preferred.preferredBaseUnit.{basepreferredRef.ITNO}.ITNO = basepreferredRef.ITNO;
+						SET Environment.Variables.Preferred.preferredBaseUnit.{basepreferredRef.ITNO}.ALUN = basepreferredRef.ALUN;
+					END IF;
+					MOVE basepreferredRef NEXTSIBLING REPEAT NAME;
+				END WHILE;
+				MOVE itemRef NEXTSIBLING;
+			END WHILE;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

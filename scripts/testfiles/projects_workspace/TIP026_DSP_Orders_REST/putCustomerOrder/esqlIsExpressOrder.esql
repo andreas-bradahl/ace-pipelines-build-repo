@@ -1,0 +1,23 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlIsExpressOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderType REFERENCE TO Environment.OrderRequest.Data.orderType;
+
+		IF orderType = Environment.Variables.SQLQueries.Express.value THEN
+			
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'PRODUCT_NOT_VALID_FOR_EXPRESS', envRef);
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

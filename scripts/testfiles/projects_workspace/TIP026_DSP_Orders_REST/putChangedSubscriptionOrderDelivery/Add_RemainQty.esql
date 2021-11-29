@@ -1,0 +1,18 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE Add_RemainQty
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DELETE FIELD OutputLocalEnvironment.Destination;
+
+		IF InputLocalEnvironment.Variables.CurrentOrderLine.ns:quantity > 0 THEN
+			PROPAGATE TO TERMINAL 'out';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

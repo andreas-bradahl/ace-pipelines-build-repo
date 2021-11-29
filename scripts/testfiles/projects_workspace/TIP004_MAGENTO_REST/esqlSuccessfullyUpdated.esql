@@ -1,0 +1,13 @@
+
+
+CREATE COMPUTE MODULE esqlSuccessfullyUpdated
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Successfully updated Items');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+		
+		RETURN FALSE;
+	END;
+END MODULE;

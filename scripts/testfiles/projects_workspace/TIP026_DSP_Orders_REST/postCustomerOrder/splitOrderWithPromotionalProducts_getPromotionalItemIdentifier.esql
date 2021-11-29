@@ -1,0 +1,21 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE splitOrderWithPromotionalProducts_getPromotionalItemIdentifier 
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.promoProductIdentifier; 
+		
+		DECLARE promoProductIdentifier ROW;
+		DECLARE promoProductOrderType ROW;
+		DECLARE applicationDataQuery CHAR 'SELECT value FROM tine_esa.dbo.ApplicationData WHERE parameter = ?';
+		 
+		SET promoProductIdentifier = PASSTHRU(applicationDataQuery, 'zPromotionalM3ItemType');
+		SET promoProductOrderType = PASSTHRU(applicationDataQuery, 'zPromotionalM3OrderType');
+		SET Environment.Variables.promoProductIdentifier = CAST(promoProductIdentifier.value AS CHAR);
+		SET Environment.Variables.promoProductOrderType = CAST(promoProductOrderType.value AS CHAR);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

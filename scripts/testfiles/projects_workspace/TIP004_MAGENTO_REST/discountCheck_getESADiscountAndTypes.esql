@@ -1,0 +1,43 @@
+
+
+
+CREATE DATABASE MODULE discountCheck_getESADiscountAndTypes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+
+		DECLARE esaClassQuery CHARACTER '
+		SELECT t.type , t.discountCampaign
+		FROM zDiscountCampaignData d
+		join zDiscountCampaigns t
+		ON d.discountCampaign = t.discountCampaign
+		WHERE ((d.chain = '''' OR d.chain is NULL) and d.customerClass =?)';
+		
+		CREATE FIELD Environment.Variables.Discounts.{customerRef.OKCUCL};
+		SET Environment.Variables.Discounts.{customerRef.OKCUCL}.Row[] = PASSTHRU(esaClassQuery,customerRef.OKCUCL);
+
+		
+		IF EXISTS(Environment.Variables.UserInfo.BusinessChains[]) THEN
+			DECLARE chainCursor,chainRef REFERENCE TO Environment.Variables.UserInfo.BusinessChains;
+			MOVE chainCursor FIRSTCHILD;
+
+			WHILE LASTMOVE(chainCursor) DO
+				DECLARE esaChainQuery CHARACTER '
+				SELECT t.type , t.discountCampaign
+				FROM zDiscountCampaignData d
+				join zDiscountCampaigns t
+				ON d.discountCampaign = t.discountCampaign
+				WHERE (d.chain = ? AND (d.customerClass = '''' OR d.customerClass is NULL ))
+				OR (d.chain = ? AND d.customerClass =?)
+				';
+				
+				CREATE FIELD Environment.Variables.Discounts.{chainCursor};
+				SET Environment.Variables.Discounts.{chainCursor}.Row[] = PASSTHRU(esaChainQuery,chainCursor,chainCursor,customerRef.OKCUCL);
+
+				MOVE chainCursor NEXTSIBLING;
+			END WHILE;
+		END IF;
+	END;
+
+END MODULE;

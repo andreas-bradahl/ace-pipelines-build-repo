@@ -1,0 +1,22 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckBelongsToCustomer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE m3CustomerNumber CHARACTER Environment.Variables.HTTPResponses.OIZ163MI_GetHead.Item.CUNO;
+		DECLARE requestCustomerNumber CHARACTER Environment.Variables.Global.OriginRequest.customerNumber;
+		
+		IF NOT(m3CustomerNumber = requestCustomerNumber) THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'WRONG_CUSTOMER';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,16 @@
+BROKER SCHEMA putSubscriptionOrderStatus
+
+
+CREATE COMPUTE MODULE esqlRouteOnActive
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF Environment.Variables.Global.OriginRequest.ns:active THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

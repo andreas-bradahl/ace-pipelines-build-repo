@@ -1,0 +1,105 @@
+
+
+CREATE DATABASE MODULE dbGetItemUnits
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE allowedOrderLineUnitsRef REFERENCE TO Environment;
+		
+		DECLARE itnoString CHARACTER '';
+				
+		FOR itemInfo AS Environment.Variables.FullItemsList.Item[] DO
+			
+			SET itnoString = itnoString ||''''|| itemInfo.ITNO ||''''|| ',';
+			
+		END FOR;
+		
+		SET itnoString = itnoString || '!!!';
+		SET itnoString = SUBSTRING(itnoString BEFORE ',!!!');
+		
+		DECLARE sqlQueryItemUnits CHAR ' 
+			SELECT MM.MMUNMS, MM.MMALUN, MU.MUALUN, MU.MUITNO
+			FROM MITAUN MU
+			INNER JOIN MITMAS MM
+			ON 
+					MU.MUCONO = MM.MMCONO
+				AND MU.MUITNO = MM.MMITNO
+			WHERE 
+					MM.MMCONO = 100 
+				AND MU.MUAUTP = 1
+				AND MM.MMUNMS != MU.MUALUN
+				AND MM.MMALUN != MU.MUALUN
+				AND MM.MMITNO IN ('||itnoString||')
+		';
+			
+		SET Environment.Variables.SQLQueries.CurrentItemUnits.Row = PASSTHRU(sqlQueryItemUnits);
+		
+		DECLARE firstEntry BOOLEAN;
+		DECLARE lastSpecificITNO BOOLEAN;
+		DECLARE CurrentItemUnitRef REFERENCE TO Environment;
+		
+		FOR itemInfo AS Environment.Variables.FullItemsList.Item[] DO
+			
+			SET firstEntry = TRUE;
+			SET lastSpecificITNO = FALSE;
+		
+			MOVE CurrentItemUnitRef TO Environment.Variables.SQLQueries.CurrentItemUnits;
+			MOVE CurrentItemUnitRef FIRSTCHILD;
+			
+			WHILE LASTMOVE(CurrentItemUnitRef) AND NOT lastSpecificITNO DO
+				
+				IF itemInfo.ITNO = TRIM(CurrentItemUnitRef.MUITNO) THEN
+					
+					IF firstEntry THEN
+											
+						CREATE LASTCHILD OF itemInfo AS allowedOrderLineUnitsRef NAME 'allowedOrderLineUnits';
+				
+						IF EXISTS(Environment.Variables.SQLQueries.CantAddOrderLineUnit[]) THEN
+							IF NOT Environment.Variables.SQLQueries.CantAddOrderLineUnit.code = TRIM(CurrentItemUnitRef.MMUNMS) THEN
+								CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MMUNMS);
+							END IF;
+						ELSE
+							CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MMUNMS);
+						END IF;
+						
+						IF EXISTS(Environment.Variables.SQLQueries.CantAddOrderLineUnit[]) THEN
+							IF NOT Environment.Variables.SQLQueries.CantAddOrderLineUnit.code = TRIM(CurrentItemUnitRef.MMALUN) THEN
+								CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MMALUN);
+							END IF;
+						ELSE
+							CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MMALUN);
+						END IF;
+						
+						SET firstEntry = FALSE;
+						
+					END IF;
+						
+					IF EXISTS(Environment.Variables.SQLQueries.CantAddOrderLineUnit[]) THEN
+						IF NOT Environment.Variables.SQLQueries.CantAddOrderLineUnit.code = TRIM(CurrentItemUnitRef.MUALUN) THEN
+							CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MUALUN);
+						END IF;
+					ELSE
+						CREATE LASTCHILD OF allowedOrderLineUnitsRef NAME 'Item' VALUE TRIM(CurrentItemUnitRef.MUALUN);
+					END IF;
+					
+				ELSEIF NOT firstEntry THEN
+					
+					SET lastSpecificITNO = TRUE;
+					
+				END IF;				
+				
+				IF NOT firstEntry AND NOT lastSpecificITNO THEN
+					MOVE CurrentItemUnitRef NEXTSIBLING;
+					DELETE PREVIOUSSIBLING OF CurrentItemUnitRef;
+				ELSE
+					MOVE CurrentItemUnitRef NEXTSIBLING;
+				END IF;
+				
+			END WHILE;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

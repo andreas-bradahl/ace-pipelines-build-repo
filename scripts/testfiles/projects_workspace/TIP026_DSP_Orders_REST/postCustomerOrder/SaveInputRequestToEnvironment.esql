@@ -1,0 +1,28 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE SaveInputRequestToEnvironment
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.OrderRequest = InputRoot.JSON;		
+		--SET OutputRoot.HTTPRequestHeader."Accept" = 'application/json;
+/*		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRef, orderLineCursor REFERENCE TO Environment.OrderRequest.Data;
+		MOVE orderLineCursor FIRSTCHILD NAME 'orderLines';
+		MOVE orderLineCursor FIRSTCHILD NAME 'Item';
+		DECLARE orderLineCursorIndex INT 0;
+		
+		WHILE LASTMOVE(orderLineCursor) DO
+			
+			SET orderLineCursorIndex = orderLineCursorIndex + 1;
+			SET varRef.orderLineCursorIndex = orderLineCursorIndex;
+
+			MOVE orderLineCursor NEXTSIBLING REPEAT NAME;
+			
+		END WHILE;
+*/		
+		RETURN TRUE;
+	END;
+END MODULE;

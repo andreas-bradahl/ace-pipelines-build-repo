@@ -1,0 +1,38 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckIfNoOrderLinesAfterUpdate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE totalOrderLineCount INTEGER CARDINALITY(Environment.Variables.HTTPResponses.OIZ163MI_LstInstLine.Item[]);
+			
+		SET totalOrderLineCount = totalOrderLineCount + CARDINALITY(Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesAdd[]);
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines.ns:putChangedSubscriptionOrderDeliveryRequestOrderLinesDel[] DO
+			
+			FOR orderLineNumber AS orderLine.ns:orderLineNumbers[] DO
+					
+					FOR existingOrderLine AS Environment.Variables.HTTPResponses.OIZ163MI_LstInstLine.Item[] DO
+				
+						IF orderLineNumber = CAST(existingOrderLine.ROLN AS INTEGER) THEN
+							
+							SET totalOrderLineCount = totalOrderLineCount - 1;
+							
+						END IF;
+					
+					END FOR;	
+					
+				END FOR;	
+			
+		END FOR;
+		
+		IF totalOrderLineCount > 0 THEN
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;			
+
+		RETURN FALSE;
+	END;
+END MODULE;

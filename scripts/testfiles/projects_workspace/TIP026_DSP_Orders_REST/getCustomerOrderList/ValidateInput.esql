@@ -1,0 +1,163 @@
+BROKER SCHEMA getCustomerOrderList
+
+CREATE COMPUTE MODULE ValidateInput
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Response;
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.Error_Code;
+		CREATE FIELD OutputLocalEnvironment.Variables.ErrorMessage.HTTPCode;
+		
+		DECLARE errorMessageRef REFERENCE TO OutputLocalEnvironment.Variables.ErrorMessage;
+		DECLARE inputParamsRef REFERENCE TO InputLocalEnvironment.REST.Input.Parameters;
+		
+		DECLARE customerNumber CHARACTER;
+		DECLARE orderNumber CHARACTER;
+		DECLARE orderName CHARACTER;	
+		DECLARE fromDate CHARACTER;	
+		DECLARE toDate CHARACTER;	
+		DECLARE fromStatus CHARACTER;	
+		DECLARE toStatus CHARACTER;	
+		DECLARE typeOfOrder CHARACTER;
+		
+		SET customerNumber = TRIM(inputParamsRef.customerNumber);
+		SET orderNumber = TRIM(inputParamsRef.orderNumber);
+		SET orderName = TRIM(inputParamsRef.orderName);
+		SET fromDate = TRIM(inputParamsRef.fromDate);
+		SET toDate = TRIM(inputParamsRef.toDate);
+		SET fromStatus = COALESCE(TRIM(inputParamsRef.fromStatus), '22');
+		SET toStatus = COALESCE(TRIM(inputParamsRef.toStatus), '99');
+		SET typeOfOrder = TRIM(inputParamsRef.typeOfOrder);
+		
+		IF customerNumber IS NOT NULL THEN
+			IF LENGTH(customerNumber) > 10 THEN
+				-- Throw error: customerNumber too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'CUSTOMER_NUMBER TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		ELSE
+			-- Throw error: customerNumber mandatory
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'CUSTOMER_NUMBER MANDATORY';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+		END IF;
+		
+		IF orderNumber IS NOT NULL THEN
+			IF LENGTH(orderNumber) > 10 THEN
+				-- Throw error: orderNumber too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'ORDER_NUMBER TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+		
+		IF orderName IS NOT NULL THEN
+			IF LENGTH(orderName) > 36 THEN
+				-- Throw error: orderName too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'ORDER_NAME TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+		
+		IF fromDate IS NOT NULL THEN
+			IF CONTAINS(fromDate, '-') OR CONTAINS(fromDate, ':') THEN
+				-- Throw error: fromDate needs to be YYYYMMDD format
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'FROM_DATE NEEDS TO BE "YYYYMMDD" FORMAT';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			ELSEIF LENGTH(fromDate) > 8 THEN
+				-- Throw error: fromDate too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'FROM_DATE TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+				
+		IF toDate IS NOT NULL THEN
+			IF CONTAINS(toDate, '-') OR CONTAINS(toDate, ':') THEN
+				-- Throw error: toDate needs to be YYYYMMDD format
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'TO_DATE NEEDS TO BE "YYYYMMDD" FORMAT';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			ELSEIF LENGTH(toDate) > 8 THEN
+				-- Throw error: toDate too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'TO_DATE TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+		
+		IF typeOfOrder IS NOT NULL THEN
+			IF LENGTH(typeOfOrder) > 1 THEN
+				-- Throw error: typeOfOrder too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'TYPE_OF_ORDER TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			ELSEIF NOT(CONTAINS(typeOfOrder, 'K')) AND NOT(CONTAINS(typeOfOrder, 'F')) THEN
+				-- Throw error: typeOfOrder can only be K, F or blank
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'TYPE_OF_ORDER NEEDS TO BE "K", "F"';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+		
+		IF fromStatus IS NOT NULL THEN
+			IF LENGTH(fromStatus) > 2 THEN
+				-- Throw error: fromStatus long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'FROM_STATUS TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;		
+		
+		IF toStatus IS NOT NULL THEN
+			IF LENGTH(toStatus) > 2 THEN
+				-- Throw error: toStatus too long
+				SET errorMessageRef.Response = 'FAILED';
+				SET errorMessageRef.Error_Code = 'TO_STATUS TOO LONG';
+				SET errorMessageRef.HTTPCode = '400';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN false;
+			END IF;
+		END IF;
+		
+		RETURN true;
+	END;
+END MODULE;

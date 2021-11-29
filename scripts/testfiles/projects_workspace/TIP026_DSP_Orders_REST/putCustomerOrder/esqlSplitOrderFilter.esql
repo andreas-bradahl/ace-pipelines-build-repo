@@ -1,0 +1,49 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlSplitOrderFilter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE PromoFlag BOOLEAN Environment.Variables.Global.Flags.PromoSplit;
+		DECLARE OPEXFlag BOOLEAN Environment.Variables.Global.Flags.OPEXSplit;
+		DECLARE OriginPromoFlag BOOLEAN Environment.Variables.Global.Flags.OriginPromo;
+		
+		DECLARE customerWarehouseOrderRef REFERENCE TO Environment.Variables.Global.OrderSplit.customerWarehouseOrder.orderLines;
+		DECLARE promotionalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.promotionalOrder.orderLines;
+		DECLARE normalOrder REFERENCE TO Environment.Variables.Global.PromoSplit.normalOrder.orderLines;
+		
+		IF OPEXFlag AND NOT(OriginPromoFlag) THEN
+			IF NOT(EXISTS(customerWarehouseOrderRef.Item[])) THEN
+				PROPAGATE TO TERMINAL 'out2';
+				RETURN FALSE;
+			END IF;	
+		END IF;
+			
+		IF OriginPromoFlag AND NOT(OPEXFlag) THEN
+			IF NOT(EXISTS(promotionalOrder.Item[])) THEN
+				PROPAGATE TO TERMINAL 'out2';
+				RETURN FALSE;
+			END IF;	
+		END IF;
+	
+		IF NOT(OriginPromoFlag) AND NOT(OPEXFlag) THEN
+			IF NOT(EXISTS(normalOrder.Item[])) THEN
+				PROPAGATE TO TERMINAL 'out2';
+				RETURN FALSE;
+			END IF;	
+		END IF;
+	
+		IF EXISTS(Environment.Variables.Global.OrderSplit[]) OR EXISTS(Environment.Variables.Global.PromoSplit[]) THEN
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

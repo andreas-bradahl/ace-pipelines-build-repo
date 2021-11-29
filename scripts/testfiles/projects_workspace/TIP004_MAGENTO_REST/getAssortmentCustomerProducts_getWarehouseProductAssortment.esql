@@ -1,0 +1,97 @@
+
+
+CREATE DATABASE MODULE getAssortmentCustomerProducts_getWarehouseProductAssortment
+	
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE currentDate CHARACTER CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE warehouseItemsQuery CHAR;
+		DECLARE queryVariable CHAR '';
+		DECLARE showSellByDateProduct REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		 
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;	
+		
+		-- Add items that are available only for customers with assortment check
+		SET warehouseItemsQuery = 
+			'(SELECT DISTINCT MMITNO AS ITNO,MBWHLO, ZBSLDT,CVVTP1, MUCOFA,MMUNMS,MMITCL,
+			MUALUN, MMALUN
+			FROM MITMAS
+			INNER JOIN MITBAL
+				ON MBCONO = MMCONO
+				AND MMITNO = MBITNO
+				AND MBWHLO = ?
+				AND (MBSTAT = ''20''
+				OR MBSTAT = ''50'')	
+			INNER JOIN OCUSMA
+				ON OKCONO = MMCONO
+				AND OKWHLO = MBWHLO
+				AND OKCUNO = ?			
+			INNER JOIN OASCUS
+				ON OCCONO = OKCONO
+				AND OCCUNO = OKCUNO
+				AND OCFDAT <= ?
+				AND OCTDAT >= ?
+			INNER JOIN OASITN
+				ON OICONO = MBCONO
+				AND OIASCD = OCASCD 
+				AND OIITNO = MBITNO
+				AND OIFDAT <= ?
+				AND OITDAT >= ?
+			INNER JOIN MITWHL 
+				ON MWCONO=MBCONO
+				AND MWWHLO=MBWHLO
+			INNER JOIN CVATPC 
+				ON CVCONO=MWCONO 
+				AND CVDIVI=MBDIVI 
+				AND CVCSCD=MWCSCD 
+				AND CVVTCD=MBVTCS
+			LEFT JOIN ' || cusfdbName || '.ZITBAL
+				ON ZBCONO=MBCONO 
+				AND ZBWHLO=MBWHLO 
+				AND ZBITNO=MBITNO
+			LEFT JOIN MITAUN 
+				ON MMITNO=MUITNO 
+				AND MUAUS2 = ''1'' 
+				AND MUAUTP = ''1''
+				AND MUCONO = MMCONO
+			WHERE MMCONO = ?
+				AND (MMSTAT = ''20''
+				OR MMSTAT = ''50'')
+			    AND MMACHK = 1  
+			    ' || queryVariable || '
+				AND SUBSTRING(MMSPE2, CAST(? AS INT), 1) = ''1'')';
+				
+		CREATE FIELD Environment.Variables.ProductData; -- .Warehouse.NoACHK;
+		CREATE FIELD Environment.Variables.ProductData.Assortment;
+		CREATE FIELD Environment.Variables.ProductData.Assortment.Warehouse;
+
+		SET Environment.Variables.ProductData.Assortment.Warehouse.Item[] =
+			PASSTHRU(warehouseItemsQuery VALUES (
+				customerRef.OKWHLO, 
+				customerRef.OKCUNO,
+				customerRef.CurrentDate, 
+				customerRef.CurrentDate, 
+				customerRef.CurrentDate, 
+				customerRef.CurrentDate, 
+				customerRef.OKCONO, 
+				customerRef.SalesChannelNumber
+			));
+			
+		DECLARE count INT CARDINALITY(Environment.Variables.ProductData.Assortment.Warehouse.Item[]);
+		SET Environment.Variables.ProductData.Assortment.Warehouse = count;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,27 @@
+BROKER SCHEMA getCancellationDateList
+
+
+CREATE COMPUTE MODULE esqlPrepareResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE getCancellationDateListResponseObjectRef REFERENCE TO Environment;
+
+		FOR cancellationDate AS Environment.Variables.HTTPResponses.OIZ163MI_LstCancel.Item[] DO
+			
+			CREATE LASTCHILD OF OutputRoot.XMLNSC.ns:getCancellationDateListResponse AS getCancellationDateListResponseObjectRef NAMESPACE(ns) NAME 'getCancellationDateListResponseObject';
+			
+			IF cancellationDate.CUBL = 0 THEN
+				SET getCancellationDateListResponseObjectRef.ns:cancelledByCustomer = TRUE;
+				SET getCancellationDateListResponseObjectRef.ns:cancelledByTINE = FALSE;
+			ELSE
+				SET getCancellationDateListResponseObjectRef.ns:cancelledByCustomer = FALSE;
+				SET getCancellationDateListResponseObjectRef.ns:cancelledByTINE = TRUE;
+			END IF;
+			
+			SET getCancellationDateListResponseObjectRef.ns:date = CAST(CAST(cancellationDate.FDAT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+			
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

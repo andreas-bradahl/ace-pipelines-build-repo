@@ -1,0 +1,10 @@
+
+
+CREATE COMPUTE MODULE SendDataToM3_BrowseFromQueue
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE LASTCHILD OF Environment.variables DOMAIN 'XMLNSC' NAME 'DIP_Data';
+		SET Environment.variables.DIP_Data.XMLNSC = InputRoot.XMLNSC;
+		RETURN TRUE;
+	END;
+END MODULE;

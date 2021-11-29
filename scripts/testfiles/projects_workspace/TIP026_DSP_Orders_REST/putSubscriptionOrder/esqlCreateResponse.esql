@@ -1,0 +1,66 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCreateResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD OutputRoot.XMLNSC;
+		DECLARE outputRef REFERENCE TO OutputRoot.XMLNSC;
+		
+		DECLARE failedOrderLineRef REFERENCE TO Environment;
+
+		IF NOT(Environment.Variables.FailedVariables.OrderLinesFailed) OR Environment.Variables.HTTPResponses.OIZ163MI_DltHead.Item.RETV IS NOT NULL THEN
+			
+			SET outputRef.ns:putSubscriptionOrderResponseOK.ns:orderNumber = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+			SET outputRef.ns:putSubscriptionOrderResponseOK.ns:success = TRUE;
+			
+		ELSE
+			
+			SET outputRef.ns:putSubscriptionOrderResponseFailed.ns:orderNumber = Environment.Variables.Global.OriginRequest.ns:orderNumber;
+			SET outputRef.ns:putSubscriptionOrderResponseFailed.ns:success = FALSE;
+
+			FOR failedOrderLine AS Environment.Variables.FailedVariables.failedOrderLine[] DO
+							
+				IF failedOrderLine.orderLine.ns:action = 'add' THEN
+							
+					CREATE LASTCHILD OF outputRef.ns:putSubscriptionOrderResponseFailed AS failedOrderLineRef NAMESPACE(ns) NAME 'failedOrderLinesAdd';
+								
+					SET failedOrderLineRef.ns:sku = failedOrderLine.orderLine.ns:sku;
+					SET failedOrderLineRef.ns:quantity = failedOrderLine.orderLine.ns:quantity;
+					SET failedOrderLineRef.ns:orderLineUnit = failedOrderLine.orderLine.ns:orderLineUnit;
+					SET failedOrderLineRef.ns:action = failedOrderLine.orderLine.ns:action;
+					SET failedOrderLineRef.ns:errorCode = failedOrderLine.errorCode;
+					SET failedOrderLineRef.ns:errorMessage = failedOrderLine.errorMessage;
+					
+				ELSEIF failedOrderLine.orderLine.ns:action = 'upd' THEN
+					
+					CREATE LASTCHILD OF outputRef.ns:putSubscriptionOrderResponseFailed AS failedOrderLineRef NAMESPACE(ns) NAME 'failedOrderLinesUpd';
+					
+					SET failedOrderLineRef.ns:sku = failedOrderLine.orderLine.ns:sku;
+					SET failedOrderLineRef.ns:quantity = failedOrderLine.orderLine.ns:quantity;
+					SET failedOrderLineRef.ns:orderLineUnit = failedOrderLine.orderLine.ns:orderLineUnit;
+					SET failedOrderLineRef.ns:action = failedOrderLine.orderLine.ns:action;
+					SET failedOrderLineRef.ns:orderLineNumbers = failedOrderLine.orderLine.ns:orderLineNumbers;
+					SET failedOrderLineRef.ns:errorCode = failedOrderLine.errorCode;
+					SET failedOrderLineRef.ns:errorMessage = failedOrderLine.errorMessage;
+					
+				ELSEIF failedOrderLine.orderLine.ns:action = 'del' THEN
+					
+					CREATE LASTCHILD OF outputRef.ns:putSubscriptionOrderResponseFailed AS failedOrderLineRef NAMESPACE(ns) NAME 'failedOrderLinesDel';
+					
+					SET failedOrderLineRef.ns:sku = failedOrderLine.orderLine.ns:sku;
+					SET failedOrderLineRef.ns:action = failedOrderLine.orderLine.ns:action;
+					SET failedOrderLineRef.ns:orderLineNumbers = failedOrderLine.orderLine.ns:orderLineNumbers;
+					SET failedOrderLineRef.ns:errorCode = failedOrderLine.errorCode;
+					SET failedOrderLineRef.ns:errorMessage = failedOrderLine.errorMessage;
+				
+				END IF;
+								
+			END FOR;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

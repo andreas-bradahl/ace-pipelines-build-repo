@@ -1,0 +1,98 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlOrderAvailabilityAtCustomersWarehouse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE cono CHAR orderRequestRef.companyNumber;
+		DECLARE whlo CHAR varRef.Customer.warehouse;
+		DECLARE itno CHAR '';
+		DECLARE CUNO CHARACTER orderRequestRef.customerNumber;
+		DECLARE FACI CHARACTER Environment.Variables.Customer.warehouse;
+		DECLARE ORTP CHARACTER orderRequestRef.orderType;
+		DECLARE DWDZ CHARACTER REPLACE(orderRequestRef.requestedDeliveryDate, '-', '');
+		DECLARE SPLM CHARACTER Environment.Variables.Customer.supplyModel;
+		
+		CREATE FIELD Environment.Variables.Warehouse.Exists;
+		CREATE FIELD Environment.Variables.Warehouse.NotExists;
+		DECLARE existsRef REFERENCE TO Environment.Variables.Warehouse.Exists;
+		DECLARE notExistsRef REFERENCE TO Environment.Variables.Warehouse.NotExists;
+		
+		DECLARE existsCount INT 0;
+		DECLARE notExistsCount INT 0;
+		
+		FOR orderLineItem AS orderRequestRef.orderLines.Item[] DO
+			
+			SET itno = orderLineItem.sku;
+			
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = 100;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = CUNO;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = FACI;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.POPN = itno;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = 1;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTP = ORTP;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDZ = DWDZ;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPLM = SPLM;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.BCKO = 2;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.PADL = 2;
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+			IF Environment.Variables.isCustomerWarehouse THEN
+				DECLARE existsItemCursor REFERENCE TO existsRef;
+				CREATE LASTCHILD OF existsItemCursor AS existsItemCursor NAME 'Item';
+				CREATE LASTCHILD OF existsItemCursor NAME 'ITNO' VALUE itno;
+				SET existsCount = existsCount + 1;
+			ELSE
+				DECLARE notExistsItemCursor REFERENCE TO notExistsRef;
+				CREATE LASTCHILD OF notExistsItemCursor AS notExistsItemCursor NAME 'Item';
+				CREATE LASTCHILD OF notExistsItemCursor NAME 'ITNO' VALUE itno;
+				SET notExistsCount = notExistsCount + 1;
+			END IF;
+			
+		END FOR;
+		
+		SET varRef.Global.orderAvailability = getOrderAvailability(existsCount, notExistsCount);
+		
+		RETURN TRUE;
+	END;
+	
+	
+CREATE FUNCTION getOrderAvailability (IN existsCount INT, IN notExistsCount INT) RETURNS CHAR
+	BEGIN
+		
+		DECLARE orderAvailability CHAR '';
+		
+		IF existsCount + notExistsCount = 0 THEN
+			
+			SET orderAvailability  = 'all';
+			
+		ELSEIF existsCount > 0 AND notExistsCount = 0 THEN
+			
+			SET orderAvailability  = 'all';
+			
+		ELSEIF existsCount = 0 AND notExistsCount > 0 THEN
+			
+			SET orderAvailability  = 'none';
+			
+		ELSE
+			
+			SET orderAvailability  = 'some';
+			
+		END IF;
+		
+		RETURN orderAvailability;
+		
+	END;
+	
+CREATE FUNCTION itemFound (IN entry CHAR, IN list REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		
+		RETURN EXISTS(SELECT * FROM list.Item[] AS i WHERE i.ITNO = entry);
+		
+	END;
+
+END MODULE;

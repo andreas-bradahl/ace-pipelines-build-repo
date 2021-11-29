@@ -1,0 +1,16 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareLstOXCNTRU1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE originRequest REFERENCE TO Environment.Variables.Global.OriginRequest;
+		
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE queryStringRef REFERENCE TO OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		SET queryStringRef.CUNO = originRequest.customerNumber;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

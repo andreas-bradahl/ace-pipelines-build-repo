@@ -1,0 +1,65 @@
+BROKER SCHEMA getCustomerOrderList
+
+
+CREATE COMPUTE MODULE IsTemporaryOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+				
+		CREATE FIELD OutputLocalEnvironment.MDBREADMILstOXCNTRU1Response;
+		CREATE FIELD OutputLocalEnvironment.FoundInTemp;
+		
+		DECLARE inputRef REFERENCE TO InputRoot.JSON.Data;
+		DECLARE originRequest REFERENCE TO Environment.Variables.OriginRequest;
+		DECLARE listCursor REFERENCE TO Environment.Variables.MDBREADMILstOXCNTRU1Response_JSONArray;
+		
+		DECLARE firstOrder BOOLEAN (InputLocalEnvironment.OrderIndex = 0);
+		DECLARE foundInTemp BOOLEAN;
+		SET foundInTemp = FALSE;
+		
+		DECLARE noInputParams BOOLEAN;
+		
+		SET noInputParams = (originRequest.ORNO IS NULL AND 
+							 originRequest.DSTX IS NULL AND
+							 CONTAINS(originRequest.ORDF, getDateAsyyyyMMdd()) AND
+							 originRequest.ORDT IS NULL AND
+							 originRequest.ORSL IS NULL AND
+							 originRequest.ORST IS NULL AND
+							 originRequest.ORTY IS NULL);
+		
+        MOVE listCursor FIRSTCHILD NAME 'Item';
+        
+        WHILE LASTMOVE(listCursor) DO 
+        	
+        	DECLARE tempORNR REFERENCE TO listCursor.ORNR;
+        	
+        	IF CONTAINS(inputRef.ORNO, tempORNR) AND CONTAINS(inputRef.SRCO, 'K') THEN
+        		SET foundInTemp = TRUE;
+    		END IF;
+    		
+    		IF originRequest.ORNO IS NULL AND originRequest.DSTX IS NULL THEN
+        	
+	        	IF tempORNR IS NULL AND firstOrder AND noInputParams THEN
+	        		SET OutputLocalEnvironment.MDBREADMILstOXCNTRU1Response = listCursor;
+	        		PROPAGATE TO TERMINAL 'out';	
+	        		
+	        	ELSEIF (tempORNR IS NULL) AND firstOrder AND CONTAINS(inputRef.SRCO, 'K') THEN
+	        		SET OutputLocalEnvironment.MDBREADMILstOXCNTRU1Response = listCursor;
+	        		PROPAGATE TO TERMINAL 'out';
+			  	END IF;
+			  	
+    		END IF;
+        	
+            MOVE listCursor NEXTSIBLING REPEAT NAME;
+        END WHILE;
+        
+        SET OutputLocalEnvironment.FoundInTemp = foundInTemp;
+        
+        SET OutputRoot = InputRoot;
+        
+    	PROPAGATE TO TERMINAL 'out1';
+    	
+    	
+		RETURN FALSE;
+	END;
+END MODULE;

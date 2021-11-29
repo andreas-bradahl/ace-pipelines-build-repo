@@ -1,0 +1,19 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE prepareCrmWebserviceRequestForSetDiscountPercentage
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE clipCardNumber CHAR orderRequestRef.clipCard;
+		
+		DECLARE fullpath CHAR crmBasePath || 'clip/' || clipCardNumber;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = fullpath;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

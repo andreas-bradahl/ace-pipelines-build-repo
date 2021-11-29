@@ -1,0 +1,72 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCleanEnvironment
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE Name CHARACTER;
+		DECLARE Value CHARACTER;
+		
+		-- Clean OriginRequest
+		SET Environment.Variables.Global.OriginRequest = Environment.OrderRequest.Data;
+		DELETE FIELD Environment.OrderRequest;
+		
+		
+		-- Clean GetHead		
+		DECLARE getHeadCursor REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue.Item;
+		
+		DECLARE getHeadRef REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.HTTPResponses.GetHead.Item AS getHeadRef;
+		
+		WHILE LASTMOVE(getHeadCursor) DO
+			
+			SET Name = getHeadCursor.Name;
+			SET Value = getHeadCursor.Value;
+			
+			SET getHeadRef.{Name} = TRIM(Value);
+			
+			MOVE getHeadCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		
+		-- Clean LstLine2
+		CREATE FIELD Environment.Variables.HTTPResponses.LstLine2;
+		
+		DECLARE lstLine2Cursor REFERENCE TO Environment.JSONResponse.LstLine2.Data.MIRecord.Item;
+		
+		DECLARE lstLine2EnvRef REFERENCE TO Environment.Variables.HTTPResponses.LstLine2;
+		DECLARE lstLine2ItemRef REFERENCE TO Environment;
+		
+        WHILE LASTMOVE(lstLine2Cursor) DO
+           
+            CREATE LASTCHILD OF lstLine2EnvRef AS lstLine2ItemRef NAME 'Item';
+           
+            DECLARE lstLine2ValueCursor REFERENCE TO lstLine2Cursor.NameValue.Item;
+            WHILE LASTMOVE(lstLine2ValueCursor) DO
+               
+                SET Name = lstLine2ValueCursor.Name;
+                SET Value = lstLine2ValueCursor.Value;
+           
+                SET lstLine2ItemRef.{Name} = TRIM(Value);
+               
+                MOVE lstLine2ValueCursor NEXTSIBLING REPEAT NAME;
+            END WHILE;
+           
+        MOVE lstLine2Cursor NEXTSIBLING REPEAT NAME;
+        END WHILE;
+		
+		DELETE FIELD Environment.JSONResponse;
+	
+		
+		-- Clean NoDeleteOrderCodes
+		SET Environment.Variables.SQLQueries.NoDeleteOrderCodes = Environment.NoDeleteOrderCodes;
+		DELETE FIELD Environment.NoDeleteOrderCodes;
+		
+		
+		-- Clean NoChangeOrderCodes
+		SET Environment.Variables.SQLQueries.NoChangeOrderCodes = Environment.NoChangeOrderCodes;
+		DELETE FIELD Environment.NoChangeOrderCodes;
+	
+		RETURN TRUE;
+	END;
+END MODULE;

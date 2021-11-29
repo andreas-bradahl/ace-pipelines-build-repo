@@ -1,0 +1,28 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlFilterCorrectUnits
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE currentOrderline REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		
+		IF currentOrderline.orderLineUnit IS NULL THEN
+			PROPAGATE TO TERMINAL 'out';	
+			
+		ELSEIF currentOrderline.orderLineUnit = '' THEN
+			PROPAGATE TO TERMINAL 'out';
+				
+		ELSEIF NOT (currentOrderline.orderLineUnit = 'STK' OR currentOrderline.orderLineUnit = 'D') THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSEIF NOT currentOrderline.sellableInD THEN
+			PROPAGATE TO TERMINAL 'out';
+			
+		ELSE
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

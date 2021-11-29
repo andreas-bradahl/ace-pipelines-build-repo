@@ -1,0 +1,30 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE getExtraDeliveryType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE httpResponseRef REFERENCE TO Environment.Variables.HTTPResponses;
+		DECLARE extraDeliveryType CHAR 'zMvxOrdertype_extra';
+		
+		DECLARE orderType CHAR  httpResponseRef.GetHead.ORTP;
+		DECLARE value CHAR getSingleValueFromApplicationData(extraDeliveryType, LocalEnvironment);
+		
+		
+		IF orderType = value THEN
+			
+			SET globalVarRef.extraDelivery = true;
+			
+		ELSE
+			
+			SET globalVarRef.extraDelivery = false;
+			
+		END IF;
+		
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

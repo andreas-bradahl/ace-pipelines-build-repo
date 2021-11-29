@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+    <complexType name="EventHubObject">
+    	<sequence>
+    		<element name="tenant" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="publisher" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="operation" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="document" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="timestamp" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="elements" type="co:EventHubObjectElements" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="EventHubObjectElements">
+    	<sequence>
+    		<element name="name" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="oldvalue" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="newvalue" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <element name="EventHubObject" type="co:EventHubObject"></element>
+
+</schema>

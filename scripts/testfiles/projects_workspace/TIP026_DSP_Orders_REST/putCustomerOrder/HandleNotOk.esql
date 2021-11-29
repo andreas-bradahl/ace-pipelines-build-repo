@@ -1,0 +1,82 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE HandleNotOk
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE inputDataRef REFERENCE TO InputRoot.JSON.Data;
+
+		DECLARE orderOK BOOLEAN true;
+		
+		IF inputDataRef."@type" = 'ServerReturnedNOK' THEN 
+			SET orderOK = false;
+		END IF;
+		
+		IF orderOK THEN
+			RETURN FALSE;
+		END IF;
+		
+		DECLARE failedOrderLinesRef, failedOrderLineCursor REFERENCE TO Environment.failedOrderLines;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderLineIndex INT Environment.Variables.orderLineIndex;
+		DECLARE orderLineRef REFERENCE TO orderRequestRef.orderLines.Item[orderLineIndex];
+		DECLARE todaysDate INT CAST(CAST(CURRENT_DATE AS CHAR FORMAT 'YYYYMMdd') AS INT);
+		DECLARE cono CHAR TRIM(orderRequestRef.companyNumber);
+		DECLARE code CHAR TRIM(inputDataRef."@code");
+		DECLARE message CHAR inputDataRef.Message;
+		SET message = REPLACE(message, code, '');
+		SET message = TRIM(message);
+		
+		DECLARE sqlQuery CHAR 'SELECT EVTX60 FROM TCERRM WHERE EVCONO = ? AND EVMSID = ? AND EVMDTA= ? AND EVRGDT = ? ORDER BY EVRGTM DESC LIMIT 1';
+		SET InputLocalEnvironment.TCERRM.Item[] = PASSTHRU(sqlQuery, cono, code, message, todaysDate);
+		
+		DECLARE evtx60 CHAR TRIM(InputLocalEnvironment.TCERRM.Item[1].EVTX60);
+		DECLARE action CHAR TRIM(orderLineRef.action);
+		DECLARE orderLinePlacementStatus CHAR TRIM(GetValueFromNameValueList('STAT',Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue));
+		
+		-- TODO implement rest
+		IF action = 'add' OR action = 'upd' OR action = 'del' THEN
+			CREATE LASTCHILD OF failedOrderLineCursor AS failedOrderLineCursor NAME 'Item';
+			CALL writeNewFailedOrderLine(orderLineRef, code, message, evtx60, action, failedOrderLineCursor);
+		END IF;
+		RETURN FALSE;
+	END;
+
+CREATE PROCEDURE writeNewFailedOrderLine(IN orderLineRef REFERENCE, IN code CHAR, IN message CHAR, IN evtx60 CHAR, IN action CHAR, IN failedOrderLineRef REFERENCE)
+BEGIN
+	DECLARE orderLineNumbersItemCursor REFERENCE TO failedOrderLineRef;
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'sku' VALUE orderLineRef.sku;
+	
+	
+	IF NOT action = 'del' THEN
+		
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'quantity' VALUE orderLineRef.quantity;
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'lostSalesWarehouse' VALUE orderLineRef.lostSalesWarehouse;
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'orderLineUnit' VALUE orderLineRef.orderLineUnit;
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine1' VALUE CAST(orderLineRef.discountLine1 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine2' VALUE CAST(orderLineRef.discountLine2 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine3' VALUE CAST(orderLineRef.discountLine3 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine4' VALUE CAST(orderLineRef.discountLine4 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine5' VALUE CAST(orderLineRef.discountLine5 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'discountLine6' VALUE CAST(orderLineRef.discountLine6 AS DECIMAL);
+		CREATE LASTCHILD OF failedOrderLineRef NAME 'isLostSales' VALUE orderLineRef.isLostSales;
+		
+	END IF;
+	
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'action' VALUE orderLineRef.action;
+	
+	IF NOT action = 'add' THEN
+		MOVE orderLineNumbersItemCursor FIRSTCHILD NAME 'orderLineNumbers';
+		IF NOT LASTMOVE(orderLineNumbersItemCursor) THEN
+			CREATE FIELD failedOrderLineRef.orderLineNumbers AS orderLineNumbersItemCursor IDENTITY(JSON.Array)orderLineNumbers ;
+		END IF;
+		CREATE LASTCHILD OF orderLineNumbersItemCursor NAME 'Item' VALUE orderLineRef.orderLineNumber.Item;
+	END IF;
+	
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'orderLinePlacementStatus' VALUE COALESCE(orderLineRef.orderLinePlacementStatus, 'Need value'); -- TODO fix this
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'errorCode' VALUE code;
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'errorMessage' VALUE message;
+	CREATE LASTCHILD OF failedOrderLineRef NAME 'errorInformation' VALUE evtx60;
+END;
+		
+END MODULE;

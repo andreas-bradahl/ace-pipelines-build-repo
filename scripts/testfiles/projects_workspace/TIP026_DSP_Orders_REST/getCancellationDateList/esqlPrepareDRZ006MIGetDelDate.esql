@@ -1,0 +1,14 @@
+BROKER SCHEMA getCancellationDateList
+
+
+CREATE COMPUTE MODULE esqlPrepareDRZ006MIGetDelDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.OrderRequest.Data.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.OrderRequest.Data.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RLDT = REPLACE(CAST(Environment.OrderRequest.Data.requestedDeliveryDate AS CHAR), '-', '');
+		
+		RETURN TRUE;
+	END;
+END MODULE;

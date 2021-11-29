@@ -1,0 +1,14 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareMDBREADMIGetOCUSMA00
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = orderRequestRef.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = '100';
+
+		RETURN TRUE;
+	END;
+END MODULE;

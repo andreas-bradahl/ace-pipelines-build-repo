@@ -1,0 +1,80 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlCheckSellByDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE warehouseSupplying CHARACTER;		
+		--DECLARE warehouseDefault CHARACTER Environment.Variables.HTTPResponses.MDBREADMI_GetOCUSMA00.Item.WHLO;
+		DECLARE warehouseDefault CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.WHLO;
+		DECLARE sku CHARACTER InputLocalEnvironment.Variables.sku;
+
+		DECLARE ZBSLDT CHARACTER;
+		DECLARE ZBSLDTDate DATE;
+		
+		DECLARE entityCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item;
+		WHILE LASTMOVE(entityCursor) DO
+						
+			DECLARE valueCursor REFERENCE TO entityCursor.NameValue.Item;
+			WHILE LASTMOVE(valueCursor) DO
+				
+				
+				IF valueCursor.Name = 'SWHL' THEN
+					SET warehouseSupplying = TRIM(valueCursor.Value);					
+				END IF;			
+				
+				MOVE valueCursor NEXTSIBLING REPEAT NAME;
+			END WHILE;
+			
+			
+			MOVE entityCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+				
+		DECLARE sqlQuerySellByDate CHAR ' 
+			SELECT ZBSLDT
+			FROM ZITBAL
+			WHERE 
+					ZBCONO = ''100''
+				AND ZBWHLO = ? 
+				AND ZBITNO = ?
+		';
+		
+		IF warehouseSupplying IS NOT NULL THEN
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseSupplying, sku);
+		ELSE
+			SET Environment.Variables.SQLQueries.SellByDate = PASSTHRU(sqlQuerySellByDate, warehouseDefault, sku);
+		END IF;
+	
+		SET ZBSLDT = CAST(Environment.Variables.SQLQueries.SellByDate.ZBSLDT AS CHARACTER);
+	
+		IF NOT(ZBSLDT = 0) THEN
+			
+			SET ZBSLDTDate = CAST(ZBSLDT AS DATE FORMAT 'yyyyMMdd');
+			
+
+			
+			-- IF ZBSLDTDate > Environment.Variables.HTTPResponses.OIZ102MI_LstOrders.Item[1].RLDT THEN
+			IF ZBSLDTDate > Environment.OrderRequest.Data.requestedDeliveryDate THEN
+					
+				SET Environment.Variables.Global.SellByDateError = TRUE;
+				
+				DECLARE errorCode INT 400;
+				DECLARE response CHAR 'FAILED';
+				DECLARE reason CHAR 'SELL_BY_DATE';
+				CALL setErrorMessage (errorCode, response, reason, Environment);
+						
+				--SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+				--SET OutputRoot.JSON.Data.Response = 'FAILED';
+				--SET OutputRoot.JSON.Data.Error_Code = 'SELL_BY_DATE';
+				
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+			
+			END IF;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

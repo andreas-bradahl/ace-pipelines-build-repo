@@ -1,0 +1,12 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE createSplitOrder_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.noExtraOrderCharge = true;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

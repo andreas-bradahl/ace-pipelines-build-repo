@@ -1,0 +1,102 @@
+
+
+CREATE COMPUTE MODULE getESATrueFasleFilterData_CalculateCanBeDeliveredAtDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE LeadTimeExeptionRef REFERENCE TO Environment.Variables.ProductData.LeadTimeExceptions.Row;
+		DECLARE LeadTimeCusor, LeadTimeRef REFERENCE TO Environment.Variables.ProductData.LeadTimes;
+		DECLARE requestRef REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+
+		DECLARE calcDeliveryDate CHAR;
+		DECLARE CanBeDeliveredData CHAR  NULL;
+		DECLARE inputOrderDate CHARACTER requestRef.DATE;
+		-- Current date multi formats--
+		DECLARE currentDate CHARACTER customerRef.CurrentDate; -- '20200508';
+		IF inputOrderDate = '' THEN
+			SET inputOrderDate = currentDate;
+		END IF;
+
+		DECLARE currentDateAsDate DATE CAST(currentDate AS DATE FORMAT 'yyyyMMdd');
+		DECLARE currentDateAsTimestamp TIMESTAMP CAST(currentDate||'000000' AS TIMESTAMP FORMAT 'yyyyMMdd'||'HHmmss');
+		--DECLARE currentDateAsChar CHAR CAST(currentDateAsDate AS CHARACTER FORMAT 'yyyy-MM-dd');
+		-- Current time format --
+		DECLARE currentTimeAsChar CHAR CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'HH:mm');
+
+		-- Current days weekday nr--
+		DECLARE currentDayInteger INTEGER EXTRACT(DAYOFWEEK FROM currentDateAsDate);
+		--DECLARE currentDayAsChar CHAR CAST(currentDayInteger AS CHARACTER);
+		-- Lead time exp data--
+		DECLARE orderDateLeadTimeExeptionAsTimestamp TIMESTAMP LeadTimeExeptionRef.orderDate;
+		DECLARE orderBeforeLeadTimeExeptionAsChar char CAST(LeadTimeExeptionRef.orderBefore AS CHARACTER);
+		DECLARE leadDaysLeadTimeExeption INTEGER LeadTimeExeptionRef.leadDays;
+
+		IF (currentDateAsTimestamp = orderDateLeadTimeExeptionAsTimestamp )
+			AND (currentTimeAsChar < orderBeforeLeadTimeExeptionAsChar ) THEN
+
+			DECLARE tmp DATE (currentDateAsDate + CAST(leadDaysLeadTimeExeption AS INTERVAL DAY));
+			SET calcDeliveryDate = CAST( tmp AS CHARACTER FORMAT 'yyyyMMdd');
+			IF inputOrderDate < calcDeliveryDate THEN
+				SET CanBeDeliveredData = calcDeliveryDate;
+			END IF;
+		END IF;
+
+
+		IF NOT EXISTS(Environment.Variables.ProductData.LeadTimeExceptions.Row[])
+			OR (currentTimeAsChar > orderBeforeLeadTimeExeptionAsChar )THEN
+			
+			DECLARE newDayleadDays int 0;
+			DECLARE count int 0;
+			
+			DECLARE todaysDate BOOLEAN TRUE;
+			
+			-- Loop to checke the next 14 days 
+			WHILE count <= 14 do
+				
+				MOVE LeadTimeCusor TO Environment.Variables.ProductData.LeadTimes;
+				MOVE LeadTimeCusor FIRSTCHILD NAME 'Row';
+				-- Go through all availebel leadTimes
+				WHILE LASTMOVE(LeadTimeCusor) DO
+					
+					DECLARE weekDay INT LeadTimeCusor.weekDay;
+					DECLARE orderBefore CHAR LeadTimeCusor.orderBefore;
+					DECLARE leadDays INT newDayleadDays + LeadTimeCusor.leadDays;
+
+					IF currentDayInteger = weekDay THEN
+						 
+						IF (currentTimeAsChar < orderBefore) OR NOT todaysDate THEN
+						
+							DECLARE tmp2 DATE (currentDateAsDate + CAST(leadDays AS INTERVAL DAY));
+							SET calcDeliveryDate = CAST( tmp2 AS CHARACTER FORMAT 'yyyyMMdd');
+														
+							SET CanBeDeliveredData = calcDeliveryDate;
+							SET count = 20;
+
+						END IF;
+												
+						SET todaysDate = FALSE;
+						
+					END IF;
+
+					MOVE LeadTimeCusor NEXTSIBLING REPEAT NAME;
+				END WHILE;
+				
+				IF currentDayInteger= 7 THEN
+					SET currentDayInteger = 1;
+				ELSE
+					SET currentDayInteger = currentDayInteger + 1;
+				END IF;
+				
+				SET newDayleadDays = newDayleadDays +1;
+				SET count = count+1;
+				SET currentTimeAsChar = '00:00';
+				
+			END WHILE;
+		END IF;
+
+--		DELETE FIELD Environment.Variables.ProductData.LeadTimeExceptions;
+--		DELETE FIELD Environment.Variables.ProductData.LeadTimes;
+
+		SET Environment.Variables.ProductData.CanBeDeliveredData value = CanBeDeliveredData;
+	END;
+END MODULE;

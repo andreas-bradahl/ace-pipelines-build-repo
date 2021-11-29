@@ -1,0 +1,13 @@
+
+
+CREATE COMPUTE MODULE esqlLogItemsError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET CACHE.Valid  =  'OK';
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Error in ItemsBatchUpdater');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+		
+		RETURN FALSE;
+	END;
+END MODULE;

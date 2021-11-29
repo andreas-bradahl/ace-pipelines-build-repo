@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">     
+    <xsd:element name="FoundInTemp" type="xsd:boolean"/>     
+</xsd:schema>]]></inlinedXMLSchema>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var3"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var5"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var1"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var2"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="CreateOrderRecord">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var3/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}OIZ102MILstOrdersResponse" ref="var"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/any" qualifier="FoundInTemp" ref="var5"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var1/mb:msg(JSON,assembly,JSON)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}getCustomerOrderListResponseOrderHead" ref="var2"/>
+        </output>
+        <local>
+            <input path="$MessageAssembly/JSON/spath('Data',2)" var="Data"/>
+            <input path="$MessageAssembly/LocalEnvironment/FoundInTemp[1]" var="FoundInTemp"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)"/>
+            <move>
+                <input path="$Data/ORNO"/>
+                <output path="orderNumber"/>
+            </move>
+            <move>
+                <input path="$Data/CUNO"/>
+                <output path="customerNumber"/>
+            </move>
+            <move>
+                <input path="$Data/ORSL"/>
+                <output path="orderStatusLowest"/>
+            </move>
+            <move>
+                <input path="$Data/ORST"/>
+                <output path="orderStatusHighest"/>
+            </move>
+            <move>
+                <input path="$Data/ORTP"/>
+                <output path="orderType"/>
+            </move>
+            <move>
+                <input path="$Data/RLDT"/>
+                <output path="deliveryDate"/>
+            </move>
+            <move>
+                <input path="$Data/SRCO" var="SRCO3"/>
+                <output path="typeOfOrder"/>
+            </move>
+            <move>
+                <input path="$Data/NTAM" var="NTAM"/>
+                <input auxiliary="true" path="$Data/SRCO" var="SRCO"/>
+                <output path="netOrderValue"/>
+                <test lang="xpath">$SRCO = "K"</test>
+            </move>
+            <task type="warning">
+                <documentation description="Unknown how to calculate, need to investigate how to create link to IDM - Bestilling"/>
+                <output path="invoiceLink"/>
+            </task>
+            <assign>
+                <output path="invoiceLink"/>
+            </assign>
+            <move>
+                <input path="$FoundInTemp/.[1]"/>
+                <output path="containsTempLines"/>
+            </move>
+            <condition>
+                <if>
+                    <input path="$Data/SRCO" var="SRCO4"/>
+                    <input auxiliary="true" path="$Data/DSTX" var="DSTX1"/>
+                    <output path="orderName"/>
+                    <test lang="xpath">fn:string-length($DSTX1) = 0</test>
+                    <assign>
+                        <output path="."/>
+                    </assign>
+                </if>
+                <else>
+                    <input path="$Data/DSTX"/>
+                    <output path="orderName"/>
+                    <move>
+                        <input path="." var="DSTX2"/>
+                        <output path="."/>
+                    </move>
+                </else>
+            </condition>
+            <assign value="false">
+                <output path="isTemporaryOrder"/>
+            </assign>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

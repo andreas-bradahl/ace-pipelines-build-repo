@@ -1,0 +1,16 @@
+BROKER SCHEMA putSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlDeleteValidationData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.GetHead.DEWD = Environment.Variables.HTTPResponses.OIZ163MI_GetHead.Item.DEWD;
+		SET Environment.Variables.GetHead.RAST = Environment.Variables.HTTPResponses.OIZ163MI_GetHead.Item.RAST;
+		
+		DELETE FIELD Environment.Variables.HTTPResponses;
+		--DELETE FIELD Environment.Variables.SQLQueries;
+
+		RETURN TRUE;
+	END;
+END MODULE;

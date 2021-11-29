@@ -1,0 +1,22 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE setIsOpexCustomer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE cfc6Value CHAR TRIM(GetValueFromNameValueList('CFC6', InputRoot.JSON.Data.MIRecord.Item.NameValue));
+		DECLARE isOpexCustomer BOOLEAN false;
+		
+		IF cfc6Value = 'OPEX' THEN
+			
+			SET isOpexCustomer = true;
+			
+		END IF;
+		
+		SET globalVarRef.isOpexCustomer = isOpexCustomer;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

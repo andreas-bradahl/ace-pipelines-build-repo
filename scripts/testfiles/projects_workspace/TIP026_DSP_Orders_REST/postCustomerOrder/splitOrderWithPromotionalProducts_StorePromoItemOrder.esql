@@ -1,0 +1,23 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE splitOrderWithPromotionalProducts_storePromoItemOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF EXISTS(InputRoot.BLOB.BLOB[]) THEN
+			CREATE FIELD Environment.Variables.Throwaway;
+			DECLARE jsonRef REFERENCE TO Environment.Variables.Throwaway;
+			
+			CREATE LASTCHILD OF jsonRef DOMAIN('JSON') PARSE(InputRoot.BLOB.BLOB);
+			SET Environment.Variables.promoOrderResponse = jsonRef.JSON.Data;
+			
+			DELETE FIELD Environment.Variables.Throwaway;
+		ELSE
+			SET Environment.Variables.promoOrderResponse = InputRoot.JSON.Data.Item;
+		END IF;
+		
+		RETURN TRUE;
+	END;
+	
+END MODULE;

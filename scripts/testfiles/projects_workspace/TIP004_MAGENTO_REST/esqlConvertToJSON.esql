@@ -1,0 +1,22 @@
+
+
+CREATE COMPUTE MODULE esqlConvertToJSON
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIRSTCHILD OF OutputRoot.MQMD NAME 'MsgId' VALUE Environment.MsgId;
+		
+		IF EXISTS(InputRoot.BLOB.BLOB[]) THEN
+			
+			DECLARE jsonRef REFERENCE TO Environment;
+			CREATE LASTCHILD OF jsonRef DOMAIN('JSON') PARSE(InputRoot.BLOB.BLOB);
+			SET OutputRoot.JSON.Data = jsonRef.JSON.Data;
+			
+			DELETE FIELD Environment.Variables.Throwaway;
+		ELSE
+			SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+		END IF;
+				
+		RETURN TRUE;
+	END;
+END MODULE;

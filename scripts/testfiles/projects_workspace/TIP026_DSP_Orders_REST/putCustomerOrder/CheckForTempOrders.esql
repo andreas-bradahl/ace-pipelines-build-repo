@@ -1,0 +1,39 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckForTempOrders
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.HTTPRequestHeader.Authorization = InputRoot.HTTPRequestHeader.Authorization;
+		SET OutputRoot.HTTPRequestHeader."Accept" = InputRoot.HTTPRequestHeader."Accept";
+		
+		DECLARE errorTerminal CHAR 'out1';
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderNumber CHAR orderRequestRef.orderNumber;
+		DECLARE tempOrderNumber CHAR '';
+		DECLARE msgItemCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item;
+		DECLARE noTempOrderFound BOOLEAN true;
+		
+		WHILE LASTMOVE(msgItemCursor) AND noTempOrderFound DO
+			SET tempOrderNumber = TRIM(GetValueFromNameValueList('ORNR', msgItemCursor.NameValue));
+			IF tempOrderNumber LIKE orderNumber THEN
+				SET noTempOrderFound = false;
+			END IF;
+			MOVE msgItemCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		IF noTempOrderFound THEN
+			RETURN TRUE;
+			
+		ELSE
+			DECLARE envRef REFERENCE TO Environment;
+			CALL setErrorMessage(400, 'FAILED', 'REVIEW_IN_PROGRESS', envRef);
+			PROPAGATE TO TERMINAL errorTerminal;
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

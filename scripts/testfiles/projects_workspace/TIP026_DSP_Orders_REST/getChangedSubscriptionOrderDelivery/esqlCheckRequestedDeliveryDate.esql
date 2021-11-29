@@ -1,0 +1,28 @@
+BROKER SCHEMA getChangedSubscriptionOrderDelivery
+DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST';
+
+
+CREATE COMPUTE MODULE esqlCheckRequestedDeliveryDate
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate = CAST(Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate AS CHAR FORMAT 'yyyyMMdd');
+		
+		IF LENGTH(Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate) = 10 THEN
+			SET Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate = CAST(Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+			SET Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate = CAST(Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+		
+		IF LENGTH(Environment.Variables.Global.OriginRequest.ns:requestedDeliveryDate) <> 8 THEN
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'CHANGED_ORDER_NOT_FOUND';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+		
+		END IF;
+		
+		RETURN TRUE;
+		
+	END;
+END MODULE;

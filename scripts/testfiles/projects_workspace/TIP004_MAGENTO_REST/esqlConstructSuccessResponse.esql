@@ -1,0 +1,11 @@
+
+
+CREATE COMPUTE MODULE esqlConstructSuccessResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputRoot.JSON.Data.Status = 'Items successfully started updating';
+
+		RETURN TRUE;
+	END;
+END MODULE;

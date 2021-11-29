@@ -1,0 +1,38 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddDateToOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE response REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE responseCursor REFERENCE TO InputRoot.JSON.Data.MIRecord.Item.NameValue.Item;
+		DECLARE responseRef REFERENCE TO Environment;
+		CREATE FIELD OutputLocalEnvironment.Variables.Response.Item AS responseRef;
+		
+		DECLARE Name CHARACTER;
+		DECLARE Value CHARACTER;
+		
+		WHILE LASTMOVE(responseCursor) DO
+			
+			SET Name = responseCursor.Name;
+			SET Value = responseCursor.Value;
+			
+			IF Value IS NULL THEN
+				SET Value = '';
+			END IF;
+			
+			SET responseRef.{Name} = TRIM(Value);
+			
+			MOVE responseCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		DECLARE preRLDT CHARACTER responseRef.RLDT;
+		DECLARE postRLDT DATE CAST(preRLDT AS DATE FORMAT 'yyyyMMdd');
+		
+		SET Environment.Variables.Global.PromoSplit.promotionalOrder.requestedDeliveryDate = CAST(postRLDT AS CHARACTER FORMAT 'yyyy-MM-dd');
+
+		RETURN TRUE;
+	END;
+END MODULE;

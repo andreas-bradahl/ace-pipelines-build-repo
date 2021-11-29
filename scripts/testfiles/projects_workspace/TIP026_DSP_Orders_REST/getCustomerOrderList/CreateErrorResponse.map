@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">   
+        <xsd:element name="ErrorMessage">  
+    <xsd:complexType>  
+      <xsd:sequence>  
+        <xsd:element name="HTTPCode" type="xsd:string"/>  
+        <xsd:element name="Response" type="xsd:string"/>  
+        <xsd:element name="Error_Code" type="xsd:string"/>  
+      </xsd:sequence>  
+    </xsd:complexType>  
+  </xsd:element>  
+    <xsd:element name="fromDate" type="xsd:string"/>   
+    <xsd:element name="orderNumber" type="xsd:string"/>   
+    <xsd:element name="toStatus" type="xsd:string"/>   
+    <xsd:element name="fromStatus" type="xsd:string"/>   
+    <xsd:element name="toDate" type="xsd:string"/>   
+    <xsd:element name="typeOfOrder" type="xsd:string"/>   
+    <xsd:element name="customerNumber" type="xsd:string"/>   
+    <xsd:element name="orderName" type="xsd:string"/>   
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var1"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var2"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var3"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="CreateErrorResponse">
+        <input derivedFrom="MB:JSON_operation_name:getCustomerOrderList" path="$var/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="ComIbmMessageAssembly_BLOB">
+            <cast derivedFrom="MB:JSON_path_query_parm:fromDate" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="fromDate" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:orderNumber" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderNumber" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:toStatus" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="toStatus" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:fromStatus" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="fromStatus" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:toDate" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="toDate" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:typeOfOrder" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="typeOfOrder" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:customerNumber" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="customerNumber" ref="var1"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:orderName" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/REST/Input/Parameters/any" qualifier="orderName" ref="var1"/>
+            <cast castType="userDefined" path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/Variables/any" qualifier="ErrorMessage" ref="var1"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var2/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}ErrorMessageResponse" ref="var3"/>
+        </output>
+        <move>
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/Variables/ErrorMessage[1]/HTTPCode"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/ReplyStatusCode"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/Variables/ErrorMessage[1]/Response"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/Response"/>
+        </move>
+        <move>
+            <input path="$ComIbmMessageAssembly_BLOB/LocalEnvironment/Variables/ErrorMessage[1]/Error_Code"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/Error_Code"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

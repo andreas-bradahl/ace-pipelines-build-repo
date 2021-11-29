@@ -1,0 +1,19 @@
+BROKER SCHEMA deleteCancellationDate
+
+DECLARE ns NAMESPACE 'http://TIP026_DSP_Orders_REST';
+
+CREATE COMPUTE MODULE esqlPrepareOIZ163MIDltCancel
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ163MI/DltCancel';
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.ns:companyNumber; 
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.ns:customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDATE = Environment.Variables.Global.OriginRequest.ns:date;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RSWD = '0';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

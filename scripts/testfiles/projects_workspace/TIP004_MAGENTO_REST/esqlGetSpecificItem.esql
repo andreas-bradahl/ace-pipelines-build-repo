@@ -1,0 +1,41 @@
+
+
+CREATE COMPUTE MODULE esqlGetSpecificItem
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sku CHARACTER Environment.Variables.getItemsRequestEnviroment.itemsRequest.sku;
+		DECLARE foundSku BOOLEAN FALSE;
+
+		DECLARE itemRef REFERENCE TO Environment;
+		DECLARE skupath CHARACTER;
+		--set skupath='CACHE.skuData' +sku;
+		--SET skupath = 'CACHE.skuData.' || COALESCE(sku,'');
+		SET skupath = 'CACHE.skuData.';
+		--DECLARE inputCursor REFERENCE TO InputRoot.JSON.Data;
+		
+		-- DECLARE inputCursor REFERENCE TO skupath;
+		DECLARE inputCursor REFERENCE TO CACHE.ItemDataCache.skuData.{sku};
+
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY(JSON.Array);
+
+		CREATE LASTCHILD OF OutputRoot.JSON.Data AS itemRef DOMAIN 'JSON' NAME 'Item';
+		SET foundSku = LASTMOVE(inputCursor);				
+				
+	
+		IF foundSku THEN
+			SET itemRef = inputCursor;
+			PROPAGATE TO TERMINAL 'out';
+		ELSE
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'NOT_FOUND';
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putCustomerOrder" version="8.0.5.0" xmlns:map="putCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+                <xsd:element name="noExtraOrderCharge" type="xsd:boolean"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var2"/>
+    <output derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var3"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="io" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareLegalPostCustomerOrderSplit">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}PutCustomerOrderRequest" ref="var1"/>
+        </input>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var2/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly1">
+            <cast derivedFrom="MB:JSON_operation_response" path="$MessageAssembly1/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}NewOrder" ref="var3"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/REST/Request/Parameters/any" qualifier="noExtraOrderCharge" ref="var4"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/REST/Input/Parameters/any" qualifier="noExtraOrderCharge" ref="var4"/>
+        </output>
+        <foreach>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/orderLines/Item"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/orderLines/Item"/>
+            <move automap="true">
+                <input path="sku"/>
+                <output path="sku"/>
+            </move>
+            <move automap="true">
+                <input path="quantity"/>
+                <output path="quantity"/>
+            </move>
+            <move automap="true">
+                <input path="lostSalesWarehouse"/>
+                <output path="lostSalesWarehouse"/>
+            </move>
+            <move automap="true">
+                <input path="orderLineUnit"/>
+                <output path="orderLineUnit"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine1"/>
+                <output path="discountLine1"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine2"/>
+                <output path="discountLine2"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine3"/>
+                <output path="discountLine3"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine4"/>
+                <output path="discountLine4"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine5"/>
+                <output path="discountLine5"/>
+            </move>
+            <move automap="true">
+                <input path="discountLine6"/>
+                <output path="discountLine6"/>
+            </move>
+            <move automap="true">
+                <input path="isLostSales"/>
+                <output path="isLostSales"/>
+            </move>
+        </foreach>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/companyNumber"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/companyNumber"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/customerNumber"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/customerNumber"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/estimatedOrderAmount"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/estimatedOrderAmount"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/orderType"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/orderType"/>
+        </move>
+        <move>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/requestedDeliveryDate"/>
+            <output path="$MessageAssembly1/JSON/spath('Data',2)/requestedDeliveryDate"/>
+        </move>
+        <assign value="false">
+            <output path="$MessageAssembly1/LocalEnvironment/REST/Input/Parameters/noExtraOrderCharge"/>
+        </assign>
+    </mappingDeclaration>
+</mappingRoot>

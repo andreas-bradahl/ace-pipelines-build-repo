@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getProductAvailability" version="8.0.5.0" xmlns:map="getProductAvailability">
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <output path="/getProductAvailability/OIZ340MILstSupplSummary.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapOIZ340MILstSupplSummaryIntoXML">
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+        </input>
+        <output path="mb:msg(OIZ340MILstSupplSummary,assembly,XMLNSC,LocalEnvironment)" var="MessageAssembly2"/>
+        <foreach>
+            <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item" var="Item3"/>
+            <output path="$MessageAssembly2/OIZ340MILstSupplSummary/Item"/>
+            <foreach>
+                <input path="$Item3/NameValue/Item" var="Item2"/>
+                <output path="WHLO" var="WHLO1"/>
+                <output path="ITNO" var="ITNO1"/>
+                <output path="PLDT" var="PLDT1"/>
+                <output path="CODT" var="CODT1"/>
+                <output path="TRQA" var="TRQA1"/>
+                <output path="MAR2" var="MAR21"/>
+                <output path="SWHL" var="SWHL"/>
+                <output path="ALUN" var="ALUN"/>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value6"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name6"/>
+                    <output path="$WHLO1/."/>
+                    <param name="input" value="$Value6"/>
+                    <test lang="xpath">$Name6 = "WHLO"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value7"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name7"/>
+                    <output path="$ITNO1/."/>
+                    <param name="input" value="$Value7"/>
+                    <test lang="xpath">$Name7 = "ITNO"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value8"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name8"/>
+                    <output path="$PLDT1/."/>
+                    <param name="input" value="$Value8"/>
+                    <test lang="xpath">$Name8 = "PLDT"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value9"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name9"/>
+                    <output path="$CODT1/."/>
+                    <param name="input" value="$Value9"/>
+                    <test lang="xpath">$Name9 = "CODT"</test>
+                </function>
+                <function ref="substring">
+                    <input path="$Item2/Value" var="Value10"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name10"/>
+                    <output path="$TRQA1/."/>
+                    <param name="input" value="$Value10"/>
+                    <property key="delimiter" value="."/>
+                    <property key="index" value="0"/>
+                    <test lang="xpath">$Name10 = "TRQA"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value11"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name11"/>
+                    <output path="$MAR21/."/>
+                    <param name="input" value="$Value11"/>
+                    <test lang="xpath">$Name11 = "MAR2"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name"/>
+                    <output path="$SWHL/."/>
+                    <param name="input" value="$Value"/>
+                    <test lang="xpath">$Name = "SWHL"</test>
+                </function>
+                <function ref="normalize">
+                    <input path="$Item2/Value" var="Value"/>
+                    <input auxiliary="true" path="$Item2/Name" var="Name2"/>
+                    <output path="$ALUN/."/>
+                    <param name="input" value="$Value"/>
+                    <test lang="xpath">$Name2 = "ALUN"</test>
+                </function>
+            </foreach>
+        </foreach>
+        <move>
+            <input path="$MessageAssembly/LocalEnvironment"/>
+            <output path="$MessageAssembly2/LocalEnvironment"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

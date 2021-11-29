@@ -1,0 +1,22 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddOrderNumberToSplitOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		IF InputRoot.JSON.Data.Response = 'FAILED' THEN
+			
+			SET OutputRoot = InputRoot;
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+
+			SET Environment.Variables.Global.OrderSplit.otherWarehouseOrder.orderNumber = InputRoot.JSON.Data.Item.orderNumber;
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

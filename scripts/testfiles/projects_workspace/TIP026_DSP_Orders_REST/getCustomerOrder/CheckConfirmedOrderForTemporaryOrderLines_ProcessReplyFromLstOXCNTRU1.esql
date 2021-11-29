@@ -1,0 +1,83 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE CheckConfirmedOrderForTemporaryOrderLines_ProcessReplyFromLstOXCNTRU1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE globalVarRef REFERENCE TO Environment.Variables.Global;
+		DECLARE itemCursor REFERENCE TO Environment.Variables.HTTPResponses.LstOXCNTRU1.Item;
+		DECLARE found BOOLEAN FALSE;
+		
+		SET Environment.Variables.Global.Flags.HasTemporaryOrder = FALSE;
+		
+		WHILE LASTMOVE(itemCursor) DO
+			
+			IF itemCursor.ORNR LIKE globalVarRef.order_number THEN
+				
+				SET found = FALSE;
+				SET Environment.Variables.Global.Flags.HasTemporaryOrder = TRUE;
+				
+				IF itemCursor.OPT1 NOT LIKE '4' THEN
+					
+					FOR record AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+						
+						IF NOT(found) THEN
+						
+							IF itemCursor.PONR = record.PONR THEN
+								
+								SET record.OPT1 = itemCursor.OPT1;
+								SET Environment.Variables.Global.haveTempLines = TRUE;
+								SET found = TRUE;
+								
+							END IF;
+						
+						END IF;
+						
+					END FOR;
+					
+					IF NOT(found) OR itemCursor.OPT1 = '2' THEN
+				
+						CREATE FIELD OutputLocalEnvironment.Variables.current_PONR VALUE itemCursor.PONR;
+						CREATE FIELD OutputLocalEnvironment.Variables.current_OPT1 VALUE itemCursor.OPT1;
+						
+						SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = itemCursor.ORNO;
+						SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = globalVarRef.company_number;
+						
+						IF itemCursor.OPT1 LIKE '2' THEN
+							SET OutputLocalEnvironment.Destination.HTTP.QueryString.PONR = itemCursor.PONR;
+						END IF;
+						
+						PROPAGATE TO TERMINAL 'out';
+						
+					END IF;
+					
+				ELSE
+					
+					FOR record AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+						
+						IF NOT(found) THEN
+						
+							IF itemCursor.PONR = record.PONR THEN
+								
+								SET record.OPT1 = itemCursor.OPT1;
+								SET found = TRUE;
+								
+							END IF;
+						
+						END IF;
+						
+					END FOR;
+					
+				END IF;
+					
+			END IF;
+			
+			MOVE itemCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		PROPAGATE TO TERMINAL 'out1';
+		
+		RETURN FALSE;
+	END;
+END MODULE;

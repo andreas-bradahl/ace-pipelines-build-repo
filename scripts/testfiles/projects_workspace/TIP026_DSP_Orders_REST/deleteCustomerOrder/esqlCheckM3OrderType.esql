@@ -1,0 +1,30 @@
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE DATABASE MODULE esqlCheckM3OrderType
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryM3OrderType CHAR ' 
+			SELECT code 
+			FROM tine_esa.dbo.Code code
+			INNER JOIN tine_esa.dbo.CodeType codeType 
+			ON code.typeId=codeType.id
+			WHERE name = ''zNoChangeOrderTypeTIP''
+		';
+			
+		SET Environment.Variables.SQLQueries.M3OrderType = PASSTHRU(sqlQueryM3OrderType);
+		
+		FOR orderType AS Environment.Variables.SQLQueries.M3OrderType[] DO
+			
+			IF orderType.code = GetValueFromNameValueList('ORTP', Environment.GetHeadRecord.Item.NameValue) THEN
+				Call setErrorMessage (400, 'FAILED','CANT_CHANGE_ORDERTYPE', Environment);
+				PROPAGATE TO TERMINAL 'Failure';
+			END IF;
+			
+		END FOR;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

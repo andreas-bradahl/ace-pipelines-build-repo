@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putCustomerOrder" version="8.0.5.0" xmlns:map="putCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">        
+        <xsd:include schemaLocation="/putCustomerOrder.xsd"/>       
+        <xsd:element name="HTTPResponses">      
+    <xsd:complexType>      
+      <xsd:sequence>      
+        <xsd:element name="GetHead" type="GetHead"/>      
+      </xsd:sequence>      
+    </xsd:complexType>      
+  </xsd:element>      
+    <xsd:element name="Global">       
+    <xsd:complexType>       
+      <xsd:sequence>       
+                                 <xsd:element name="OriginRequest" type="putOriginRequest"/>   
+            </xsd:sequence>       
+    </xsd:complexType>       
+  </xsd:element>        
+    <xsd:element name="DWDT" type="xsd:string"/>        
+    <xsd:element name="ORTP" type="xsd:string"/>        
+    <xsd:element name="ORQA" type="xsd:string"/>        
+    <xsd:element name="ITNO" type="xsd:string"/>        
+    <xsd:element name="CUNO" type="xsd:string"/>        
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var2"/>
+    <input path="/putCustomerOrder.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var4"/>
+    <imports>
+        <import kind="esql" namespace="/Common.esql"/>
+    </imports>
+    <namespaces>
+        <namespace kind="extension" prefix="Common" uri="/Common.esql"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareGetPriceLine">
+        <input path="$var2/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var" var="any5"/>
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="HTTPResponses" ref="var" var="any9"/>
+        </input>
+        <input path="$var1/mb:msg(Order,assembly,XMLNSC)" var="MessageAssembly"/>
+        <output path="$var3/mb:env(Environment)" var="Environment1">
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="Global" ref="var" var="any6"/>
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="HTTPResponses" ref="var" var="any10"/>
+        </output>
+        <output path="$var4/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly1">
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="CUNO" ref="var" var="any"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ITNO" ref="var" var="any1"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORQA" ref="var" var="any2"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORTP" ref="var" var="any3"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DWDT" ref="var" var="any4"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates/>
+        </passthrough>
+        <local>
+            <input path="$MessageAssembly/Order" var="Order"/>
+            <input path="$Environment/Variables/HTTPResponses[1]/GetHead" var="GetHead"/>
+            <input path="$Environment/Variables/Global[1]/OriginRequest" var="OriginRequest"/>
+            <output path="$MessageAssembly1/LocalEnvironment"/>
+            <move>
+                <input path="$Order/sku"/>
+                <output path="Destination/HTTP/QueryString/ITNO"/>
+            </move>
+            <move>
+                <input path="$Order/quantity"/>
+                <output path="Destination/HTTP/QueryString/ORQA"/>
+            </move>
+            <move>
+                <input path="$OriginRequest/customerNumber"/>
+                <output path="Destination/HTTP/QueryString/CUNO"/>
+            </move>
+            <move>
+                <input path="$GetHead/Item/ORTP"/>
+                <output path="Destination/HTTP/QueryString/ORTP"/>
+            </move>
+            <customFunction lang="esql" ref="Common:formatStringToDate">
+                <input path="$GetHead/Item/RLDT" var="RLDT2"/>
+                <output path="Destination/HTTP/QueryString/DWDT"/>
+                <param name="inputString" value="$RLDT2"/>
+            </customFunction>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

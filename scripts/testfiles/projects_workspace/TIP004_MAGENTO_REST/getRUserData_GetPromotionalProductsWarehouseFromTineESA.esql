@@ -1,0 +1,41 @@
+
+
+CREATE DATABASE MODULE getRUserData_GetPromotionalProductsWarehouseFromTineESA
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.RWarehouses;
+		DECLARE tineESARef, tineESACursor REFERENCE TO Environment.Variables.RWarehouses;
+		
+		DECLARE tineESAQuery CHARACTER '
+		select value 
+		from ApplicationData 
+		where parameter = ?
+		';
+		
+		SET tineESARef.Row[] = PASSTHRU(tineESAQuery, 'zReklamartiklerWHLO');
+		
+		CREATE FIELD Environment.Variables.WarehouseList;
+		
+		DECLARE endOfString CHAR '§';
+
+		
+		-- Build locations
+		DECLARE warehouses CHAR '';
+		MOVE tineESACursor FIRSTCHILD NAME 'Row';
+		WHILE LASTMOVE(tineESACursor) DO
+			SET warehouses = warehouses || '''';
+			SET warehouses = warehouses || tineESACursor.value;
+			SET warehouses = warehouses || '''';
+			SET warehouses = warehouses || ',';
+			MOVE tineESACursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		SET warehouses = warehouses || endOfString;
+		SET warehouses = SUBSTRING(warehouses BEFORE ',' || endOfString);
+
+		SET Environment.Variables.WarehouseList = warehouses;
+		DELETE FIELD Environment.Variables.RWarehouses;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

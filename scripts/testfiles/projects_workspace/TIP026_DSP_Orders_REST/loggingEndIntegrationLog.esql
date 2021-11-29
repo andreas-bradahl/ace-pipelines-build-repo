@@ -1,0 +1,31 @@
+
+
+CREATE COMPUTE MODULE loggingEndIntegrationLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		IF Environment.Variables.Global.UDP.Logging THEN
+		
+			DECLARE integrationEnd CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+			
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('___________________________________________________________________________________________________');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Ending integration at: ' || integrationEnd);
+			
+			DECLARE integrationStart CHARACTER Environment.Variables.Logging.integrationStart;		
+			DECLARE integrationTotalTimeTaken CHARACTER subtractOrAddTimes(integrationEnd, '-', integrationStart);
+			
+			DECLARE httpTotalTimeTaken CHARACTER Environment.Variables.Logging.httpTotalTimeTaken;
+			DECLARE codeTotalTimeTaken CHARACTER subtractOrAddTimes(integrationTotalTimeTaken, '-', httpTotalTimeTaken);
+			
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('___________________________________________________________________________________________________');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Total time for integration: ' || integrationTotalTimeTaken);
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Total time spent on code execution: ' || codeTotalTimeTaken);
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Total time spent waiting for HTTP responses: ' || httpTotalTimeTaken);
+				
+		END IF;
+				
+		RETURN TRUE;
+	END;
+END MODULE;

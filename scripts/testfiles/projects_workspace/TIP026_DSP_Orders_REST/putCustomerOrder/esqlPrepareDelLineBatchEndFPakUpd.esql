@@ -1,0 +1,19 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareDelLineBatchEndFPakUpd
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE ORNO CHARACTER InputLocalEnvironment.Variables.OrderNumber;
+		DECLARE PONR CHARACTER InputRoot.XMLNSC.Values.PONR;
+		DECLARE POSX CHARACTER InputRoot.XMLNSC.Values.POSX;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.PONR = PONR;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.POSX = POSX;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

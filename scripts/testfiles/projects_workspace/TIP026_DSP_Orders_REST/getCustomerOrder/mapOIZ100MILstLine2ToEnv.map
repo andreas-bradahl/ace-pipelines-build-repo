@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrder" version="8.0.5.0" xmlns:map="getCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">   
+    <xsd:element name="HTTPResponses">   
+    <xsd:complexType>   
+      <xsd:sequence>   
+        <xsd:element name="LstLine2">   
+          <xsd:complexType>   
+            <xsd:sequence>   
+              <xsd:element maxOccurs="unbounded" minOccurs="1" name="Item">   
+                <xsd:complexType>   
+                  <xsd:sequence>   
+                    <xsd:element name="ITNO" type="xsd:string"/>   
+                    <xsd:element name="ITDS" type="xsd:string"/>   
+                    <xsd:element name="ORQT" type="xsd:string"/>   
+                    <xsd:element name="SAPR" type="xsd:string"/>   
+                    <xsd:element name="DIA1" type="xsd:string"/>   
+                    <xsd:element name="DIA2" type="xsd:string"/>   
+                    <xsd:element name="DIA3" type="xsd:string"/>   
+                    <xsd:element name="DIA4" type="xsd:string"/>   
+                    <xsd:element name="DIA5" type="xsd:string"/>   
+                    <xsd:element name="DIA6" type="xsd:string"/>   
+                    <xsd:element name="PONR" type="xsd:string"/>   
+                    <xsd:element name="POSX" type="xsd:string"/>   
+                    <xsd:element name="ORST" type="xsd:string"/>   
+                    <xsd:element name="NLAM" type="xsd:string"/>   
+                    <xsd:element name="ALUN" type="xsd:string"/>   
+                    <xsd:element name="SPUN" type="xsd:string"/>   
+                    <xsd:element name="ORQA" type="xsd:string"/>   
+                    <xsd:element name="CODT" type="xsd:string"/>   
+                    <xsd:element name="RORC" type="xsd:string"/>   
+                    <xsd:element name="RORN" type="xsd:string"/>   
+                    <xsd:element name="RORL" type="xsd:string"/>   
+                                                          <xsd:element name="OPT1" type="xsd:integer"/>  
+                                                                            <xsd:element name="IVQT" type="xsd:string"/> 
+                                    </xsd:sequence>   
+                </xsd:complexType>   
+              </xsd:element>   
+            </xsd:sequence>   
+          </xsd:complexType>   
+        </xsd:element>   
+      </xsd:sequence>   
+    </xsd:complexType>   
+  </xsd:element>   
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var3"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapOIZ100MILstLine2ToEnv">
+        <input path="$var3/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="HTTPResponses" ref="var2"/>
+        </input>
+        <input namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON)" var="MessageAssembly">
+            <cast derivedFrom="MB:JSON_operation_request" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}MIRecord" ref="var1"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="HTTPResponses" ref="var2"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <foreach>
+                    <input path="$MessageAssembly/JSON/spath('Data',2)/MIRecord/Item" var="Item1"/>
+                    <output path="Variables/HTTPResponses/LstLine2/Item"/>
+                    <foreach>
+                        <input path="$Item1/NameValue/Item" var="Item"/>
+                        <output path="ITNO" var="ITNO"/>
+                        <output path="ITDS" var="ITDS"/>
+                        <output path="ORQT" var="ORQT"/>
+                        <output path="SAPR" var="SAPR"/>
+                        <output path="DIA1" var="DIA1"/>
+                        <output path="DIA3" var="DIA3"/>
+                        <output path="DIA2" var="DIA2"/>
+                        <output path="DIA4" var="DIA4"/>
+                        <output path="DIA5" var="DIA5"/>
+                        <output path="DIA6" var="DIA6"/>
+                        <output path="PONR" var="PONR"/>
+                        <output path="POSX" var="POSX"/>
+                        <output path="ORST" var="ORST"/>
+                        <output path="NLAM" var="NLAM"/>
+                        <output path="ALUN" var="ALUN"/>
+                        <output path="SPUN" var="SPUN"/>
+                        <output path="ORQA" var="ORQA"/>
+                        <output path="CODT" var="CODT"/>
+                        <output path="RORC" var="RORC"/>
+                        <output path="RORN" var="RORN"/>
+                        <output path="RORL" var="RORL"/>
+                        <output path="IVQT" var="IVQT"/>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name"/>
+                            <output path="$ITNO/."/>
+                            <param name="input" value="$Value"/>
+                            <test lang="xpath">$Name = "ITNO"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value1"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name1"/>
+                            <output path="$ITDS/."/>
+                            <param name="input" value="$Value1"/>
+                            <test lang="xpath">$Name1 = "ITDS"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value2"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name2"/>
+                            <output path="$ORQT/."/>
+                            <param name="input" value="$Value2"/>
+                            <test lang="xpath">$Name2 = "ORQT"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value3"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name3"/>
+                            <output path="$SAPR/."/>
+                            <param name="input" value="$Value3"/>
+                            <test lang="xpath">$Name3 = "SAPR"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value4"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name4"/>
+                            <output path="$DIA1/."/>
+                            <param name="input" value="$Value4"/>
+                            <test lang="xpath">$Name4 = "DIA1"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value5"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name5"/>
+                            <output path="$DIA3/."/>
+                            <param name="input" value="$Value5"/>
+                            <test lang="xpath">$Name5 = "DIA3"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value6"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name6"/>
+                            <output path="$DIA2/."/>
+                            <param name="input" value="$Value6"/>
+                            <test lang="xpath">$Name6 = "DIA2"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value7"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name7"/>
+                            <output path="$DIA4/."/>
+                            <param name="input" value="$Value7"/>
+                            <test lang="xpath">$Name7 = "DIA4"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value8"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name8"/>
+                            <output path="$DIA5/."/>
+                            <param name="input" value="$Value8"/>
+                            <test lang="xpath">$Name8 = "DIA5"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value9"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name9"/>
+                            <output path="$DIA6/."/>
+                            <param name="input" value="$Value9"/>
+                            <test lang="xpath">$Name9 = "DIA6"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value10"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name10"/>
+                            <output path="$PONR/."/>
+                            <param name="input" value="$Value10"/>
+                            <test lang="xpath">$Name10 = "PONR"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value11"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name11"/>
+                            <output path="$ORST/."/>
+                            <param name="input" value="$Value11"/>
+                            <test lang="xpath">$Name11 = "ORST"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value12"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name12"/>
+                            <output path="$NLAM/."/>
+                            <param name="input" value="$Value12"/>
+                            <test lang="xpath">$Name12 = "NLAM"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value13"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name13"/>
+                            <output path="$ALUN/."/>
+                            <param name="input" value="$Value13"/>
+                            <test lang="xpath">$Name13 = "ALUN"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value14"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name14"/>
+                            <output path="$SPUN/."/>
+                            <param name="input" value="$Value14"/>
+                            <test lang="xpath">$Name14 = "SPUN"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value15"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name15"/>
+                            <output path="$ORQA/."/>
+                            <param name="input" value="$Value15"/>
+                            <test lang="xpath">$Name15 = "ORQA"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value16"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name16"/>
+                            <output path="$POSX/."/>
+                            <param name="input" value="$Value16"/>
+                            <test lang="xpath">$Name16 = "POSX"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value17"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name17"/>
+                            <output path="$CODT/."/>
+                            <param name="input" value="$Value17"/>
+                            <test lang="xpath">$Name17 = "CODT"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value18"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name18"/>
+                            <output path="$RORC/."/>
+                            <param name="input" value="$Value18"/>
+                            <test lang="xpath">$Name18 = "RORC"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value19"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name19"/>
+                            <output path="$RORN/."/>
+                            <param name="input" value="$Value19"/>
+                            <test lang="xpath">$Name19 = "RORN"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value20"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name20"/>
+                            <output path="$RORL/."/>
+                            <param name="input" value="$Value20"/>
+                            <test lang="xpath">$Name20 = "RORL"</test>
+                        </function>
+                        <function ref="normalize">
+                            <input path="$Item/Value" var="Value21"/>
+                            <input auxiliary="true" path="$Item/Name" var="Name21"/>
+                            <output path="$IVQT/."/>
+                            <param name="input" value="$Value21"/>
+                            <test lang="xpath">$Name21 = "IVQT"</test>
+                        </function>
+                    </foreach>
+                    <assign value="-1">
+                        <output path="OPT1"/>
+                    </assign>
+                </foreach>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

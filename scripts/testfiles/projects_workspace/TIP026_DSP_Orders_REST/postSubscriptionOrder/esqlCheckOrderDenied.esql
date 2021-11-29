@@ -1,0 +1,21 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckOrderDenied
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF TRIM(InputRoot.JSON.Data.Message) = 'ZZ16310 DEWD' THEN
+			
+			SET OutputRoot.XMLNSC.success = FALSE;
+			SET OutputRoot.XMLNSC.errorMessage = 'ORDER_DENIED';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		SET OutputRoot = InputRoot;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

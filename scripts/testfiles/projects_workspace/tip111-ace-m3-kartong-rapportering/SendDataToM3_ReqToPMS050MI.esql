@@ -1,0 +1,57 @@
+
+
+CREATE COMPUTE MODULE SendDataToM3_ReqToPMS050MI
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF NOT EXISTS(InputRoot.XMLNSC.[])  THEN
+			SET OutputRoot.XMLNSC = Environment.variables.DIP_Data.XMLNSC;
+			PROPAGATE TO TERMINAL 'out1'; --Restore message for processing later
+			THROW USER EXCEPTION SEVERITY 3 MESSAGE 2951 VALUES('CRITICAL ERROR - No Message in TIP111.M3.DATA.PMS100MI');
+		END IF;
+		
+		DECLARE selectRef REFERENCE TO InputRoot.XMLNSC.ns1:miResult.ns1:MIRecord;
+		DECLARE selectItemRef REFERENCE TO selectRef.ns1:NameValue;
+		DECLARE MFNO, MAUN, PRNO CHARACTER;
+		
+		WHILE LASTMOVE(selectRef) DO
+			MOVE selectItemRef TO selectRef.ns1:NameValue;
+			
+			WHILE LASTMOVE(selectItemRef) DO
+				CASE selectItemRef.ns1:Name
+				WHEN 'PRNO' THEN
+					SET PRNO = TRIM(selectItemRef.ns1:Value);
+				WHEN 'MAUN' THEN
+					SET MAUN = TRIM(selectItemRef.ns1:Value);
+				WHEN 'MFNO' THEN
+					SET MFNO = TRIM(selectItemRef.ns1:Value);
+				END CASE;
+			MOVE selectItemRef NEXTSIBLING REPEAT NAME;	
+			END WHILE;
+			
+			IF PRNO = Environment.variables.DIP_Data.XMLNSC.ProductDetails.ArticleNumber THEN
+				SET OutputLocalEnvironment.Destination.HTTP.QueryString.PRNO = PRNO;
+				SET OutputLocalEnvironment.Destination.HTTP.QueryString.MAUN = MAUN;
+				SET OutputLocalEnvironment.Destination.HTTP.QueryString.MFNO = MFNO;
+			END IF;	
+			
+		MOVE selectRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = '100';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = '123';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RPQA = Environment.variables.DIP_Data.XMLNSC.ProductDetails.Antall;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP1 = '1';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP2 = '2';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP3 = '3';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP4 = '4';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP5 = '5';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP6 = '6';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP7 = '7';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSP8 = '8';
+		SET OutputRoot.HTTPRequestHeader."Authorization" = m3authorization;
+		LOG EVENT SEVERITY 1 VALUES('TIP111', MessageFlowLabel, NodeLabel, 'Prepare for PMS050MI/RptReceipt API call');
+				
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,23 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareChgLineBatchEnt
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE orderLineIndex INT Environment.Variables.orderLineIndex;
+		DECLARE orderLineCursor REFERENCE TO orderRequestRef.orderLines.Item[orderLineIndex];
+		
+		DECLARE getHeadNameValueRef REFERENCE TO Environment.JSONResponse.GetHead.Data.MIRecord.Item.NameValue;
+		DECLARE ORNO CHAR GetValueFromNameValueList('ORNO', getHeadNameValueRef);
+		DECLARE PONR INT orderLineCursor.orderLineNumber;
+		DECLARE ORQA CHAR TRIM(orderLineCursor.quantity);
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.PONR = PONR;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = ORQA;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,28 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareAddLineBatchEndFPakUpd
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE orderNumber REFERENCE TO InputLocalEnvironment.Variables.OrderNumber;
+		DECLARE currentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE queryStringRef REFERENCE TO OutputLocalEnvironment.Destination.HTTP.QueryString;
+		
+		SET queryStringRef.ORNO = orderNumber;
+		SET queryStringRef.ITNO = currentOrder.sku;
+		SET queryStringRef.ORQT = currentOrder.quantity;
+		SET queryStringRef.DIP1 = CAST(currentOrder.discountLine1 AS DECIMAL);
+		SET queryStringRef.DIP2 = CAST(currentOrder.discountLine2 AS DECIMAL);
+		SET queryStringRef.DIP3 = CAST(currentOrder.discountLine3 AS DECIMAL);
+		SET queryStringRef.DIP4 = CAST(currentOrder.discountLine4 AS DECIMAL);
+		SET queryStringRef.DIP5 = CAST(currentOrder.discountLine5 AS DECIMAL);
+		SET queryStringRef.DIP6 = CAST(currentOrder.discountLine6 AS DECIMAL);
+		SET queryStringRef.ALUN = currentOrder.orderLineUnit;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

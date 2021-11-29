@@ -1,0 +1,10 @@
+
+
+CREATE COMPUTE MODULE Load_M3_Data_PMS100MI_SendToQueue
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties.CodedCharSetId = 1208;
+		SET OutputRoot.XMLNSC = Environment.variables.M3Response.XMLNSC;
+		RETURN TRUE;
+	END;
+END MODULE;

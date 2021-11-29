@@ -1,0 +1,31 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE getChargesPerOrderLine_LstLineChargeToEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE msgRef REFERENCE TO InputRoot;
+		DECLARE nameValueMsgRef REFERENCE TO msgRef.JSON.Data.MIRecord.Item.NameValue;
+		DECLARE lstLineChargeEnvRef REFERENCE TO Environment.Variables.HTTPResponses.LstLineCharge;
+		
+		IF NOT LASTMOVE(lstLineChargeEnvRef) THEN
+			
+			CREATE FIELD Environment.Variables.HTTPResponses.LstLineCharge AS lstLineChargeEnvRef;
+			
+		END IF;
+		
+		DECLARE lstLineChargeItemRef REFERENCE TO lstLineChargeEnvRef;
+		CREATE LASTCHILD OF lstLineChargeItemRef AS lstLineChargeItemRef NAME 'Item';
+		
+		
+		SET lstLineChargeItemRef.ORNO = GetValueFromNameValueList('ORNO', nameValueMsgRef);
+		SET lstLineChargeItemRef.PONR = GetValueFromNameValueList('PONR', nameValueMsgRef);
+		SET lstLineChargeItemRef.POSX = GetValueFromNameValueList('POSX', nameValueMsgRef);
+		SET lstLineChargeItemRef.CRID = GetValueFromNameValueList('CRID', nameValueMsgRef);
+		SET lstLineChargeItemRef.PBAM = GetValueFromNameValueList('PBAM', nameValueMsgRef);
+		SET lstLineChargeItemRef.CUCD = GetValueFromNameValueList('CUCD', nameValueMsgRef);
+		
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,53 @@
+
+
+CREATE DATABASE MODULE getItemsPerCustomer_GetCustomerFromM3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+		DECLARE inputCONO INT CAST(queryParams.CONO AS INT DEFAULT -1);
+		DECLARE inputCUNO CHAR queryParams.CUNO;
+		CREATE FIELD Environment.Variables.UserInfo;
+		DECLARE m3Ref REFERENCE TO Environment.Variables.UserInfo;
+		
+		DECLARE m3Query CHARACTER '
+		SELECT
+			OK.OKCONO,
+			OK.OKCUNO,
+			OK.OKCUCL,
+			OK.OKFACI,
+			OK.OKCFC4,
+			OK.OKWHLO,
+			OK.OKSPLM,
+			OK.OKACHK,
+			OK.OKSTAT,
+			OK.OKVTCD
+		FROM OCUSMA AS OK
+		WHERE OK.OKCONO = ?
+		AND OK.OKCUNO = ?
+		';
+		
+		SET m3Ref.Row[] = PASSTHRU(m3Query,inputCONO,inputCUNO);
+		
+		DECLARE customerRef REFERENCE TO m3Ref.Row;
+		
+		SET customerRef.CurrentDate = CAST(CURRENT_DATE AS CHARACTER FORMAT 'yyyyMMdd');
+		IF TRIM(customerRef.OKCFC4) = 510 THEN
+			SET customerRef.SalesChannelNumber = 2;
+		ELSEIF TRIM(customerRef.OKCFC4) = 511 THEN
+			SET customerRef.SalesChannelNumber = 3;
+		ELSEIF TRIM(customerRef.OKCFC4) = 513 THEN
+			SET customerRef.SalesChannelNumber = 4;
+		ELSEIF TRIM(customerRef.OKCFC4) = 801 THEN
+			SET customerRef.SalesChannelNumber = 5;
+		END IF;
+		
+		If EXISTS(m3Ref.Row[]) THEN
+			RETURN TRUE;
+		ELSE
+			Call setErrorMessage (400, 'FAILED','NOT_FOUND', Environment);
+			PROPAGATE TO TERMINAL 'Failure';
+		END IF;
+	END;
+
+END MODULE;
+

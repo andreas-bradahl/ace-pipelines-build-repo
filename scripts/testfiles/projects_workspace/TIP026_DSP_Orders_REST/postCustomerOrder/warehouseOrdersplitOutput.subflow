@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmRoute.msgnode="ComIbmRoute.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="postCustomerOrder/warehouseOrdersplitOutput.subflow" nsPrefix="postCustomerOrder_warehouseOrdersplitOutput.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="warehouseOrdersplitOutput" bundleName="postCustomerOrder/warehouseOrdersplitOutput" pluginId="TIP026_DSP_Orders_REST"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj16/warehouseOrdersplitOutput.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/TIP026_DSP_Orders_REST/icons/full/obj30/warehouseOrdersplitOutput.gif"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="10,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="postCustomerOrder/warehouseOrdersplitOutput" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="1179,20">
+        <translation xmi:type="utility:TranslatableString" key="OutTerminal.Output" bundleName="postCustomerOrder/warehouseOrdersplitOutput" pluginId="TIP026_DSP_Orders_REST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="393,116">
+        <outTerminals terminalNodeID="nonWarehouseOrder" dynamic="true" label="nonWarehouseOrder"/>
+        <translation xmi:type="utility:ConstantString" string="NonWarehouseOrder?"/>
+        <shortDescription xmi:type="utility:ConstantString" string="flag needed for WarehouseOrdersplit loop"/>
+        <filterTable filterPattern="$Environment/Variables/Global/nonWarehouseOrder = 'true'" routingOutputTerminal="nonWarehouseOrder"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="889,116" computeExpression="esql://routine/postCustomerOrder#storeExtraWarehouseOrder.Main">
+        <translation xmi:type="utility:ConstantString" string="StoreExtraWarehouseOrder"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="910,20" computeExpression="esql://routine/postCustomerOrder#buildCombinedOutput.Main">
+        <translation xmi:type="utility:ConstantString" string="BuildCombinedOutput"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="660,20">
+        <outTerminals terminalNodeID="isExtraCharge" dynamic="true" label="isExtraCharge"/>
+        <translation xmi:type="utility:ConstantString" string="IsExtraOrderCharge?"/>
+        <shortDescription xmi:type="utility:ConstantString" string="flag needed for WarehouseOrdersplit loop"/>
+        <filterTable filterPattern="$Environment/Variables/isExtraOrderCharge = 'true'" routingOutputTerminal="isExtraCharge"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="372,20">
+        <outTerminals terminalNodeID="hasExtraCharges" dynamic="true" label="hasExtraCharges"/>
+        <translation xmi:type="utility:ConstantString" string="orderTypeHasExtraCharges"/>
+        <filterTable filterPattern="$Environment/Variables/orderTypeHasExtraCharges = 'true'" routingOutputTerminal="hasExtraCharges"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="99,20">
+        <outTerminals terminalNodeID="warehouseOrdersplit" dynamic="true" label="warehouseOrdersplit"/>
+        <translation xmi:type="utility:ConstantString" string="DoWarehouseOrderSplit?"/>
+        <shortDescription xmi:type="utility:ConstantString" string="flag needed for WarehouseOrdersplit loop"/>
+        <filterTable filterPattern="$Environment/Variables/Global/doWarehouseOrderSplit = 'true'" routingOutputTerminal="warehouseOrdersplit"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRoute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="450,422">
+        <outTerminals terminalNodeID="isLastOrder" dynamic="true" label="isLastOrder"/>
+        <translation xmi:type="utility:ConstantString" string="isLastOrder?"/>
+        <filterTable filterPattern="$Environment/Variables/Global/isLastOrder = 'true'" routingOutputTerminal="isLastOrder"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="nonWarehouseOrder" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_10" sourceTerminalName="hasExtraCharges" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_11" sourceTerminalName="warehouseOrdersplit" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_9" sourceTerminalName="isExtraCharge" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.default" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_12" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_12" sourceTerminalName="isLastOrder" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

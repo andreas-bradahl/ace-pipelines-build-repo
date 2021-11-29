@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putCustomerOrder" version="8.0.5.0" xmlns:map="putCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:include schemaLocation="/putCustomerOrder.xsd"/>  
+    <xsd:element name="ALUN" type="xsd:string"/>  
+    <xsd:element name="DRDN" type="xsd:string"/>  
+    <xsd:element name="WHLO" type="xsd:string"/>  
+    <xsd:element name="SPUN" type="xsd:string"/>  
+    <xsd:element name="SAPR" type="xsd:string"/>  
+    <xsd:element name="LSLS" type="xsd:string"/>  
+    <xsd:element name="DIP6" type="xsd:string"/>  
+    <xsd:element name="DIP5" type="xsd:string"/>  
+    <xsd:element name="DIP4" type="xsd:string"/>  
+    <xsd:element name="DIP3" type="xsd:string"/>  
+    <xsd:element name="DIP2" type="xsd:string"/>  
+    <xsd:element name="DIP1" type="xsd:string"/>  
+    <xsd:element name="ORQT" type="xsd:string"/>  
+    <xsd:element name="ITNO" type="xsd:string"/>  
+    <xsd:element name="ORNO" type="xsd:string"/>  
+    <xsd:element name="CurrentOrder" type="Order"/>  
+    <xsd:element name="Global">  
+    <xsd:complexType>  
+      <xsd:sequence>  
+        <xsd:element name="OriginRequest" type="putOriginRequest"/>  
+      </xsd:sequence>  
+    </xsd:complexType>  
+  </xsd:element>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var"/>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var5"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var2"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/BlobMessage.xsd" var="var3"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapPrepareAddLineBatchEntFPakAdd">
+        <input path="$var/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var4" var="any"/>
+        </input>
+        <input path="$var1/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Variables/any" qualifier="CurrentOrder" ref="var4" var="any2"/>
+        </input>
+        <output path="$var2/mb:env(Environment)" var="Environment1">
+            <cast castType="userDefined" path="$Environment1/Variables/any" qualifier="Global" ref="var4" var="any1"/>
+        </output>
+        <output path="$var3/mb:msg(BLOB,assembly,BLOB,LocalEnvironment)" var="MessageAssembly1">
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORNO" ref="var4" var="any3"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ITNO" ref="var4" var="any4"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORQT" ref="var4" var="any5"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP1" ref="var4" var="any6"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP2" ref="var4" var="any7"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP3" ref="var4" var="any8"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP4" ref="var4" var="any9"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP5" ref="var4" var="any10"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DIP6" ref="var4" var="any11"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="LSLS" ref="var4" var="any12"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="SAPR" ref="var4" var="any13"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="SPUN" ref="var4" var="any14"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="WHLO" ref="var4" var="any15"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DRDN" ref="var4" var="any16"/>
+            <cast castType="userDefined" path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ALUN" ref="var4" var="any17"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="$Environment1/."/>
+            <updates/>
+        </passthrough>
+        <local>
+            <input path="$Environment/Variables/Global[1]/OriginRequest" var="OriginRequest"/>
+            <input path="$MessageAssembly/LocalEnvironment/Variables/CurrentOrder[1]" var="CurrentOrder"/>
+            <output path="$MessageAssembly1/LocalEnvironment/Destination/HTTP/QueryString"/>
+            <move>
+                <input path="$OriginRequest/orderNumber"/>
+                <output path="ORNO"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/sku"/>
+                <output path="ITNO"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/quantity"/>
+                <output path="ORQT"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine1"/>
+                <output path="DIP1"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine2"/>
+                <output path="DIP2"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine3"/>
+                <output path="DIP3"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine4"/>
+                <output path="DIP4"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine5"/>
+                <output path="DIP5"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/discountLine6"/>
+                <output path="DIP6"/>
+            </move>
+            <condition>
+                <if>
+                    <input path="$CurrentOrder/isLostSales" var="isLostSales"/>
+                    <output path="LSLS"/>
+                    <test lang="xpath">fn:string($isLostSales) = "true"</test>
+                    <assign value="1">
+                        <output path="."/>
+                    </assign>
+                </if>
+                <else>
+                    <output path="LSLS"/>
+                    <assign value="0">
+                        <output path="."/>
+                    </assign>
+                </else>
+            </condition>
+            <task type="todo">
+                <output path="SAPR"/>
+            </task>
+            <task type="todo">
+                <output path="SPUN"/>
+            </task>
+            <move>
+                <input path="$CurrentOrder/lostSalesWarehouse"/>
+                <output path="WHLO"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/lostSalesUniqueId"/>
+                <output path="DRDN"/>
+            </move>
+            <move>
+                <input path="$CurrentOrder/orderLineUnit"/>
+                <output path="ALUN"/>
+            </move>
+        </local>
+    </mappingDeclaration>
+</mappingRoot>

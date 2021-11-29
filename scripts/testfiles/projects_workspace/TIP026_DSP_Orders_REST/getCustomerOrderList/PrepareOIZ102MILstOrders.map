@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrderList" version="8.0.5.0" xmlns:map="getCustomerOrderList">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">       
+        <xsd:element name="CONO" type="xsd:string"/>      
+    <xsd:element name="ANTP" type="xsd:string"/>      
+    <xsd:element name="ORTY" type="xsd:string"/>      
+    <xsd:element name="ORST" type="xsd:string"/>      
+    <xsd:element name="ORSL" type="xsd:string"/>      
+    <xsd:element name="ORDT" type="xsd:string"/>      
+    <xsd:element name="ORDF" type="xsd:string"/>      
+    <xsd:element name="DSTX" type="xsd:string"/>      
+    <xsd:element name="ORNO" type="xsd:string"/>      
+    <xsd:element name="CUNO" type="xsd:string"/>       
+                                   </xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var7"/>
+    <input path="/getCustomerOrderList/OriginRequest.xsd" var="var4"/>
+    <input path="/getCustomerOrderList/OriginRequest.xsd" var="var8"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var6"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var9"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var5"/>
+    <imports>
+        <import kind="esql" namespace="/Common.esql"/>
+    </imports>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="extension" prefix="fn" uri="http://www.w3.org/2005/xpath-functions"/>
+        <namespace kind="extension" prefix="Common" uri="/Common.esql"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="PrepareOIZ102MILstOrders">
+        <input path="$var7/mb:env(Environment)">
+            <cast path="Variables/any" qualifier="OriginRequest" ref="var4" var="any"/>
+        </input>
+        <output path="$var9/mb:env(Environment)" var="Environment">
+            <cast path="$Environment/Variables/any" qualifier="OriginRequest" ref="var4" var="any1"/>
+        </output>
+        <output namespace="http://www.ibm.com/iib/msl/json" path="$var5/mb:msg(JSON,assembly,JSON,LocalEnvironment)" var="MessageAssembly">
+            <cast castType="userDefined" path="$MessageAssembly/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}JSONObject" ref="var5" var="anyType"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="CUNO" ref="var6" var="any2"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORNO" ref="var6" var="any3"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="DSTX" ref="var6" var="any4"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORDF" ref="var6" var="any5"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORDT" ref="var6" var="any6"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORSL" ref="var6" var="any7"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORST" ref="var6" var="any8"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ORTY" ref="var6" var="any9"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="ANTP" ref="var6" var="any10"/>
+            <cast castType="userDefined" path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/any" qualifier="CONO" ref="var6" var="any11"/>
+        </output>
+        <passthrough>
+            <input path="."/>
+            <output path="$Environment/."/>
+            <updates/>
+        </passthrough>
+        <move>
+            <input path="Variables/OriginRequest/CUNO"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/CUNO"/>
+        </move>
+        <move>
+            <input path="Variables/OriginRequest/ORNO"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORNO"/>
+        </move>
+        <move>
+            <input path="Variables/OriginRequest/DSTX"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/DSTX"/>
+        </move>
+        <move>
+            <input path="Variables/OriginRequest/ORDF"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORDF"/>
+        </move>
+        <move automap="true">
+            <input path="Variables/OriginRequest/ORDT"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORDT"/>
+        </move>
+        <condition>
+            <if>
+                <input path="Variables/OriginRequest/ORSL" var="ORSL"/>
+                <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORSL"/>
+                <test lang="xpath">fn:string-length($ORSL) &gt; 0</test>
+                <move automap="true">
+                    <input path="$ORSL/."/>
+                    <output path="."/>
+                </move>
+            </if>
+            <else>
+                <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORSL"/>
+                <assign value="22">
+                    <output path="."/>
+                </assign>
+            </else>
+        </condition>
+        <condition>
+            <if>
+                <input path="Variables/OriginRequest/ORST" var="ORST"/>
+                <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORST"/>
+                <test lang="xpath">fn:string-length($ORST) &gt; 0</test>
+                <move automap="true">
+                    <input path="$ORST/." var="ORST"/>
+                    <output path="."/>
+                </move>
+            </if>
+            <else>
+                <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORST"/>
+                <assign value="99">
+                    <output path="."/>
+                </assign>
+            </else>
+        </condition>
+        <move automap="true">
+            <input path="Variables/OriginRequest/ORTY"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ORTY"/>
+        </move>
+        <move automap="true">
+            <input path="Variables/OriginRequest/ANTP"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/ANTP"/>
+        </move>
+        <move automap="true">
+            <input path="Variables/OriginRequest/CONO"/>
+            <output path="$MessageAssembly/LocalEnvironment/Destination/HTTP/QueryString/CONO"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

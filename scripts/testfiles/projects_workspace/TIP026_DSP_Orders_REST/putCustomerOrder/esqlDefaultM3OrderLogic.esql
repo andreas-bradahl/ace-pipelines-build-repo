@@ -1,0 +1,21 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlDefaultM3OrderLogic
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		DECLARE defaultM3OrderType CHARACTER Environment.OrderRequest.Data.defaultM3OrderType;
+
+		IF LENGTH(defaultM3OrderType) > 0 THEN
+			SET OutputRoot.JSON.Data.orderType = defaultM3OrderType;
+			SET Environment.Variables.Global.PromoSplit.normalOrder = defaultM3OrderType;
+		ELSE
+			SET OutputRoot.JSON.Data.orderType = Environment.Variables.SQLQueries.DefaultM3OrderType.value;
+			SET Environment.Variables.Global.PromoSplit.normalOrder = Environment.Variables.SQLQueries.DefaultM3OrderType.value;
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

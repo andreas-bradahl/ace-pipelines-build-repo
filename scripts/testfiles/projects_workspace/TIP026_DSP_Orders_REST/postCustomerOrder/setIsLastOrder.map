@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="postCustomerOrder" version="8.0.5.0" xmlns:map="postCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+    <xsd:element name="Global"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="isLastOrder" type="xsd:boolean"/> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element> 
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="setIsLastOrder">
+        <input path="$var1/mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var"/>
+        </input>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var"/>
+        </output>
+        <passthrough>
+            <input path="."/>
+            <output path="."/>
+            <updates>
+                <assign value="true">
+                    <output path="Variables/Global/isLastOrder"/>
+                </assign>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

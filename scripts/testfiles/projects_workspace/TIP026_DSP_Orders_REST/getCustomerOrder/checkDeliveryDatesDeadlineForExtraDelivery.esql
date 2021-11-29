@@ -1,0 +1,48 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE checkDeliveryDatesDeadlineForExtraDelivery
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE jsonReplyRef REFERENCE TO InputRoot.JSON.Data;
+		
+		DECLARE requestedDeliveryDate DATE CAST(varRef.Global.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		
+		DECLARE responseCursor REFERENCE TO jsonReplyRef.extradeliverydates;
+
+		DECLARE matchFound BOOLEAN false;
+		DECLARE noMatchingDate BOOLEAN false;
+		MOVE responseCursor FIRSTCHILD NAME 'Item';
+		DECLARE matchCursor REFERENCE TO responseCursor;
+		
+		WHILE LASTMOVE(responseCursor) AND NOT matchFound  AND NOT noMatchingDate DO
+			
+			DECLARE deliveryDate DATE CAST(responseCursor.deliveryDate AS DATE FORMAT 'yyyy-MM-dd');			
+			
+			IF requestedDeliveryDate > deliveryDate THEN
+				
+				MOVE matchCursor TO responseCursor;
+			 	
+			ELSEIF requestedDeliveryDate = deliveryDate THEN
+			 	
+			 	MOVE matchCursor TO responseCursor;
+			 	SET matchFound = true;
+			 	
+			ELSE
+				
+				SET noMatchingDate = true;
+			 	
+			END IF;
+			
+			MOVE responseCursor NEXTSIBLING REPEAT NAME;
+			 
+		END WHILE;
+		
+		SET varRef.Global.deadline = matchCursor;
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;

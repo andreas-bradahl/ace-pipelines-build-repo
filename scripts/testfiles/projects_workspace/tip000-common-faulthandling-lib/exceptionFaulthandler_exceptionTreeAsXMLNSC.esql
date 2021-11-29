@@ -1,0 +1,12 @@
+
+
+CREATE COMPUTE MODULE exceptionFaulthandler_exceptionTreeAsXMLNSC
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE LASTCHILD OF OutputRoot DOMAIN('XMLNSC') NAME 'XMLNSC';
+		SET OutputRoot.XMLNSC = InputExceptionList;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

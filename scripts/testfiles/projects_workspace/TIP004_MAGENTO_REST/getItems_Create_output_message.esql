@@ -1,0 +1,9 @@
+
+
+CREATE COMPUTE MODULE getItems_Create_output_message
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		RETURN TRUE;
+	END;
+END MODULE;

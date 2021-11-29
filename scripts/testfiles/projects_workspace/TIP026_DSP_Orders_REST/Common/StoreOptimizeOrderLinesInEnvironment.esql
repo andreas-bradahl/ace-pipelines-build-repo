@@ -1,0 +1,19 @@
+BROKER SCHEMA Common
+
+
+CREATE DATABASE MODULE StoreOptimizeOrderLinesInEnvironment
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+  		DECLARE parameterRef REFERENCE TO LocalEnvironment.REST.Input.Parameters;
+  		
+		DECLARE optimizeOrderLines BOOLEAN parameterRef.optimizeOrderLines;
+		DECLARE noExtraOrderCharge BOOLEAN parameterRef.noExtraOrderCharge;
+		
+		SET Environment.Variables.optimizeOrderLines = COALESCE(optimizeOrderLines, false);
+		SET Environment.Variables.noExtraOrderCharge = COALESCE(noExtraOrderCharge, false);
+			
+		RETURN TRUE;
+	END;
+
+END MODULE;

@@ -1,0 +1,19 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ163MIAddCancel
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+		DECLARE M3BaseUrl CHARACTER Environment.Variables.Global.UDP.M3BaseUrl;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = M3BaseUrl || 'OIZ163MI/AddCancel';
+				
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.Variables.Global.OriginRequest.ns:companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.Variables.Global.OriginRequest.ns:customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RSWD = '0';
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.FDAT = Environment.Variables.Global.OriginRequest.ns:deliveryDate;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.TDAT = Environment.Variables.Global.OriginRequest.ns:deliveryDate;
+	
+		RETURN TRUE;
+	END;
+END MODULE;

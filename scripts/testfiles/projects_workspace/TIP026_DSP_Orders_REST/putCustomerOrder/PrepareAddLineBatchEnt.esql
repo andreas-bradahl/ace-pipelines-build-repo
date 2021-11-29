@@ -1,0 +1,66 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareAddLineBatchEnt
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		DECLARE getPriceLineRef REFERENCE TO Environment.JSONResponse.getPriceLineRef;
+		DECLARE getPriceLineNameValueRef REFERENCE TO getPriceLineRef.Data.MIRecord.Item.NameValue;
+		DECLARE orderLineIndex INT Environment.Variables.orderLineIndex;
+		DECLARE orderLineCursor REFERENCE TO orderRequestRef.orderLines.Item[orderLineIndex];
+		
+		DECLARE ORNO CHAR TRIM(orderRequestRef.orderNumber);
+		DECLARE ITNO CHAR TRIM(orderLineCursor.sku);
+		DECLARE ORQT CHAR TRIM(orderLineCursor.quantity);
+		DECLARE DIP1 DECIMAL orderLineCursor.discountLine1;
+		DECLARE DIP2 DECIMAL orderLineCursor.discountLine2;
+		DECLARE DIP3 DECIMAL orderLineCursor.discountLine3;
+		DECLARE DIP4 DECIMAL orderLineCursor.discountLine4;
+		DECLARE DIP5 DECIMAL orderLineCursor.discountLine5;
+		DECLARE DIP6 DECIMAL orderLineCursor.discountLine6;
+		DECLARE LSLS CHAR;
+		
+		DECLARE SAPR CHAR NULL;
+		DECLARE SPUN CHAR NULL;
+		DECLARE WHLO CHAR NULL;
+		DECLARE DRDN CHAR NULL;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORNO = ORNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ITNO = ITNO;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQT = ORQT;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP1 = DIP1;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP2 = DIP2;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP3 = DIP3;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP4 = DIP4;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP5 = DIP5;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIP6 = DIP6;
+		
+		IF orderLineCursor.isLostSales THEN
+			SET LSLS = '1';
+			DECLARE LNAM DECIMAL CAST(GetValueFromNameValueList('LNAM',getPriceLineNameValueRef) AS DECIMAL);
+			DECLARE DIA6 DECIMAL CAST(TRIM(GetValueFromNameValueList('DIA6',getPriceLineNameValueRef)) AS DECIMAL);
+			DECLARE quantity DECIMAL CAST(ORQT AS DECIMAL);
+			DECLARE conversionFactor DECIMAL 1; 
+			DECLARE salesPriceLostSales DECIMAL (LNAM + DIA6) / (quantity * conversionFactor);
+			SET SAPR = salesPriceLostSales;
+			SET SPUN = TRIM(GetValueFromNameValueList('SPUN',getPriceLineNameValueRef));
+			SET WHLO = orderLineCursor.lostSalesWarehouse;
+			SET DRDN = orderLineCursor.lostSalesUniqueId;
+			
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.LSLS = LSLS;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.LNAM = LNAM;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.DIA6 = DIA6;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.SAPR = SAPR;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPUN = SPUN;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.WHLO = WHLO;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.DRDN = DRDN;
+			
+		END IF;
+		
+		IF LASTMOVE(getPriceLineRef) THEN
+			DELETE FIELD getPriceLineRef;
+		END IF;
+		RETURN TRUE;
+		END;
+END MODULE;

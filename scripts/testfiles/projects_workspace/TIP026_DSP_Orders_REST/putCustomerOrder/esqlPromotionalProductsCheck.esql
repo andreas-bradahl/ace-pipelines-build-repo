@@ -1,0 +1,67 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPromotionalProductsCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		CREATE FIELD Environment.Variables.Global.Flags.PromoSplit;
+		
+		DECLARE PromotionalCode CHARACTER Environment.Variables.SQLQueries.PromotionalCode.value;
+		
+		DECLARE hasPromotional BOOLEAN FALSE;
+		DECLARE onlyPromotional BOOLEAN TRUE;
+		
+		DECLARE promotional REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.PromotionalSkus AS promotional;
+		DECLARE promotionalRef REFERENCE TO Environment;
+		
+		DECLARE notPromotional REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.NotPromotionalSkus AS notPromotional;
+		DECLARE notPromotionalRef REFERENCE TO Environment;
+		
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+				
+			DECLARE sqlQueryIsPromotionalProduct CHAR ' 
+				SELECT MMITNO
+				FROM MITMAS
+				WHERE
+						MMCONO = ''100''
+					AND MMITTY = ?
+					AND MMITNO = ?
+			';
+				
+			SET Environment.Variables.SQLQueries.IsPromotionalProduct[] = PASSTHRU(sqlQueryIsPromotionalProduct, PromotionalCode, orderLine.sku);
+			
+			IF EXISTS(Environment.Variables.SQLQueries.IsPromotionalProduct[]) THEN
+					
+				SET hasPromotional = TRUE;
+				CREATE LASTCHILD OF promotional AS promotionalRef NAME 'orderLines';
+				SET promotionalRef = orderLine;
+				
+			ELSE
+				
+				CREATE LASTCHILD OF notPromotional AS notPromotionalRef NAME 'orderLines';
+				SET notPromotionalRef = orderLine;
+				SET onlyPromotional = FALSE;
+								
+			END IF;
+		
+		END FOR;
+		
+		SET Environment.Variables.Global.Flags.OnlyPromotional = onlyPromotional;
+		SET Environment.Variables.Global.Flags.HasPromotional = hasPromotional;
+		
+		IF onlyPromotional THEN
+
+			PROPAGATE TO TERMINAL 'out';
+
+		ELSE
+			
+			PROPAGATE TO TERMINAL 'out1';
+			
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;

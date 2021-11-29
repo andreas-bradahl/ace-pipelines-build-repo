@@ -1,0 +1,87 @@
+
+
+
+
+CREATE DATABASE MODULE getProductWithoutAssortment_getWarehouseProductWithoutAssortment
+	
+	DECLARE cusfdbName EXTERNAL CHARACTER;
+	
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE queryVariable CHAR '';
+		DECLARE showSellByDateProduct BOOLEAN; 
+		SET showSellByDateProduct = Environment.Variables.getItemPerCustomerRequestEnviroment.Request.showSellByDateProducts;
+		 
+		IF Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE IS NULL THEN
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CURRENT_DATE;
+			SET Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE = CAST(Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE AS CHAR FORMAT 'yyyyMMdd');
+		END IF;
+			
+		IF showSellByDateProduct THEN
+		ELSE
+			SET queryVariable = 'AND (ZBSLDT is null or ZBSLDT = ''0'' or ZBSLDT <= '''||Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE||''') ';
+		END IF;			
+
+		DECLARE warehouseItemsQuery CHAR;
+		SET warehouseItemsQuery =
+		'(SELECT
+			TRIM(MMITNO) AS ITNO,MBWHLO, ZBSLDT, CVVTP1, MUCOFA,MMUNMS, MMITCL,
+			MUALUN, MMALUN
+		FROM MITMAS
+		INNER JOIN MITBAL
+			ON MBCONO = MMCONO
+			AND MMITNO = MBITNO
+			AND MBWHLO = ?
+			AND MBSTAT >= ''20''
+			AND MBSTAT <= ''50''
+		INNER JOIN OCUSMA
+			ON OKCONO = MMCONO
+			AND OKWHLO = MBWHLO
+			AND OKCUNO = ?
+		INNER JOIN MITWHL 
+			ON MWCONO=MBCONO
+			AND MWWHLO=MBWHLO
+		INNER JOIN CVATPC 
+			ON CVCONO=MWCONO 
+			AND CVDIVI=MBDIVI 
+			AND CVCSCD=MWCSCD 
+			AND CVVTCD=MBVTCS
+		LEFT JOIN ' || cusfdbName || '.ZITBAL
+			ON ZBCONO=MBCONO 
+			AND ZBWHLO=MBWHLO 
+			AND ZBITNO=MBITNO
+		LEFT JOIN MITAUN 
+			ON MMITNO=MUITNO 
+			AND MUAUS2 = ''1'' 
+			AND MUAUTP = ''1''
+			AND MUCONO = MMCONO
+		WHERE MMCONO = ?
+			AND MMSTAT >= ''20''
+			AND MMSTAT < ''80''
+			AND (MMACHK = 1 OR MMACHK = 0)
+			' || queryVariable || '
+			AND SUBSTRING(MMSPE2, CAST(? AS INT), 1)= ''1'')';
+
+		CREATE FIELD Environment.Variables.ProductData; -- .Warehouse.NoACHK;
+		CREATE FIELD Environment.Variables.ProductData.NoneAssortment;
+		CREATE FIELD Environment.Variables.ProductData.NoneAssortment.Warehouse;
+		DECLARE m3Ref REFERENCE TO Environment.Variables.ProductData.NoneAssortment.Warehouse;
+		SET m3Ref.Item[] =
+		PASSTHRU(warehouseItemsQuery
+		VALUES (
+		customerRef.OKWHLO,
+		customerRef.OKCUNO,
+		customerRef.OKCONO,
+		customerRef.SalesChannelNumber
+		));
+		--LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Line 36', 'Query was : ' || warehouseItemsQuery);
+		--DECLARE count INT CARDINALITY(Environment.Variables.Customer.Items.Item[]);
+		DECLARE count INT CARDINALITY(m3Ref.Item[]);
+		SET m3Ref= count;
+		--LOG EVENT SEVERITY 1 VALUES(BrokerName, BrokerVersion, NodeLabel, 'Line 39', 'Count was : ' || CAST(count AS CHAR));
+		RETURN TRUE;
+	END;
+
+END MODULE;

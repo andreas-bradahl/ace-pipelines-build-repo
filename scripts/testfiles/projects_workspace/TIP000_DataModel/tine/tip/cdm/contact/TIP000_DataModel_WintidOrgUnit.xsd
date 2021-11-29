@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://TIP000_DataModel" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:co="http://TIP000_DataModel">
+
+
+
+
+
+    <element name="WintidOrgUnit" type="co:WintidOrgUnit"></element>
+    
+    <complexType name="WintidOrgUnit">
+    	<sequence>
+    		<element name="OrganizationalUnitImport"
+    			type="co:WintidOrganizationalUnitImport" maxOccurs="1" minOccurs="1">
+    		</element>
+    	</sequence>
+    </complexType>
+
+
+    <complexType name="WintidOrganizationalUnitImport">
+    	<sequence>
+    		<element name="Header"
+    			type="co:WintidOrganizationalUnitImportHeader" maxOccurs="1" minOccurs="1">
+    		</element>
+    		<element name="OrganizationUnits" type="co:WintidOrganizationalUnitImportOrganizationUnits" maxOccurs="unbounded" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="WintidOrganizationalUnitImportHeader">
+    	<sequence>
+    		<element name="Date" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="Sender" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="Type" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="DepartmentIdType" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+    
+    <complexType
+    	name="WintidOrganizationalUnitImportOrganizationUnits">
+    	<sequence>
+    		<element name="UnitType" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="UnitId" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="UnitName" type="string" maxOccurs="1" minOccurs="1"></element>
+    		<element name="ManagerEmployeeId" type="string" maxOccurs="1" minOccurs="1"></element>
+    	</sequence>
+    </complexType>
+</schema>

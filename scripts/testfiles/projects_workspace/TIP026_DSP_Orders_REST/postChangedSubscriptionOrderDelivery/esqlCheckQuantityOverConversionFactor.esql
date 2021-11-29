@@ -1,0 +1,20 @@
+BROKER SCHEMA postChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckQuantityOverConversionFactor
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		DECLARE orderLineRef REFERENCE TO InputLocalEnvironment.Variables.CurrentOrderLine;
+		DECLARE conversionFactor INT InputLocalEnvironment.Variables.conversionFactor;
+		
+		IF conversionFactor <= orderLineRef.ns:quantity OR orderLineRef.ns:orderLineUnit = 'D' THEN			
+			PROPAGATE TO TERMINAL 'out1';
+		ELSE
+			PROPAGATE TO TERMINAL 'out';			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

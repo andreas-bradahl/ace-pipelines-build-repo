@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getSubscriptionOrder" version="8.0.5.0" xmlns:map="getSubscriptionOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">      
+                                   <xsd:element name="Global">     
+    <xsd:complexType>     
+      <xsd:sequence>     
+                               <xsd:element name="OriginRequest"> 
+          <xsd:complexType> 
+            <xsd:sequence> 
+              <xsd:element name="companyNumber" type="xsd:string"/> 
+              <xsd:element name="orderNumber" type="xsd:string"/> 
+              <xsd:element name="customerNumber" type="xsd:string"/> 
+              <xsd:element name="requestedDeliveryDate" type="xsd:string"/> 
+            </xsd:sequence> 
+          </xsd:complexType> 
+        </xsd:element>    
+            </xsd:sequence>     
+    </xsd:complexType>     
+  </xsd:element>     
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var4"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var6"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var7"/>
+    <input path="/subscriptionOrder.xsd" var="var"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="out" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="supplement" prefix="in" uri="http://TIP026_DSP_Orders_REST"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputXmlToEnvironment">
+        <input path="$var4/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var6"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST" path="$var/mb:msg(getSubscriptionOrderRequest,assembly,XMLNSC)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var6"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <local>
+                    <input path="$MessageAssembly/getSubscriptionOrderRequest"/>
+                    <output path="Variables/Global/OriginRequest"/>
+                    <move>
+                        <input path="companyNumber"/>
+                        <output path="companyNumber"/>
+                    </move>
+                    <move>
+                        <input path="orderNumber"/>
+                        <output path="orderNumber"/>
+                    </move>
+                    <move>
+                        <input path="customerNumber"/>
+                        <output path="customerNumber"/>
+                    </move>
+                    <move>
+                        <input path="requestedDeliveryDate"/>
+                        <output path="requestedDeliveryDate"/>
+                    </move>
+                </local>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

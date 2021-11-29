@@ -1,0 +1,25 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE MAR2NotEqual
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		
+		DECLARE resultRef REFERENCE TO InputLocalEnvironment.Variables.Result;
+		DECLARE currentProduct REFERENCE TO InputRoot.XMLNSC.OIZ340MILstSupplSummary.Item;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.available TYPE NameValue VALUE resultRef.available;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.partialAvailable TYPE NameValue VALUE resultRef.partialAvailable;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.warehouse TYPE NameValue VALUE resultRef.warehouse;
+		
+		DECLARE delayedDeliveryDate CHARACTER CAST(CAST(currentProduct.CODT AS DATE FORMAT 'yyyyMMdd') AS CHARACTER FORMAT 'yyyy-MM-dd');
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.plannedAvailableDate TYPE NameValue VALUE '';
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.delayedDeliveryDate TYPE NameValue VALUE delayedDeliveryDate;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.productNumber TYPE NameValue VALUE currentProduct.ITNO;
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.availableQuantity TYPE NameValue VALUE currentProduct.TRQA;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

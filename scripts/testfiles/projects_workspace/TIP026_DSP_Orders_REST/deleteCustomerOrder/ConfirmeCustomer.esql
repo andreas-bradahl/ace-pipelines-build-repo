@@ -1,0 +1,28 @@
+
+
+BROKER SCHEMA deleteCustomerOrder
+
+
+CREATE COMPUTE MODULE ConfirmeCustomer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF EXISTS(InputRoot.JSON.Data.MIRecord[]) THEN
+
+			SET Environment.GetHeadRecord = InputRoot.JSON.Data.MIRecord;
+			DECLARE orderRequestRef, orderLineCursor REFERENCE TO Environment.OrderRequest;
+			DECLARE CUNO CHARACTER GetValueFromNameValueList('CUNO', Environment.GetHeadRecord.Item.NameValue);
+
+			IF CUNO = orderRequestRef.customerNumber THEN
+				PROPAGATE TO TERMINAL 'out';
+			ELSE
+				Call setErrorMessage (400, 'FAILED','WRONG_CUSTOMER', Environment);
+				PROPAGATE TO TERMINAL 'out1';
+			END IF;
+		ELSE
+			Call setErrorMessage (400, 'FAILED','NOT_FOUND', Environment);
+			PROPAGATE TO TERMINAL 'out1';
+		END IF;
+		
+		RETURN FALSE;	
+	END;
+END MODULE;

@@ -1,0 +1,14 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareGetDeadlinePickup
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.customerNumber = orderRequestRef.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.orderType = 'pickup';
+
+		RETURN TRUE;
+	END;
+END MODULE;

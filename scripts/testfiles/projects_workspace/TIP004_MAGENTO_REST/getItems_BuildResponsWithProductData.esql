@@ -1,0 +1,542 @@
+
+
+CREATE COMPUTE MODULE getItems_BuildResponsWithProductData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- DECLARE itemCursor REFERENCE TO Environment.Variables.ProductList.Product[1];
+		DECLARE itemCursor REFERENCE TO Environment.Variables.ProductList;
+		DECLARE variablesRef REFERENCE TO Environment.Variables.Preferred;
+		MOVE itemCursor FIRSTCHILD NAME 'Product';
+		
+		--DECLARE cleaner REFERENCE TO InputLocalEnvironment;
+		
+		DECLARE riversandRestAPI CHAR 'out1';
+		DECLARE noContent CHAR 'out2';
+		
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Starting to create response in batch');
+		
+		-- TODO If input SKU is not found in list 
+		IF Environment.Variables.SKU IS NOT NULL THEN
+			IF NOT LASTMOVE(itemCursor) THEN
+				Call setErrorMessage (400, 'FAILED','NOT_FOUND', Environment);
+				PROPAGATE TO TERMINAL 'Failure';
+			END IF;
+		END IF;
+		
+		DECLARE currentProductRef REFERENCE TO OutputRoot;
+		DECLARE outdoc REFERENCE TO OutputRoot;
+		CREATE FIELD OutputRoot.JSON.Data as outdoc IDENTITY(JSON.Array);
+		WHILE (LASTMOVE(itemCursor)) DO	
+			
+			CALL AddItemToOutputMessage(itemCursor, outdoc, variablesRef);
+			--set cleaner = itemCursor;
+			
+			MOVE itemCursor	NEXTSIBLING REPEAT NAME;			
+			--Delete field cleaner;
+	    END WHILE;
+		
+		LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | Stopping creation of response in batch');
+		
+		--PROPAGATE TO TERMINAL 'out';
+		--PROPAGATE TO TERMINAL 'out1';
+		--LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('TIP004-Items | after propagation');
+		--DELETE FIELD Environment.*;
+		RETURN TRUE;
+	
+	END;	
+		
+	CREATE PROCEDURE AddItemToOutputMessage(IN productCursor REFERENCE, IN currentProductRef REFERENCE, IN variablesRef REFERENCE)
+	BEGIN
+		
+		DECLARE newItemRef REFERENCE TO OutputRoot;
+		--CREATE LASTCHILD OF currentProductRef AS newItemRef DOMAIN 'JSON' NAME 'Item';
+		CREATE LASTCHILD OF currentProductRef AS newItemRef NAME 'Item';
+		-- Add product to JSON output
+		CALL AddFieldsFromM3(productCursor, newItemRef, variablesRef);
+		
+		CALL StoreTineEsaDataOnCurrentItem(productCursor.ITNO);
+		CALL AddFieldsFromTineEsa(newItemRef);
+		CALL AddFieldsFromRiversand(productCursor, newItemRef);
+	END;
+	
+	CREATE PROCEDURE AddFieldsFromM3(IN itemDataRef REFERENCE, IN newItemRef REFERENCE, IN variablesRef REFERENCE)
+	BEGIN
+		DECLARE eansRef REFERENCE TO OutputRoot;
+		
+		CREATE LASTCHILD OF newItemRef NAME 'sku' VALUE itemDataRef.ITNO;
+		CREATE LASTCHILD OF newItemRef NAME 'promotionalItem' VALUE IsPromotionalItem(itemDataRef.ITNO);
+		CREATE LASTCHILD OF newItemRef NAME 'visible' VALUE IsVisible(itemDataRef.STAT);
+		CREATE LASTCHILD OF newItemRef NAME 'weight' VALUE CAST(itemDataRef.NEWE AS CHARACTER);
+		CREATE LASTCHILD OF newItemRef NAME 'unspsc' VALUE itemDataRef.SPE1;
+		CREATE LASTCHILD OF newItemRef NAME 'type' VALUE itemDataRef.ITTY;		
+		CREATE LASTCHILD OF newItemRef NAME 'buyableInBaseUnit' VALUE IsBuyableInBasicUnit(itemDataRef.ITCL, itemDataRef.ITNO); 
+		CREATE LASTCHILD OF newItemRef NAME 'productClass' VALUE itemDataRef.ITCL;
+		CREATE LASTCHILD OF newItemRef NAME 'baseUnit' VALUE '';
+		CREATE LASTCHILD OF newItemRef NAME 'UNMS' VALUE itemDataRef.UNMS;
+		--CREATE LASTCHILD OF newItemRef NAME 'baseUnit' VALUE GetPreferredBaseUnit(variablesRef.preferredBaseUnit, itemDataRef);
+		CREATE LASTCHILD OF newItemRef NAME 'buyableInSalesUnit' VALUE IsBuyableInSalesUnit(itemDataRef.ITCL);
+		CREATE LASTCHILD OF newItemRef NAME 'salesUnit' VALUE '';
+		CREATE LASTCHILD OF newItemRef NAME 'ALUN' VALUE itemDataRef.ALUN;
+		--CREATE LASTCHILD OF newItemRef NAME 'salesUnit' VALUE GetPreferredSalesUnit(variablesRef.preferredSalesUnit,itemDataRef); 
+		CREATE LASTCHILD OF newItemRef NAME 'variableWeight' VALUE HasVariableWeight(itemDataRef.SALES_PRICE_UNIT);
+		CREATE LASTCHILD OF newItemRef NAME 'conversionFactor' VALUE CAST(GetConversionFactor(itemDataRef) AS CHARACTER);-- todo prefferd.cofa
+		CREATE LASTCHILD OF newItemRef NAME 'comparativeUnit'VALUE itemDataRef.COMP_SALES_UNIT;
+		CREATE LASTCHILD OF newItemRef NAME 'epdNumber' VALUE itemDataRef.POPN;
+		CREATE LASTCHILD OF newItemRef NAME 'name' VALUE itemDataRef.ITDS;
+		CREATE LASTCHILD OF newItemRef NAME 'description' VALUE itemDataRef.ITDS;
+		
+		CREATE LASTCHILD OF newItemRef AS eansRef IDENTITY (JSON.Array)eans;
+
+		CALL SetEans(itemDataRef.ITNO, eansRef);
+	END;
+	
+	CREATE PROCEDURE AddFieldsFromTineEsa(IN newItemRef REFERENCE)
+	BEGIN
+		CREATE LASTCHILD OF newItemRef NAME 'maxQty' VALUE GetMaxQuantity();
+		CREATE LASTCHILD OF newItemRef NAME 'minWeight' VALUE GetMinWeight();
+		CREATE LASTCHILD OF newItemRef NAME 'leadTimeMinWeight' VALUE GetLeadTime();
+	END;
+	
+	CREATE PROCEDURE AddFieldsFromRiversand(IN itemDataRef REFERENCE, IN newItemRef REFERENCE)
+	BEGIN
+		DECLARE 
+				riversandRef, 
+				similarProductsRef, 
+				certificationsRef, 
+				enSearchWordRef,
+				noSearchWordRef,
+				nutritionsRef,
+				visibleInStoreRef,
+				riversandEnglishRef,
+				combinedProducts
+			REFERENCE TO InputRoot;
+		
+		IF Environment.Variables.SKU IS NOT NULL THEN
+			MOVE riversandRef TO Environment.Variables.RiversandData.values;
+			MOVE riversandEnglishRef TO Environment.Variables.RiversandData.English.values;
+		ELSE 
+			MOVE riversandRef TO Environment.Variables.RiversandData;
+			MOVE riversandRef FIRSTCHILD NAME itemDataRef.ITNO;
+			MOVE riversandRef TO riversandRef.values;
+			
+			MOVE riversandEnglishRef TO Environment.Variables.RiversandData.English;
+			MOVE riversandEnglishRef FIRSTCHILD NAME itemDataRef.ITNO;
+			MOVE riversandEnglishRef TO riversandEnglishRef.values;
+		END IF;
+
+		CREATE LASTCHILD OF newItemRef AS enSearchWordRef IDENTITY (JSON.Array)enSearchWord;
+		CREATE LASTCHILD OF newItemRef AS noSearchWordRef IDENTITY (JSON.Array)noSearchWord;
+			
+		-- Get all language specific fields in correct language
+		DECLARE noAllergens, noIngredients, noPackaging, noStorage, noDescription, enCombinedProducts CHAR;
+		DECLARE enAllergens, enIngredients, enPackaging, enStorage, enDescription, noCombinedProducts CHAR;
+		
+		SET enAllergens = GetRiversandField(itemDataRef, riversandEnglishRef, 'Allergener');
+		SET enIngredients = GetRiversandField(itemDataRef, riversandEnglishRef, 'Ingredienser');
+		SET enPackaging = GetRiversandField(itemDataRef, riversandEnglishRef, 'Marked_Emballasje');
+		SET enStorage = GetRiversandField(itemDataRef, riversandEnglishRef, 'Marked_Oppbevaring');
+		SET enDescription = GetRiversandField(itemDataRef, riversandEnglishRef, 'Produktbeskrivelse');
+		SET enCombinedProducts = GetRiversandField(combinedProducts, riversandEnglishRef, 'Marked_Relaterte_Produkter');
+
+		CREATE LASTCHILD OF newItemRef IDENTITY (JSON.Array)enNutritions;
+		CALL GetNutrients(riversandEnglishRef.ProdSpes_Naering_tabell, newItemRef.enNutritions);
+		
+		CREATE LASTCHILD OF newItemRef IDENTITY (JSON.Array)noNutritions;
+		CALL GetNutrients(riversandRef.ProdSpes_Naering_tabell, newItemRef.noNutritions);
+		CALL GetSearchWords(itemDataRef, riversandEnglishRef, enSearchWordRef);
+		CALL GetSearchWords(itemDataRef, riversandRef, noSearchWordRef);	
+		
+		SET noAllergens = GetRiversandField(itemDataRef, riversandRef, 'Allergener');
+		SET noIngredients = GetRiversandField(itemDataRef, riversandRef, 'Ingredienser');
+		SET noPackaging = GetRiversandField(itemDataRef, riversandRef, 'Marked_Emballasje');
+		SET noStorage = GetRiversandField(itemDataRef, riversandRef, 'Marked_Oppbevaring');
+		SET noDescription = GetRiversandField(itemDataRef, riversandRef, 'Produktbeskrivelse');
+		SET noCombinedProducts = GetRiversandField(combinedProducts, riversandRef, 'Marked_Relaterte_Produkter');
+		
+		CREATE LASTCHILD OF newItemRef NAME 'enAllergens' VALUE enAllergens;
+		CREATE LASTCHILD OF newItemRef NAME 'enIngredients' VALUE enIngredients;
+		CREATE LASTCHILD OF newItemRef NAME 'enPackaging' VALUE enPackaging;
+		CREATE LASTCHILD OF newItemRef NAME 'enStorage' VALUE enStorage;
+		
+		IF enDescription IS NOT NULL THEN
+			SET newItemRef.description = enDescription;
+		END IF;
+		
+		CREATE LASTCHILD OF newItemRef NAME 'noAllergens' VALUE noAllergens;
+		CREATE LASTCHILD OF newItemRef NAME 'noIngredients' VALUE noIngredients;
+		CREATE LASTCHILD OF newItemRef NAME 'noPackaging' VALUE noPackaging;
+		CREATE LASTCHILD OF newItemRef NAME 'noStorage' VALUE noStorage;
+		
+		IF noDescription IS NOT NULL THEN
+			SET newItemRef.noDescription = noDescription;
+		END IF;
+
+		IF riversandRef.Navn IS NOT NULL THEN
+			SET newItemRef.name = riversandRef.Navn;
+		END IF;
+
+		CREATE LASTCHILD OF newItemRef NAME 'preservable' VALUE riversandRef.Dager_Disp_Detaljist;
+		CREATE LASTCHILD OF newItemRef NAME 'productGroup' VALUE riversandRef.M3_Artikkelgruppe;
+		CREATE LASTCHILD OF newItemRef NAME 'productNumber' VALUE riversandRef.M3_Artikkelnr;
+		CREATE LASTCHILD OF newItemRef NAME 'productType' VALUE riversandRef.M3_Artikkeltype;
+		CREATE LASTCHILD OF newItemRef AS similarProductsRef IDENTITY (JSON.Array)similarProducts;
+
+		IF riversandRef.Marked_Lignende_Artikler IS NOT NULL THEN
+			DECLARE similarProductsString CHAR REPLACE(riversandRef.Marked_Lignende_Artikler, ',', '');  
+			CALL SetSimilarProducts(similarProductsString, similarProductsRef);
+		END IF;
+
+		CREATE LASTCHILD OF newItemRef NAME 'newUntilDate' VALUE riversandRef.Marked_Nyhet_Til_Dato;
+		CREATE LASTCHILD OF newItemRef NAME 'expiredUntilDate' VALUE riversandRef.Utgaatt_til_dato;
+		CREATE LASTCHILD OF newItemRef NAME 'recyclingChargeBaseUnit' VALUE CAST(GetRecyclingCharge(riversandRef.TS_Pantekode_Fpak) AS CHARACTER);
+		CREATE LASTCHILD OF newItemRef NAME 'brand' VALUE riversandRef.Merkevare;
+		CREATE LASTCHILD OF newItemRef AS certificationsRef IDENTITY (JSON.Array)certifications;
+	
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Blomsten', 'Blomst	en'); 
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Debio', 'Debio');		
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Energy_Star', 'Energy_Star');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_EU_okologi', 'EU_okologi');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Fairtrade', 'Fairtrade');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_FSC', 'FSC');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Krav', 'Krav');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_MSC', 'MSC');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Nokkelhullet', 'Nokkelhullet');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Nyt_Norge', 'Nyt_Norge');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_Svanen', 'Svanen');
+		CALL SetCertificationsField(riversandRef, certificationsRef, 'ProdSpes_TCO', 'TCO');
+	
+		CREATE LASTCHILD OF newItemRef NAME 'categoryLevel1' VALUE riversandRef.Salgskatalog_nivaa1;
+		CREATE LASTCHILD OF newItemRef NAME 'categoryLevel2' VALUE riversandRef.Salgskatalog_nivaa2;
+		CREATE LASTCHILD OF newItemRef NAME 'categoryLevel3' VALUE riversandRef.Salgskatalog_nivaa3;
+		
+		CREATE LASTCHILD OF newItemRef NAME 'enCombinedProducts' VALUE enCombinedProducts;
+		CREATE LASTCHILD OF newItemRef NAME 'noCombinedProducts' VALUE noCombinedProducts;
+		
+		--TODO country of orgin / TS_Opprinnelsesland
+		CREATE LASTCHILD OF newItemRef NAME 'countryOfOrigin' VALUE SUBSTRING(riversandRef.TS_Opprinnelsesland AFTER ',');
+		-- TODO: Nutritions needs to be parsed and added	
+		-- CREATE LASTCHILD OF newItemRef AS nutritionsRef IDENTITY (JSON.Array)nutritions;
+	
+		CREATE LASTCHILD OF newItemRef AS visibleInStoreRef IDENTITY (JSON.Array)visibleInStore;
+		IF riversandRef.Marked_Websider IS NOT NULL THEN
+			CREATE LASTCHILD OF visibleInStoreRef NAME 'Item' VALUE riversandRef.Marked_Websider;
+		END IF;
+	
+	END;
+	
+	-- R15
+	CREATE FUNCTION IsPromotionalItem(IN itemNumber CHAR)
+	RETURNS BOOLEAN
+	BEGIN
+		IF SUBSTRING(itemNumber FROM 1 FOR 1) = 'M' THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF; 
+	END;
+	
+	-- R2
+	CREATE FUNCTION IsVisible(IN itemStatus CHAR)
+	RETURNS BOOLEAN
+	BEGIN
+		IF itemStatus >= '20' AND itemStatus < 80 THEN
+			RETURN TRUE;
+		ELSE 
+			RETURN FALSE;
+		END IF;
+	END;
+	
+	-- R3
+	CREATE FUNCTION IsBuyableInBasicUnit(IN itemClass CHAR, IN itemNumber CHAR)
+	RETURNS BOOLEAN
+	BEGIN
+		IF itemClass = 'OPEX' THEN
+			RETURN TRUE;
+		ELSE
+			IF itemNumber IN (Environment.Variables.PriceListAndCurrencyItems.ItemNumber[]) THEN
+				RETURN TRUE;
+			ELSE
+				RETURN FALSE;
+			END IF;
+		END IF;
+	END;
+	
+	-- R4
+	CREATE FUNCTION IsBuyableInSalesUnit(IN itemClass CHAR)
+	RETURNS BOOLEAN
+	BEGIN
+		IF itemClass <> Environment.Variables.tine_esa.ApplicationData.zProductClassBasicUnit THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+	
+	CREATE FUNCTION HasVariableWeight(IN salesUnit CHAR)
+	RETURNS BOOLEAN
+	BEGIN
+		IF salesUnit = Environment.Variables.tine_esa.ApplicationData.zCreditcardKGItemUnit THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
+	
+	-- R6
+	-- TODO adjust for preferredBASEunit
+	CREATE FUNCTION GetConversionFactor(IN currentProduct REFERENCE)
+	RETURNS DECIMAL
+	BEGIN
+		IF currentProduct.COFA IS NULL THEN
+			IF currentProduct.UNMS <> 'STK' THEN
+				DECLARE conversionFactor DECIMAL;
+				SET conversionFactor = 
+					THE(SELECT ITEM
+						C.COFA
+					FROM 
+						Environment.Variables.AllAlternativeConversionFactors.Item[] AS C
+					WHERE
+						C.ITNO = currentProduct.ITNO);
+						
+				RETURN conversionFactor;
+			ELSE
+				RETURN 1.0;
+			END IF;
+		ELSE
+			RETURN currentProduct.COFA;
+		END IF;
+	END;
+	
+	CREATE FUNCTION GetComparativeSalesUnit(IN salesUnit CHAR)
+	RETURNS CHAR
+	BEGIN
+		IF salesUnit IN (Environment.Variables.ComparativeSalesUnit.SalesUnit[]) THEN
+			RETURN salesUnit;
+		ELSE
+			RETURN NULL;
+		END IF;
+	END;
+	
+	CREATE PROCEDURE StoreTineEsaDataOnCurrentItem(IN itemNumber CHAR)
+	BEGIN
+		SET Environment.Variables.CurrentItemTineEsa = 
+			THE(SELECT 
+				I.itemNumber,
+				I.zMaxQty,
+				I.minimumWeight,
+				I.leadTime
+			FROM 
+				Environment.Variables.tine_esa.ItemsList.Item[] AS I
+			WHERE
+				I.itemNumber = itemNumber);	
+	END;
+	
+	CREATE FUNCTION GetMaxQuantity()
+	RETURNS INTEGER
+	BEGIN
+		RETURN Environment.Variables.CurrentItemTineEsa.zMaxQty;
+	END;
+	
+	CREATE FUNCTION GetMinWeight()
+	RETURNS INTEGER
+	BEGIN
+		RETURN COALESCE(Environment.Variables.CurrentItemTineEsa.minimumWeight, 0); 
+	END;
+	
+	CREATE FUNCTION GetLeadTime()
+	RETURNS INTEGER
+	BEGIN
+		RETURN COALESCE(Environment.Variables.CurrentItemTineEsa.leadTime, 0);
+	END;
+	
+	CREATE PROCEDURE SetCertificationsField(IN rsProductData REFERENCE, IN storeInLocation REFERENCE, IN fieldToCheck CHAR, IN defaultValue CHAR)
+	BEGIN
+		IF rsProductData.{fieldToCheck} = 'Ja' THEN
+			CREATE LASTCHILD OF storeInLocation TYPE NameValue NAME 'Item' VALUE defaultValue;
+		END IF;
+	END;
+		
+	CREATE PROCEDURE Split(IN string CHARACTER, IN envRef REFERENCE, IN delimiter CHARACTER) 
+	BEGIN 
+	   DECLARE P INTEGER; 
+	   DECLARE Idx INTEGER 1; 
+	
+	   SET envRef.Split = NULL; 
+	
+	   REPEAT 
+	      SET P = POSITION(delimiter IN string); 
+	      IF P = 0 THEN 
+	         SET envRef.Split.Array[Idx] = string; 
+	      ELSE 
+	         SET envRef.Split.Array[Idx] = LEFT(string, P - 1); 
+	         SET string = SUBSTRING(string FROM P + LENGTH(delimiter)); 
+	         SET Idx = Idx + 1; 
+	      END IF; 
+	  UNTIL P = 0    
+	  END REPEAT;
+	  
+	  -- DELETE FIELD envRef.Split;  
+	END;
+	
+	CREATE PROCEDURE GetSearchWords(IN product REFERENCE, IN riversandRef REFERENCE, IN arrayHead REFERENCE)
+	BEGIN
+		DECLARE searchWordsRef REFERENCE TO riversandRef.Soekeord; 
+		
+		IF searchWordsRef IS NOT NULL THEN
+			CALL Split(riversandRef.Soekeord, Environment.Variables, ' ');
+		
+			DECLARE searchWordCursor REFERENCE TO Environment.Variables.Split.Array[1];
+			
+			WHILE LASTMOVE (searchWordCursor) DO
+				
+				IF TRIM(searchWordCursor) <> '' THEN
+					
+					CREATE LASTCHILD OF arrayHead NAME 'Item' VALUE searchWordCursor;
+					
+				END IF;
+				
+				MOVE searchWordCursor NEXTSIBLING REPEAT NAME;
+				
+			END WHILE; 
+			
+			-- DELETE FIELD Environment.Variables.Split;
+		END IF;
+	END;
+		
+	CREATE FUNCTION GetRecyclingCharge(IN pantekodeAndCharge CHAR)
+	RETURNS DECIMAL
+	BEGIN
+		DECLARE recyclingCharge FLOAT;
+		
+		IF pantekodeAndCharge IS NULL OR TRIM(pantekodeAndCharge) = '' THEN
+			RETURN 0.00;
+		ELSE
+			CALL Split(pantekodeAndCharge, Environment.Variables, ',');
+		END IF;
+		
+		SET recyclingCharge = Environment.Variables.Split.Array[2] || '.' || Environment.Variables.Split.Array[3];
+		-- DELETE FIELD Environment.Variables.Split;
+		
+		RETURN CAST(recyclingCharge AS DECIMAL(10,2));
+	END;
+	
+	CREATE PROCEDURE SetEans(IN itemNumber CHAR, IN arrayHead REFERENCE)
+	BEGIN
+		SET arrayHead.Item[] = SELECT
+			E.ITNO AS sku,
+			E.POPN AS code,
+			E.ALUN AS packaging
+		FROM Environment.Variables.EANList.Item[] AS E
+		WHERE E.ITNO = itemNumber;
+		
+		
+	END;
+	
+	CREATE PROCEDURE SetSimilarProducts(IN productsString CHAR, IN arrayHead REFERENCE) 
+	BEGIN
+		CALL Split(productsString, Environment.Variables, ' ');
+		DECLARE productCursor REFERENCE TO Environment.Variables.Split.Array[1];
+			
+		WHILE LASTMOVE (productCursor) DO
+			IF TRIM(productCursor) <> '' THEN 
+				CREATE LASTCHILD OF arrayHead NAME 'Item' VALUE TRIM(productCursor);
+			END IF;
+			
+			MOVE productCursor NEXTSIBLING REPEAT NAME;
+		END WHILE; 
+		
+		-- DELETE FIELD Environment.Variables.Split;
+	END;
+	
+	CREATE FUNCTION GetRiversandField(IN product REFERENCE, IN riversandRef REFERENCE, IN fieldToGet CHAR)
+	RETURNS CHAR
+	BEGIN
+		RETURN CAST(riversandRef.{fieldToGet} AS CHAR);
+	END;
+	
+	CREATE PROCEDURE GetNutrients(IN inputNuitritionsString CHARACTER, IN arrayHead REFERENCE)
+	BEGIN
+		DECLARE cleanNuitritionsString CHARACTER inputNuitritionsString;
+		DECLARE whiteSpace CONSTANT CHARACTER CAST( X'090D0A20' AS CHAR CCSID 1208);
+		DECLARE currentNutritionsString CHARACTER;
+		DECLARE currentName CHARACTER;
+		DECLARE currentValue CHARACTER;
+		DECLARE parsedValues CHARACTER '';
+		DECLARE tempNutrition REFERENCE TO arrayHead;
+		
+		SET cleanNuitritionsString =  REPLACE(cleanNuitritionsString, '<tabledata> <nutrients> ', '');
+		SET cleanNuitritionsString =  REPLACE(cleanNuitritionsString, '  </nutrients> </tabledata>', '');
+		SET cleanNuitritionsString =  SUBSTRING(cleanNuitritionsString AFTER '</name>');
+		
+		WHILE((cleanNuitritionsString <> '') AND inputNuitritionsString IS NOT NULL) DO
+		
+			SET currentNutritionsString = cleanNuitritionsString;
+			-- SUBSTRING(cleanNuitritionsString AFTER '<nutrient>');
+			
+			SET currentName = SUBSTRING(SUBSTRING(currentNutritionsString AFTER '<nutrient name="')  BEFORE '"');
+			SET currentValue = SUBSTRING(SUBSTRING(currentNutritionsString AFTER '>') BEFORE '</nutrient>');
+			
+			CREATE LASTCHILD OF arrayHead AS tempNutrition NAME 'Item' ;
+			
+			SET tempNutrition.name = currentName;
+			
+			SET currentValue = TRIM(LEADING whiteSpace FROM currentValue);
+			SET currentValue = TRIM(TRAILING whiteSpace FROM currentValue);
+			SET tempNutrition.value = currentValue;
+		
+			SET cleanNuitritionsString = SUBSTRING(cleanNuitritionsString AFTER '</nutrient>');
+		END WHILE;
+	END;
+	
+	CREATE PROCEDURE SplitString (IN S CHARACTER, IN Env REFERENCE, IN Delim CHARACTER) 
+	BEGIN 
+	   DECLARE P INTEGER; 
+	   DECLARE Idx INTEGER 1; 
+	
+	   SET Env.Split = NULL; 
+	
+	   REPEAT 
+	      SET P = POSITION(Delim IN S); 
+	      IF P = 0 THEN 
+	         SET Env.Split.Array[Idx] = S; 
+	      ELSE 
+	         SET Env.Split.Array[Idx] = LEFT(S, P - 1); 
+	         SET S = SUBSTRING(S FROM P + LENGTH(Delim)); 
+	         SET Idx = Idx + 1; 
+	      END IF; 
+	  UNTIL P = 0    
+	  END REPEAT;    
+	END;
+	
+	CREATE FUNCTION GetPreferredSalesUnit(IN variblesRef REFERENCE, IN itemDataRef REFERENCE)
+	RETURNS CHAR
+	BEGIN
+		DECLARE preferredUnitRef, preferredUnitCursor REFERENCE TO variblesRef;
+		MOVE preferredUnitCursor FIRSTCHILD NAME 'Unit';
+		WHILE (LASTMOVE(preferredUnitCursor)) DO
+			IF preferredUnitCursor.ITNO = itemDataRef.ITNO THEN
+				RETURN preferredUnitCursor.ALUN;
+			END IF;
+			MOVE preferredUnitCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		RETURN itemDataRef.ALUN;
+	END;
+	
+	CREATE FUNCTION GetPreferredBaseUnit(IN variblesRef REFERENCE, IN itemDataRef REFERENCE)
+	RETURNS CHAR
+	BEGIN
+		DECLARE preferredUnitRef, preferredUnitCursor REFERENCE TO variblesRef;
+		MOVE preferredUnitCursor FIRSTCHILD NAME 'Unit';
+		WHILE (LASTMOVE(preferredUnitCursor)) DO	
+			IF preferredUnitCursor.ITNO = itemDataRef.ITNO THEN
+				RETURN preferredUnitCursor.ALUN;
+				-- preferredUnitCursor.COFA;
+			END IF;
+			MOVE preferredUnitCursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		RETURN itemDataRef.UNMS;
+	END;
+	
+END MODULE;

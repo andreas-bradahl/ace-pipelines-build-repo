@@ -1,0 +1,21 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddALUNToTemporaryOrder
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;		
+		
+		DECLARE ALUN CHARACTER Environment.Variables.HTTPResponses.GetBatchLine.Item.ALUN;
+		
+		IF ALUN = '' THEN
+			PROPAGATE TO TERMINAL 'out1';					
+		ELSE
+			SET OutputLocalEnvironment.Variables.TemporaryOrder.ALUN = ALUN;
+			PROPAGATE TO TERMINAL 'out';		
+		END IF;
+			 
+		
+		RETURN FALSE;
+	END;
+END MODULE;

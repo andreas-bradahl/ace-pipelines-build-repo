@@ -1,0 +1,123 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE getExtraDeliveryDaysForItemsNotInWarehouse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varRef REFERENCE TO Environment.Variables;
+		DECLARE orderRequestRef REFERENCE TO Environment.OrderRequest.Data;
+		
+		DECLARE supplyModel CHAR varRef.Customer.supplyModel;
+		DECLARE warehouse CHAR varRef.Customer.warehouse;
+		
+		DECLARE todaysDateAndTime TIMESTAMP CURRENT_TIMESTAMP;
+		
+		DECLARE doWarehouseOrderSplit BOOLEAN false;
+		DECLARE orderSplitExtraDeliveryDays INT 0;
+		
+		DECLARE orderBefore TIME;
+		DECLARe leadDays INT;
+		DECLARE requestedDeliveryDate DATE CAST(orderRequestRef.requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		DECLARE requestedDeliveryDateDayOfWeek INT EXTRACT(DAYOFWEEK FROM requestedDeliveryDate);
+		
+		CALL setOrderBeforeAndLeadDays(CURRENT_DATE, warehouse, supplyModel, orderBefore, leadDays);
+		
+		IF isWithinOrderBeforeTime(leadDays, requestedDeliveryDate, orderBefore) THEN
+			
+			SET doWarehouseOrderSplit = doWarehouseOrderSplit(requestedDeliveryDate, leadDays);
+			SET orderSplitExtraDeliveryDays = leadDays; 
+			
+		ELSE
+			
+			DECLARE offset INT 1;
+			DECLARE dayAfter DATE CURRENT_DATE + CAST(offset AS INTERVAL DAY);
+			DECLARE dayAfterDayOfWeek INT EXTRACT(DAYOFWEEK FROM dayAfter);
+			
+			WHILE dayAfterDayOfWeek = 1 OR dayAfterDayOfWeek = 7 DO
+				
+				SET offset = offset + 1;
+				SET dayAfter = CURRENT_DATE + CAST(offset AS INTERVAL DAY);
+				SET dayAfterDayOfWeek = EXTRACT(DAYOFWEEK FROM dayAfter);
+				
+			END WHILE;
+			
+			CALL setOrderBeforeAndLeadDays(dayAfter, warehouse, supplyModel, orderBefore, leadDays);
+			
+			SET doWarehouseOrderSplit = doWarehouseOrderSplit(requestedDeliveryDate, leadDays + offset);
+			-- SET requestedDeliveryDate = dayAfter; -- TODO for testing
+			SET orderSplitExtraDeliveryDays = leadDays + offset;
+			DECLARE bafdaf BOOLEAN true; -- TODO delete
+		END IF;
+		
+		-- SET orderRequestRef.requestedDeliveryDate = CAST(requestedDeliveryDate AS DATE FORMAT 'yyyy-MM-dd');
+		SET Environment.Variables.Global.doWarehouseOrderSplit = doWarehouseOrderSplit;
+		SET Environment.Variables.Global.orderSplitExtraDeliveryDays = orderSplitExtraDeliveryDays;
+		
+		RETURN TRUE;
+	END;
+	
+	
+CREATE PROCEDURE setOrderBeforeAndLeadDays (IN requestedDeliveryDate DATE, IN warehouse CHAR, IN supplyModel CHAR, OUT orderBefore TIME, OUT leadDays INT)
+	BEGIN
+		DECLARE exceptionQuery CHAR 'select orderBefore, leadDays from zLeadTimeExceptions zl inner join zSupplyModel zs on zs.id= zl.supplyModelId where zs.supplyModel=? and zl.warehouse=? and orderDate= ?';
+		
+		SET LocalEnvironment.exception.Item[] = PASSTHRU(exceptionQuery, supplyModel, warehouse, CAST(requestedDeliveryDate AS CHAR FORMAT 'yyyy-MM-dd'));
+		
+		IF EXISTS(SELECT * FROM LocalEnvironment.exception.Item[] AS e) THEN
+			
+			SET orderBefore = CAST(LocalEnvironment.exception.Item.orderBefore AS TIME FORMAT 'HH:mm');			
+			SET leadDays = LocalEnvironment.exception.Item.leadDays;
+			
+			RETURN;
+			
+		ELSE
+			
+			DECLARE leadDaysQuery CHAR  'select orderBefore, leadDays from zLeadTime zl inner join zSupplyModel zs on zs.id= zl.supplyModelId where zs.supplyModel=? and zl.warehouse=? and weekDay=?';
+			DECLARE dayOfWeek INT EXTRACT(DAYOFWEEK FROM requestedDeliveryDate);
+			
+			SET LocalEnvironment.leadDays.Item[] = PASSTHRU(leadDaysQuery, supplyModel, warehouse, dayOfWeek);
+			
+			SET orderBefore = CAST(LocalEnvironment.leadDays.Item.orderBefore AS TIME FORMAT 'HH:mm');
+			SET leadDays = LocalEnvironment.leadDays.Item.leadDays;
+			
+			RETURN;
+			
+		END IF;
+		
+	END;
+	
+	
+CREATE FUNCTION isWithinOrderBeforeTime(IN leadDays INT, IN orderingDate DATE, IN orderBefore TIME) RETURNS BOOLEAN
+	BEGIN
+		
+		IF CURRENT_TIME < orderBefore THEN
+			
+			RETURN TRUE;
+		
+		ELSE
+			
+			RETURN FALSE;
+			
+		END IF;
+		
+	END;
+	
+	
+CREATE FUNCTION doWarehouseOrderSplit(IN requestedDeliveryDate DATE, IN leadDaysOffset INT) RETURNS BOOLEAN
+	BEGIN
+		DECLARE doWarehouseOrderSplit BOOLEAN false;
+		DECLARE debugDate DATE CURRENT_DATE + CAST(leadDaysOffset AS INTERVAL DAY);
+		
+		-- <= ?
+		IF requestedDeliveryDate < CURRENT_DATE + CAST(leadDaysOffset AS INTERVAL DAY) THEN
+			
+			SET doWarehouseOrderSplit = true;
+		
+		END IF;
+		
+		RETURN doWarehouseOrderSplit;		
+	END;
+	
+	
+END MODULE;

@@ -1,0 +1,104 @@
+
+
+CREATE DATABASE MODULE getBusinessChainData_GetAndBuildSupplyModel
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		-- Find priorities for supply model
+		DECLARE splmPrioQuery CHAR
+		'(SELECT DISTINCT C4PREX
+		FROM MSPLMX
+		WHERE C4SPLM = ?
+		ORDER BY C4PREX)';
+		-- Create folder structure and pointers
+
+		DECLARE supplyModelRef REFERENCE TO Environment.Variables;
+		CREATE LASTCHILD OF supplyModelRef AS supplyModelRef NAME 'SupplyModel';
+		-- Store and process supply model priorities
+		DECLARE priorityRef REFERENCE TO supplyModelRef;
+		SET priorityRef.Priorities.Priority[] =
+		PASSTHRU(splmPrioQuery VALUES (customerRef.OKSPLM));
+
+		MOVE priorityRef FIRSTCHILD NAME 'Priorities';
+		MOVE priorityRef FIRSTCHILD NAME 'Priority';
+		-- Create query string part to check fields
+		DECLARE fieldsString CHAR;
+		DECLARE totalCount INT 1;
+		WHILE LASTMOVE(priorityRef) DO
+			-- Create three fields to check for each priority
+			DECLARE internalCount INT 1;
+			REPEAT
+				DECLARE n INT CAST(TRIM(priorityRef.C4PREX) AS INT);
+				IF totalCount = 1 THEN
+					SET fieldsString = 'C3PC' || CAST((n - 1) AS CHAR) || CAST(internalCount AS CHAR);
+				ELSE
+					SET fieldsString = fieldsString || ', C3PC' || CAST((n - 1) AS CHAR) || CAST(internalCount AS CHAR);
+				END IF;
+
+				SET totalCount = totalCount + 1;
+				SET internalCount = internalCount + 1;
+				UNTIL
+				internalCount > 3
+			END REPEAT;
+			MOVE priorityRef NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		-- Create the SQL query string with fields to check
+		DECLARE fieldsQuery CHAR
+		'(SELECT ' || fieldsString ||
+		' FROM CROBJC
+		WHERE C3OBV1 = ?
+		AND C3CONO = ?)';
+		-- Store values from the checked fields
+		SET supplyModelRef.FieldResults[] =
+		PASSTHRU(fieldsQuery VALUES (customerRef.OKSPLM, customerRef.OKCONO));
+		
+		DECLARE fieldsToCheckRef REFERENCE TO supplyModelRef.FieldResults;
+		MOVE priorityRef TO supplyModelRef.Priorities.Priority[1];
+		MOVE fieldsToCheckRef FIRSTCHILD;
+		DECLARE priority CHAR;
+		DECLARE iterationNo INT;
+		DECLARE ruleFound BOOLEAN;
+		X : WHILE LASTMOVE(priorityRef) DO
+			SET ruleFound = FALSE;
+			Y : WHILE LASTMOVE(fieldsToCheckRef) DO
+				DECLARE internalCount INT 1;
+				REPEAT
+					IF RIGHT(fieldsToCheckRef, 4) = 'ITNO' THEN
+						SET priority = FIELDVALUE(priorityRef.C4PREX);
+						SET iterationNo = internalCount;
+						SET ruleFound = TRUE;
+						
+						-- Move pointer to first element in next priority
+						MOVE fieldsToCheckRef NEXTSIBLING;
+						WHILE LASTMOVE(fieldsToCheckRef) AND (SUBSTRING(FIELDNAME(fieldsToCheckRef) FROM 6) <> '1') DO
+							DECLARE test CHAR fieldsToCheckRef;
+							MOVE fieldsToCheckRef NEXTSIBLING;
+						END WHILE;
+						LEAVE Y;
+					END IF;
+					MOVE fieldsToCheckRef NEXTSIBLING;
+					SET internalCount = internalCount + 1;
+				UNTIL
+					internalCount > 3
+				END REPEAT;
+			END WHILE Y;
+			IF ruleFound THEN
+				/*
+				Store column and priority in Environment so that
+				they can be reused for business chains later in the flow
+				*/
+				DECLARE columnToCheck CHAR 'C4OBV' || CAST(iterationNo AS CHAR);
+				DECLARE potentialItemsRef REFERENCE TO supplyModelRef;
+				CREATE FIELD supplyModelRef.PotentialItems AS potentialItemsRef;
+				CREATE LASTCHILD OF potentialItemsRef AS potentialItemsRef TYPE Name NAME 'PotentialItem';
+				CREATE LASTCHILD OF potentialItemsRef TYPE NameValue NAME 'Column' Value columnToCheck;
+				CREATE LASTCHILD OF potentialItemsRef TYPE NameValue NAME 'Priority' Value priority;
+				SET supplyModelRef.ColumnToCheck = columnToCheck;
+			END IF;
+			
+			MOVE priorityRef NEXTSIBLING;
+		END WHILE X;
+	-- SET supplyModelRef.FoundPriority = priority;
+	END;
+
+END MODULE;

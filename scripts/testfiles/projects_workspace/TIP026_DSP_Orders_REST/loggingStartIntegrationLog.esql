@@ -1,0 +1,24 @@
+
+
+CREATE COMPUTE MODULE loggingStartIntegrationLog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot = InputRoot;
+		
+		IF Environment.Variables.Global.UDP.Logging THEN
+		
+			SET Environment.Variables.Logging.httpTotalTimeTaken = '00:00:00.000';
+			
+			DECLARE integrationStart CHARACTER CAST(CURRENT_TIME AS CHARACTER FORMAT 'hh:mm:ss.SSS');
+			SET Environment.Variables.Logging.integrationStart = integrationStart;
+			
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('------------------------------------------------------------------------------------------------------------------------');
+			LOG EVENT SEVERITY 1 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Starting integration at: ' || integrationStart);
+
+		END IF;
+
+		RETURN TRUE;
+	END;	
+END MODULE;

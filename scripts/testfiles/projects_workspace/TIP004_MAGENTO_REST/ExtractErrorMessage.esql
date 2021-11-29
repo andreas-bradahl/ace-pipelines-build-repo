@@ -1,0 +1,42 @@
+
+
+CREATE COMPUTE MODULE ExtractErrorMessage
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        SET OutputLocalEnvironment = InputLocalEnvironment;
+        SET OutputExceptionList = InputExceptionList;
+        
+        CREATE FIELD OutputLocalEnvironment.ErrorText;
+        
+        DECLARE errorText CHARACTER;
+        DECLARE ExcCursor REFERENCE TO InputExceptionList.*[1];
+        DECLARE PrevExcCursor REFERENCE TO Environment;
+
+ 
+        -- Loop through the exception list children
+        WHILE ExcCursor.Number IS NOT NULL DO 
+
+            SET errorText = ExcCursor.Text;
+            SET PrevExcCursor = ExcCursor;
+            
+            -- Move start to the last child of the field to which it currently points 
+            MOVE ExcCursor LASTCHILD;
+        END WHILE;     
+        
+        FOR errorMessage AS PrevExcCursor.Insert[] DO
+            
+            SET errorText = errorText || ' || ' || errorMessage.Text;
+            
+        END FOR;
+                
+        SET OutputLocalEnvironment.Destination.File.Name = 
+        CAST (CURRENT_TIMESTAMP AS CHARACTER FORMAT 'YYYYMMdd_HHmmss_')
+        || 'LOG';
+        
+        SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = '500';
+        SET OutputRoot.JSON.Data.Error_Code = 'Internal Server Error';
+        SET OutputRoot.JSON.Data.Response = errorText;
+        
+        RETURN TRUE;
+    END;
+END MODULE;

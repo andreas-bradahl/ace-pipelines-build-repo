@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="getCustomerOrder" version="8.0.5.0" xmlns:map="getCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+    <xsd:element name="Global"> 
+    <xsd:complexType> 
+      <xsd:sequence> 
+        <xsd:element name="company_number" type="xsd:string"/> 
+        <xsd:element name="customer_number" type="xsd:string"/> 
+        <xsd:element name="order_number" type="xsd:string"/> 
+      </xsd:sequence> 
+    </xsd:complexType> 
+  </xsd:element> 
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input path="/putCustomerOrder/customerOrder.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapXmlToEnvironment">
+        <input path="$var1/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/Variables/any" qualifier="Global" ref="var"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="$var2/mb:msg(getOrder,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="Variables/any" qualifier="Global" ref="var"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$MessageAssembly/getOrder/companyNumber"/>
+                    <output path="Variables/Global/company_number"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/getOrder/customerNumber"/>
+                    <output path="Variables/Global/customer_number"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/getOrder/orderNumber"/>
+                    <output path="Variables/Global/order_number"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

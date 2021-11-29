@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="deleteCustomerOrder" version="8.0.5.0" xmlns:map="deleteCustomerOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">  
+    <xsd:element name="OrderRequest">  
+    <xsd:complexType>  
+      <xsd:sequence>  
+        <xsd:element name="companyNumber" type="xsd:string"/>  
+        <xsd:element name="customerNumber" type="xsd:string"/>  
+        <xsd:element name="orderNumber" type="xsd:string"/>  
+               </xsd:sequence>  
+    </xsd:complexType>  
+  </xsd:element>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd" var="var1"/>
+    <input path="/putCustomerOrder/customerOrder.xsd" var="var2"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var3"/>
+    <output path="jar:file://!com/ibm/etools/mft/map/xsds/assembly/Environment.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://TIP026_DSP_Orders_REST/customerOrder"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapXmlToEnv">
+        <input path="$var1/mb:env(Environment)" var="Environment">
+            <cast castType="userDefined" path="$Environment/any" qualifier="OrderRequest" ref="var"/>
+        </input>
+        <input namespace="http://TIP026_DSP_Orders_REST/customerOrder" path="$var2/mb:msg(deleteOrder,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <output path="mb:env(Environment)">
+            <cast castType="userDefined" path="any" qualifier="OrderRequest" ref="var"/>
+        </output>
+        <passthrough>
+            <input path="$Environment/."/>
+            <output path="."/>
+            <updates>
+                <move>
+                    <input path="$MessageAssembly/deleteOrder/companyNumber"/>
+                    <output path="OrderRequest/companyNumber"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/deleteOrder/customerNumber"/>
+                    <output path="OrderRequest/customerNumber"/>
+                </move>
+                <move>
+                    <input path="$MessageAssembly/deleteOrder/orderNumber"/>
+                    <output path="OrderRequest/orderNumber"/>
+                </move>
+            </updates>
+        </passthrough>
+    </mappingDeclaration>
+</mappingRoot>

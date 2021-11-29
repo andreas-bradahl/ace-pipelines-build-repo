@@ -1,0 +1,28 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE DATABASE MODULE DB_MinimumOrderAmount_Check
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE sqlQuery CHAR 'SELECT value FROM ApplicationData where parameter = ?';
+		SET Environment.MinimumOrderAmount = PASSTHRU(sqlQuery, 'zMinimumOrderValue');
+		DECLARE minimumOrderValue DECIMAL CAST(Environment.MinimumOrderAmount.value AS DECIMAL);
+		DECLARE estimatedOrderValue DECIMAL CAST(Environment.OrderRequest.Data.estimatedOrderAmount AS DECIMAL);
+		DELETE FIELD Environment.MinimumOrderAmount;
+		
+		IF minimumOrderValue >  estimatedOrderValue THEN
+			SET Environment.Variables.HTTPCode = 400;
+			SET Environment.Variables.Response = 'FAILED';
+			SET Environment.Variables.Error_Reason = 'ORDER_MINIMUM';
+			PROPAGATE TO TERMINAL 'out1';
+			
+		ELSE
+			PROPAGATE TO TERMINAL 'out';
+			
+		END IF;
+		
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

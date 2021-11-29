@@ -1,0 +1,85 @@
+
+
+CREATE DATABASE MODULE getComparisonUnitPrices_GetComperisonPriceUnitPerItem
+		CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.ALUNS;
+		DECLARE m3Ref, m3Cursor REFERENCE TO Environment.Variables.ALUNS;
+		
+		-----------------------experiment-----------------
+		CREATE FIELD Environment.Variables.queryItemList;
+		DECLARE itemListRef, itemListCoursor REFERENCE TO Environment.Variables.FullItemsList;
+		DECLARE iList CHAR '';
+		DECLARE endOfString CHAR '§';
+		MOVE itemListCoursor FIRSTCHILD NAME 'Item';
+		WHILE LASTMOVE(itemListCoursor) DO
+			SET iList = iList || '''';
+			SET iList = iList || itemListCoursor.ITNO;
+			SET iList = iList || '''';
+			SET iList = iList || ',';
+			MOVE itemListCoursor NEXTSIBLING REPEAT NAME;
+		END WHILE;
+		SET iList = iList || endOfString;
+		SET iList = SUBSTRING(iList BEFORE ',' || endOfString);
+
+		SET Environment.Variables.queryItemList = iList;
+		
+		-----------------------experiment-----------------
+		
+		DECLARE mualunString CHARACTER '';
+		
+		FOR i AS Environment.Variables.SQLQueries.SalesPriceUnitToRunExtraPriceCallFor[] DO
+			
+			SET mualunString = mualunString || '''' || i.code || '''' || ',';
+			
+		END FOR;
+		
+		SET mualunString = mualunString || '!!!';
+		SET mualunString = SUBSTRING(mualunString BEFORE ',!!!');
+
+		DECLARE m3query CHAR
+		'
+		SELECT ITNO , ALUN
+		
+		FROM
+		(SELECT 
+		TRIM(MUITNO) AS ITNO,
+		TRIM(MUALUN) AS ALUN
+		FROM MITAUN
+		WHERE MUCONO=100 
+			AND MUAUTP=1
+			AND MUALUN IN ('||mualunString||')
+			AND MUITNO NOT IN (
+								SELECT MUITNO
+								FROM MITAUN
+								WHERE MUCONO = 100
+									AND MUAUTP = 1
+									AND MUALUN IN ('||mualunString||')
+								GROUP BY MUITNO
+								HAVING COUNT(*) > 1
+								)
+		UNION
+		SELECT 
+		TRIM(MUITNO) AS ITNO,
+		TRIM(MUALUN) AS ALUN
+		FROM MITAUN
+		WHERE MUCONO=100 
+			AND MUAUTP=1
+			AND MUALUN IN ('||mualunString||')
+			AND MUITNO IN (
+							SELECT MUITNO
+							FROM MITAUN
+							WHERE MUCONO = 100
+								AND MUAUTP = 1
+								AND MUALUN IN ('||mualunString||')
+							GROUP BY MUITNO
+							HAVING COUNT(*) > 1
+							)
+			AND MUAUS6 = ''1'')
+			WHERE ITNO IN ('||  Environment.Variables.queryItemList ||')
+		';
+		SET m3Ref.Item[] = PASSTHRU(m3query);
+		
+		DELETE FIELD Environment.Variables.queryItemList;
+	END;
+END MODULE;

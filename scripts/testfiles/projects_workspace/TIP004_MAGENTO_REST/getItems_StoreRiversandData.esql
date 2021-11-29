@@ -1,0 +1,14 @@
+
+
+CREATE COMPUTE MODULE getItems_StoreRiversandData
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE httpStatusCodeRef INT InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code";
+		
+		IF httpStatusCodeRef = 200 THEN
+			SET Environment.Variables.RiversandData =  InputRoot.JSON.Data;
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;

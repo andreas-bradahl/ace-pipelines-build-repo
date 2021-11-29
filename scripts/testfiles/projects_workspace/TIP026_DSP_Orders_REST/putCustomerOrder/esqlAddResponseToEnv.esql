@@ -1,0 +1,29 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlAddResponseToEnv
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE response REFERENCE TO InputRoot.JSON.Data;
+		DECLARE itemRef REFERENCE TO Environment;
+		
+		IF EXISTS(Environment.Variables.APIResponses[]) THEN
+			CREATE FIELD Environment.Variables.APIResponses;
+		END IF;		
+		
+		IF response.Response = 'FAILED' THEN
+			
+			CREATE LASTCHILD OF Environment.Variables.APIResponses AS itemRef NAME 'Item';
+			SET itemRef = response;
+					
+		ELSE
+			
+			CREATE LASTCHILD OF Environment.Variables.APIResponses AS itemRef NAME 'Item';
+			SET itemRef = response.Item;			
+					
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

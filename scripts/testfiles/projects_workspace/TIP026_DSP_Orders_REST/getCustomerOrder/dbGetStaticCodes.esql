@@ -1,0 +1,27 @@
+BROKER SCHEMA getCustomerOrder
+
+
+CREATE DATABASE MODULE dbGetStaticCodes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE sqlQueryPriceList CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zPriceListOnlyDpak''
+		';
+			
+		SET Environment.Variables.SQLQueries.PriceList = PASSTHRU(sqlQueryPriceList);	
+				
+		DECLARE sqlQueryCurrency CHAR ' 
+			SELECT value
+			FROM ApplicationData
+			WHERE [parameter] = ''zCurrencyOnlyDpak''
+		';
+			
+		SET Environment.Variables.SQLQueries.Currency = PASSTHRU(sqlQueryCurrency);
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

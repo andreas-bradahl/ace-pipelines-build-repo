@@ -1,0 +1,35 @@
+
+
+CREATE COMPUTE MODULE SendDataToM3_ProcessResponse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE inputRef REFERENCE TO InputRoot.XMLNSC;
+		DECLARE queryRef REFERENCE TO InputLocalEnvironment.Destination.HTTP.QueryString;
+		DECLARE NL CHAR CAST(X'0A' AS CHAR CCSID 1208); -- NewLine
+		IF InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" <> '200' THEN
+			THROW USER EXCEPTION SEVERITY 3 MESSAGE 2951 VALUES(COALESCE(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line",'N/A'));
+		END IF;
+
+		MOVE inputRef FIRSTCHILD;
+		MOVE inputRef NEXTSIBLING;
+		DECLARE errorMsg, queryData CHARACTER '';
+		IF FIELDNAME(inputRef) = 'ErrorMessage' THEN
+			MOVE queryRef FIRSTCHILD;
+			WHILE LASTMOVE(queryRef) DO
+				SET queryData = queryData || FIELDNAME(queryRef) ||':' ||FIELDVALUE(queryRef) || NL;
+			MOVE queryRef NEXTSIBLING;	
+			END WHILE;
+			
+			SET errorMsg = inputRef.ns1:Message || NL ||'- QueryString - ' || NL ||COALESCE(queryData,'NIL');
+			IF CONTAINS(errorMsg,'finnes allerede')THEN
+				LOG EVENT SEVERITY 1 VALUES('TIP111', MessageFlowLabel, NodeLabel, 'Data already present in M3');	
+			ELSE
+				THROW USER EXCEPTION SEVERITY 3 MESSAGE 2951 VALUES(COALESCE(errorMsg,'N/A'));
+			END IF;
+		END IF;
+		
+		LOG EVENT SEVERITY 1 VALUES('TIP111', MessageFlowLabel, NodeLabel, 'Completed PMS050MI/RptReceipt API call');
+		RETURN TRUE;
+	END;
+
+END MODULE;

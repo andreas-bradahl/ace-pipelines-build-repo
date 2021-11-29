@@ -1,0 +1,26 @@
+
+
+CREATE COMPUTE MODULE getItems_PrepareRiversandAPIRequest
+
+	DECLARE  PropertyRiversand  EXTERNAL  CHARACTER 'overwritten in property file';
+	DECLARE  RiversandBase_Path  EXTERNAL  CHARACTER 'overwritten in property file';
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		LOG EVENT SEVERITY 1 VALUES('prepare riversand1');
+		DECLARE httpRef, requestLineRef REFERENCE TO OutputLocalEnvironment;
+		
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP AS httpRef;
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.RequestLine AS requestLineRef;
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = RiversandBase_Path;
+		--'http://grunndata-api-test.tine.no';
+		--'http://grunndata-api.tine.no'
+		IF Environment.Variables.SKU IS NOT NULL THEN
+			SET OutputLocalEnvironment.Destination.HTTP.RequestLine.RequestURI = '/rest/v1/riversand/' || Environment.Variables.SKU; 
+		ELSE
+			SET OutputLocalEnvironment.Destination.HTTP.RequestLine.RequestURI = '/rest/v1/riversand/all';
+		END IF;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.key = PropertyRiversand; -- API key
+		
+		RETURN TRUE;
+	END;
+END MODULE;

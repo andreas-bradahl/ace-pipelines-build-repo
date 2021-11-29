@@ -1,0 +1,11 @@
+
+
+CREATE COMPUTE MODULE getCancellationDateList_ifEmpty
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD OutputRoot.JSON.Data IDENTITY (JSON.Array)Data;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

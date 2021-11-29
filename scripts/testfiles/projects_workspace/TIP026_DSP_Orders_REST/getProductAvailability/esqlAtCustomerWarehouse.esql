@@ -1,0 +1,29 @@
+BROKER SCHEMA getProductAvailability
+
+
+CREATE COMPUTE MODULE esqlAtCustomerWarehouse
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+
+		DECLARE resultRef REFERENCE TO InputLocalEnvironment.Variables.Result;
+		DECLARE currentProduct REFERENCE TO InputRoot.XMLNSC.OIZ340MILstSupplSummary.Item;
+		DECLARE customerWHLO CHARACTER Environment.Variables.MDBREADMIGetOCUSMA.Item.WHLO;
+		
+		CREATE FIELD OutputLocalEnvironment.Variables.Result.unit TYPE NameValue VALUE Environment.Variables.CurrentProduct.unit;
+						
+		IF currentProduct.SWHL = customerWHLO THEN
+						
+			CREATE FIELD OutputLocalEnvironment.Variables.Result.supplyingWarehouse TYPE NameValue VALUE currentProduct.SWHL;
+			CREATE FIELD OutputLocalEnvironment.Variables.Result.atCustomersWarehouse TYPE NameValue VALUE TRUE;
+			
+		ELSE
+			
+			CREATE FIELD OutputLocalEnvironment.Variables.Result.supplyingWarehouse TYPE NameValue VALUE currentProduct.SWHL;
+			CREATE FIELD OutputLocalEnvironment.Variables.Result.atCustomersWarehouse TYPE NameValue VALUE FALSE;			
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

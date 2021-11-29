@@ -1,0 +1,31 @@
+BROKER SCHEMA putChangedSubscriptionOrderDelivery
+
+
+CREATE COMPUTE MODULE esqlCheckOrderMinimum
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE estimatedOrderAmount INTEGER Environment.Variables.Global.OriginRequest.ns:estimatedOrderAmount;
+		
+		DECLARE sqlQueryMinimumValue CHAR ' 
+			SELECT value 
+			FROM tine_esa.dbo.applicationdata
+			WHERE 
+					[parameter] = ''zMinimumOrderValue''
+		';
+			
+		SET Environment.Variables.SQLQueries.MinimumValue = PASSTHRU(sqlQueryMinimumValue);
+	
+		IF Environment.Variables.SQLQueries.MinimumValue.value > estimatedOrderAmount THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'ORDER_MINIMUM';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

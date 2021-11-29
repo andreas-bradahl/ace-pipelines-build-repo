@@ -1,0 +1,36 @@
+
+
+CREATE COMPUTE MODULE getBusinessChainData_OnlyLimitedAssortment
+		CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--TODO remove
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo;
+		DECLARE limitedCusor, limitedRef REFERENCE TO Environment.Variables.Limiteds;
+		CREATE FIELD customerRef.OnlyLimited;
+		SET customerRef.OnlyLimited = 'NO';
+
+		IF EXISTS(customerRef.BusinessChains[]) THEN
+			DECLARE chainCursorRef REFERENCE TO customerRef.BusinessChains;
+			MOVE chainCursorRef FIRSTCHILD;
+			WHILE LASTMOVE(chainCursorRef) DO
+				DECLARE chainNr char FIELDVALUE(chainCursorRef);
+				DECLARE limitedCusor, limitedRef REFERENCE TO Environment.Variables.Limiteds;
+				MOVE limitedCusor FIRSTCHILD NAME 'Row';
+				
+				WHILE LASTMOVE(limitedCusor) DO
+					IF chainNr = limitedCusor.code THEN
+						SET customerRef.OnlyLimited = 'YES';
+					END IF;
+					MOVE limitedCusor NEXTSIBLING;
+				END WHILE;
+
+				MOVE chainCursorRef NEXTSIBLING;
+			END WHILE;
+			DELETE FIELD Environment.Variables.LimitedList;
+			DELETE FIELD Environment.Variables.Limiteds;
+		END IF;
+
+		RETURN TRUE;
+
+	END;
+END MODULE;

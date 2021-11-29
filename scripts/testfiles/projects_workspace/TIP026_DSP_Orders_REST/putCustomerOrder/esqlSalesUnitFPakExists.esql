@@ -1,0 +1,37 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlSalesUnitFPakExists
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		
+		DECLARE CurrentOrder REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE quantity CHAR CAST(CurrentOrder.quantity AS CHAR);
+		
+		FOR orderLineNumber AS CurrentOrder.orderLineNumber.Item[] DO	
+			
+			FOR lstLine2Order AS Environment.Variables.HTTPResponses.LstLine2.Item[] DO
+				
+				IF lstLine2Order.PONR = orderLineNumber AND lstLine2Order.ALUN = 'STK' THEN
+				
+					IF quantity = lstLine2Order.ORQT THEN
+						PROPAGATE TO TERMINAL 'out2';
+						RETURN FALSE;
+					ELSE
+						SET OutputRoot.XMLNSC.Values.PONR = lstLine2Order.PONR;	
+						SET OutputRoot.XMLNSC.Values.POSX = lstLine2Order.POSX;
+						PROPAGATE TO TERMINAL 'out1';
+						RETURN FALSE;
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+			
+		END FOR;
+		
+		PROPAGATE TO TERMINAL 'out';
+		RETURN FALSE;
+	END;
+END MODULE;

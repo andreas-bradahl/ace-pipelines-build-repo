@@ -1,0 +1,24 @@
+CREATE DATABASE MODULE getGuestUserData_GetM3GuestProductFromMITMAS
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Variables.FullItemsList;
+		DECLARE m3Ref REFERENCE TO Environment.Variables.FullItemsList;
+
+
+		DECLARE m3Query CHARACTER '
+		SELECT 
+		TRIM(MMITNO) ITNO
+		FROM MITMAS
+		WHERE MMCONO=100
+		AND (MMSTAT>=20 and MMSTAT<=50)
+		AND SUBSTRING(MMSPE2, 2,1)=''1''
+		AND MMITNO NOT IN ('|| Environment.Variables.ExludeList ||')
+		';
+		
+		SET m3Ref.Item[] = PASSTHRU(m3Query);
+		DELETE FIELD Environment.Variables.ExludeList;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

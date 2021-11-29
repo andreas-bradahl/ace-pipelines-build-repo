@@ -1,0 +1,19 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE PrepareAddBatchHead
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = Environment.OrderRequest.Data.companyNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = Environment.OrderRequest.Data.customerNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTP = Environment.OrderRequest.Data.orderType;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.RLDT = REPLACE(Environment.OrderRequest.Data.requestedDeliveryDate, '-', '');
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUOR = Environment.OrderRequest.Data.customerOrderNumber;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.YREF = Environment.OrderRequest.Data.customerReference;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.DSTX = Environment.OrderRequest.Data.orderName;
+		SET OutputLocalEnvironment.Destination.HTTP.QueryString.OREF = Environment.OrderRequest.Data.TINEReference;
+		
+		
+		RETURN TRUE;
+	END;
+END MODULE;

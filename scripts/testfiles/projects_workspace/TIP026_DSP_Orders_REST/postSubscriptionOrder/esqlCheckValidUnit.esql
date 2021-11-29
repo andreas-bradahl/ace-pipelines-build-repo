@@ -1,0 +1,76 @@
+BROKER SCHEMA postSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlCheckValidUnit
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE isValidOrderLineUnit BOOLEAN;
+		
+		FOR orderLine AS Environment.Variables.Global.OriginRequest.ns:orderLines[] DO
+		
+			SET isValidOrderLineUnit = FALSE;
+			
+			DECLARE sqlQueryValidUnits CHAR ' 
+				SELECT MUALUN AS UNIT
+				FROM MITAUN
+				WHERE
+						MUCONO = 100 
+					AND MUAUTP = 1 
+					AND MUITNO = ?
+			';
+				
+			SET Environment.Variables.SQLQueries.ValidUnits = PASSTHRU(sqlQueryValidUnits, orderLine.ns:sku);
+			
+			SET Environment.Variables.SQLQueries.{orderLine.ns:sku}.ValidUnits = PASSTHRU(sqlQueryValidUnits, orderLine.ns:sku);
+			
+			FOR validUnit AS Environment.Variables.SQLQueries.ValidUnits[] DO
+				
+				IF orderLine.ns:orderLineUnit = TRIM(validUnit.UNIT) THEN
+					
+					SET isValidOrderLineUnit = TRUE;
+															
+				END IF;
+				
+			END FOR;
+			
+			IF NOT isValidOrderLineUnit THEN
+				
+				SET sqlQueryValidUnits = ' 
+					SELECT MMUNMS AS UNIT, MMALUN AS UNIT
+					FROM MITMAS
+					WHERE 
+							MMCONO = 100 
+						AND MMITNO = ?
+				';
+					
+				SET Environment.Variables.SQLQueries.ValidUnits = PASSTHRU(sqlQueryValidUnits, orderLine.ns:sku);
+				
+				SET Environment.Variables.SQLQueries.{orderLine.ns:sku}.ValidUnits = PASSTHRU(sqlQueryValidUnits, orderLine.ns:sku);
+				
+				FOR validUnit AS Environment.Variables.SQLQueries.ValidUnits[] DO
+					
+					IF orderLine.ns:orderLineUnit = TRIM(validUnit.UNIT) THEN
+						
+						SET isValidOrderLineUnit = TRUE;
+																
+					END IF;
+				
+				END FOR;
+				
+			END IF;
+			
+		END FOR;
+		
+		IF NOT isValidOrderLineUnit THEN
+			
+			SET OutputLocalEnvironment.Destination.HTTP.ReplyStatusCode = 400;
+			SET OutputRoot.JSON.Data.Response = 'FAILED';
+			SET OutputRoot.JSON.Data.Error_Code = 'INVALID_ORDERLINE_UNIT';
+			PROPAGATE TO TERMINAL 'out1';
+			RETURN FALSE;
+			
+		END IF;
+		
+		RETURN TRUE;
+	END;
+END MODULE;

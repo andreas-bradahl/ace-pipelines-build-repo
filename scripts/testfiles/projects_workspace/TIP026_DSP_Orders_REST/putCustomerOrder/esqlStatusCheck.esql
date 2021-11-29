@@ -1,0 +1,41 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlStatusCheck
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE ITNO CHARACTER;
+		DECLARE status INTEGER;
+
+		FOR orderLine AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			FOR lstLine2Record AS Environment.JSONResponse.LstLine2.Data.MIRecord.Item[] DO
+				
+				SET ITNO = TRIM(GetValueFromNameValueList('ITNO', lstLine2Record.NameValue));
+				
+				IF orderLine.sku = ITNO THEN
+					
+					SET status = TRIM(GetValueFromNameValueList('ORST', lstLine2Record.NameValue));
+					
+					IF status <= 33 AND status >= 22 THEN
+					ELSE
+						
+						DECLARE envRef REFERENCE TO Environment;
+						CALL setErrorMessage(400, 'FAILED', 'ORDER_LINE_STATUS', envRef);
+						PROPAGATE TO TERMINAL 'out1';
+						RETURN FALSE;
+											
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+		
+		END FOR;
+		
+		PROPAGATE TO TERMINAL 'out';
+
+		RETURN FALSE;
+	END;
+END MODULE;

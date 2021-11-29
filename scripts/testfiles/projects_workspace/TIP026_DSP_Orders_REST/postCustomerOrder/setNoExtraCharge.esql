@@ -1,0 +1,12 @@
+BROKER SCHEMA postCustomerOrder
+
+
+CREATE COMPUTE MODULE setNoExtraCharge
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Variables.isExtraOrderCharge = 'false';
+		
+		RETURN TRUE;
+	END;
+END MODULE;

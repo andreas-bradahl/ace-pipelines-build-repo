@@ -1,0 +1,53 @@
+
+
+CREATE DATABASE MODULE discountCheck_getM3DiscountProducts
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+
+		CREATE FIELD Environment.Variables.ProductData.AgreementProducts;
+		DECLARE agrementRef REFERENCE TO Environment.Variables.ProductData.AgreementProducts;
+
+		If LENGTH(Environment.Variables.DiscountKlist) > 0 THEN
+			DECLARE m3QueryK CHARACTER '
+			SELECT
+			D8OBV2 as ITNO
+			from OGCMTX
+			where D8CONO=?
+			and D8CMPN IN ('|| Environment.Variables.DiscountKlist ||')
+			and D8FVD2 <=?
+			and D8LVDT>=?
+			';
+			CREATE FIELD agrementRef.K;
+			SET agrementRef.K.Item[] = PASSTHRU(
+			m3QueryK
+			,customerRef.OKCONO
+			,customerRef.CurrentDate
+			,customerRef.CurrentDate
+			);
+		END IF;
+
+		If LENGTH(Environment.Variables.DiscountPlist) > 0 THEN
+			DECLARE m3QueryP CHARACTER '
+			SELECT
+			ODITNO as ITNO
+			from OPRBAS
+			where ODCONO=?
+			and ODPRRF IN ('|| Environment.Variables.DiscountPlist ||')
+			and ODFVDT <=?
+			and ODLVDT>=?
+			';
+			
+			CREATE FIELD agrementRef.P;
+			SET agrementRef.P.Item[] = PASSTHRU(
+			m3QueryP
+			,customerRef.OKCONO
+			,customerRef.CurrentDate
+			,customerRef.CurrentDate
+			);
+		END IF ;
+		DELETE FIELD Environment.Variables.DiscountKlist;
+		DELETE FIELD Environment.Variables.DiscountPlist;
+	END;
+
+END MODULE;

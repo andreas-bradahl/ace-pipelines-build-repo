@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><mappingRoot xmlns="http://www.ibm.com/2008/ccl/Mapping" domainID="com.ibm.msl.mapping.xml" domainIDExtension="mb" mainMap="true" targetNamespace="putSubscriptionOrder" version="8.0.5.0" xmlns:map="putSubscriptionOrder">
+    <inlinedXMLSchema><![CDATA[<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">        
+                                     <xsd:element name="keepInstances" type="xsd:string"/>  
+    <xsd:element name="optimizeOrderLines" type="xsd:string"/>  
+</xsd:schema>]]></inlinedXMLSchema>
+    <input path="jar:file://!com/ibm/etools/mft/map/xsds/predefined/JsonDomainMsg.xsd" var="var"/>
+    <input derivedFrom="MB:JSON_schema_in_swagger_document" path="/swagger.json" var="var1"/>
+    <input inlinedXMLSchema="true" path="../schema_0.xsd" var="var2"/>
+    <output path="/subscriptionOrder.xsd"/>
+    <namespaces>
+        <namespace kind="supplement" prefix="in" uri="http://www.ibm.com/iib/msl/json"/>
+        <namespace kind="supplement" prefix="out" uri="http://TIP026_DSP_Orders_REST"/>
+    </namespaces>
+    <generation engine="xquery"/>
+    <mappingDeclaration name="mapInputParametersToXml">
+        <input derivedFrom="MB:JSON_operation_name:putSubscriptionOrder" namespace="http://www.ibm.com/iib/msl/json" path="$var/mb:msg(JSON,assembly,JSON,Properties,LocalEnvironment)" var="ComIbmMessageAssembly_JSON">
+            <cast derivedFrom="MB:JSON_operation_request" path="$ComIbmMessageAssembly_JSON/JSON/Data/type('anyType')" qualifier="{http://www.ibm.com/iib/msl/json}putSubscriptionOrderRequest" ref="var1"/>
+            <cast castType="userDefined" path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/any" qualifier="optimizeOrderLines" ref="var2"/>
+            <cast castType="userDefined" path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/any" qualifier="keepInstances" ref="var2"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:keepInstances" path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/any" qualifier="keepInstances" ref="var2"/>
+            <cast derivedFrom="MB:JSON_path_query_parm:optimizeOrderLines" path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/any" qualifier="optimizeOrderLines" ref="var2"/>
+        </input>
+        <output namespace="http://TIP026_DSP_Orders_REST" path="mb:msg(putSubscriptionOrderRequest,assembly,XMLNSC,Properties)" var="MessageAssembly"/>
+        <local>
+            <input path="$ComIbmMessageAssembly_JSON/JSON/spath('Data',2)" var="Data"/>
+            <input path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/optimizeOrderLines" var="optimizeOrderLines"/>
+            <input path="$ComIbmMessageAssembly_JSON/LocalEnvironment/REST/Input/Parameters/keepInstances" var="keepInstances"/>
+            <output path="$MessageAssembly/putSubscriptionOrderRequest"/>
+            <move>
+                <input path="$Data/companyNumber"/>
+                <output path="companyNumber"/>
+            </move>
+            <move>
+                <input path="$Data/customerNumber"/>
+                <output path="customerNumber"/>
+            </move>
+            <move>
+                <input path="$Data/orderNumber"/>
+                <output path="orderNumber"/>
+            </move>
+            <move>
+                <input path="$Data/estimatedOrderAmount"/>
+                <output path="estimatedOrderAmount"/>
+            </move>
+            <local>
+                <input path="$Data/orderLines"/>
+                <output path="orderLines"/>
+                <foreach>
+                    <input path="Item" var="Item1"/>
+                    <output path="putSubscriptionOrderRequestOrderLinesAdd" var="putSubscriptionOrderRequestOrderLinesAdd"/>
+                    <output path="putSubscriptionOrderRequestOrderLinesUpd" var="putSubscriptionOrderRequestOrderLinesUpd"/>
+                    <output path="putSubscriptionOrderRequestOrderLinesDel" var="putSubscriptionOrderRequestOrderLinesDel"/>
+                    <if>
+                        <input path="$Item1/." var="Item"/>
+                        <output path="$putSubscriptionOrderRequestOrderLinesAdd/."/>
+                        <test lang="xpath">$Item/action = 'add'</test>
+                        <move>
+                            <input path="$Item/sku" var="sku"/>
+                            <output path="sku"/>
+                        </move>
+                        <move>
+                            <input path="$Item/quantity"/>
+                            <output path="quantity"/>
+                        </move>
+                        <move>
+                            <input path="$Item/orderLineUnit"/>
+                            <output path="orderLineUnit"/>
+                        </move>
+                        <move>
+                            <input path="$Item/action"/>
+                            <output path="action"/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item1/." var="Item2"/>
+                        <output path="$putSubscriptionOrderRequestOrderLinesUpd/."/>
+                        <test lang="xpath">$Item2/action = 'upd'</test>
+                        <move>
+                            <input path="$Item2/sku"/>
+                            <output path="sku"/>
+                        </move>
+                        <move>
+                            <input path="$Item2/quantity"/>
+                            <output path="quantity"/>
+                        </move>
+                        <move>
+                            <input path="$Item2/orderLineUnit"/>
+                            <output path="orderLineUnit"/>
+                        </move>
+                        <move>
+                            <input path="$Item2/action"/>
+                            <output path="action"/>
+                        </move>
+                        <move>
+                            <input path="$Item2/orderLineNumbers/Item"/>
+                            <output path="orderLineNumbers"/>
+                        </move>
+                    </if>
+                    <if>
+                        <input path="$Item1/." var="Item3"/>
+                        <output path="$putSubscriptionOrderRequestOrderLinesDel/."/>
+                        <test lang="xpath">$Item3/action = 'del'</test>
+                        <move>
+                            <input path="$Item3/sku"/>
+                            <output path="sku"/>
+                        </move>
+                        <move>
+                            <input path="$Item3/action"/>
+                            <output path="action"/>
+                        </move>
+                        <move>
+                            <input path="$Item3/orderLineNumbers/Item"/>
+                            <output path="orderLineNumbers"/>
+                        </move>
+                    </if>
+                </foreach>
+            </local>
+            <condition>
+                <if>
+                    <input path="$optimizeOrderLines/." var="optimizeOrderLines1"/>
+                    <output path="optimizeOrderLines"/>
+                    <test lang="xpath">fn:string-length($optimizeOrderLines1) &gt; 0</test>
+                    <convert>
+                        <input path="$optimizeOrderLines1/."/>
+                        <output path="."/>
+                    </convert>
+                </if>
+                <else>
+                    <output path="optimizeOrderLines"/>
+                    <assign value="false">
+                        <output path="."/>
+                    </assign>
+                </else>
+            </condition>
+            <convert>
+                <input path="$keepInstances/."/>
+                <output path="keepInstances"/>
+            </convert>
+        </local>
+        <move>
+            <input path="$ComIbmMessageAssembly_JSON/Properties"/>
+            <output path="$MessageAssembly/Properties"/>
+        </move>
+    </mappingDeclaration>
+</mappingRoot>

@@ -1,0 +1,251 @@
+
+
+CREATE COMPUTE MODULE getItemsPerCustomer_CreateOutput
+		CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE queryParams REFERENCE TO Environment.Variables.getItemPerCustomerRequestEnviroment.Request;
+		DECLARE customerRef REFERENCE TO Environment.Variables.UserInfo.Row;
+		DECLARE producDataRef REFERENCE TO Environment.Variables.ProductData;
+		DECLARE envVariablesRef REFERENCE TO Environment.Variables;
+		
+		DECLARE itemsCount INT 0;
+		DECLARE jsonDataRef REFERENCE TO OutputRoot;
+		CREATE FIELD OutputRoot.JSON.Data AS jsonDataRef IDENTITY(JSON.Array)Data;
+
+		--DECLARE currentItem, itemsRoot REFERENCE TO OutputRoot;
+		--DECLARE itemInfoCusor,itemInfoRef REFERENCE TO Environment.Variables.FullItemsList;
+
+		DECLARE itemListRef, itemListCursor, priceCursor REFERENCE TO Environment.Variables.FullItemsList;
+		MOVE itemListCursor FIRSTCHILD NAME 'Item';
+		DECLARE variableRef REFERENCE TO Environment.Variables;
+		DECLARE itemCount INT 0;
+
+		DECLARE noVAT BOOLEAN inExcludList(customerRef.OKVTCD,producDataRef.NoVATCodes);
+
+		WHILE LASTMOVE(itemListCursor) DO
+			SET itemCount = itemCount + 1;
+			DECLARE itemId CHAR itemListCursor.ITNO;
+/*
+			IF itemId = '1379' THEN	
+				DECLARE break BOOLEAN true;
+			END IF;
+*/		
+			SET jsonDataRef.Item[itemCount].itemId = itemId;
+
+			DECLARE inK BOOLEAN inM3List(itemListCursor,producDataRef.AgreementProducts.K);
+			DECLARE inP BOOLEAN inM3List(itemListCursor,producDataRef.AgreementProducts.P);
+			IF (inK or inP) THEN
+				SET jsonDataRef.Item[itemCount].inAgreementAssortment VALUE = TRUE;
+			ELSE
+				SET jsonDataRef.Item[itemCount].inAgreementAssortment VALUE = FALSE;
+			END IF;
+			
+			-- Price data adder
+			IF (queryParams.UNIT = 'D') THEN
+								
+				MOVE priceCursor TO itemListCursor;
+				MOVE priceCursor FIRSTCHILD NAME 'Dprice';
+				SET jsonDataRef.Item[itemCount].dpakPrice VALUE = CalculatePrice(priceCursor, 'D');
+				SET jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount VALUE = CalculatePriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, 'D');
+				
+				IF itemListCursor.MUCOFA IS NULL THEN
+					IF itemListCursor.MMUNMS <> 'STK' THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = CalculateDPakPrUnitPrice(priceCursor, variableRef);
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = CalculateDPakPrUnitPriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, variableRef);
+					ELSE
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = jsonDataRef.Item[itemCount].dpakPrice;
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount;
+					END IF;
+				ELSE 					
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = jsonDataRef.Item[itemCount].dpakPrice / CAST(itemListCursor.MUCOFA AS INTEGER);
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = ROUND(jsonDataRef.Item[itemCount].dpakPerUnitPrice, 2 MODE ROUND_HALF_UP);
+					
+					IF jsonDataRef.Item[itemCount].dpakPerUnitPrice = 0 THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = NULL;
+					END IF;
+					
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount / CAST(itemListCursor.MUCOFA AS INTEGER);
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = ROUND(jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount, 2 MODE ROUND_HALF_UP);
+					
+					IF jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount = 0 THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = NULL;
+					END IF;
+				END IF;
+			
+			ELSEIF (queryParams.UNIT = 'F') THEN
+				
+				MOVE priceCursor TO itemListCursor;
+				MOVE priceCursor FIRSTCHILD NAME 'Fprice';
+				SET jsonDataRef.Item[itemCount].fpakPrice VALUE = CalculatePrice(priceCursor, 'F');
+				SET jsonDataRef.Item[itemCount].fpakPriceBeforeDiscount VALUE = CalculatePriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, 'F');
+			
+			ELSEIF (queryParams.UNIT = 'BOTH') THEN
+				
+				MOVE priceCursor TO itemListCursor;
+				MOVE priceCursor FIRSTCHILD NAME 'Dprice';
+				SET jsonDataRef.Item[itemCount].dpakPrice VALUE = CalculatePrice(priceCursor, 'D');
+				SET jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount VALUE = CalculatePriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, 'D');
+				
+				IF itemListCursor.MUCOFA IS NULL THEN
+					IF itemListCursor.MMUNMS <> 'STK' THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = CalculateDPakPrUnitPrice(priceCursor, variableRef);
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = CalculateDPakPrUnitPriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, variableRef);
+					ELSE
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = jsonDataRef.Item[itemCount].dpakPrice;
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount;
+					END IF;
+				ELSE 					
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = jsonDataRef.Item[itemCount].dpakPrice / CAST(itemListCursor.MUCOFA AS INTEGER);
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = ROUND(jsonDataRef.Item[itemCount].dpakPerUnitPrice, 2 MODE ROUND_HALF_UP);
+					
+					IF jsonDataRef.Item[itemCount].dpakPerUnitPrice = 0 THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPrice VALUE = NULL;
+					END IF;
+					
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount / CAST(itemListCursor.MUCOFA AS INTEGER);
+					SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = ROUND(jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount, 2 MODE ROUND_HALF_UP);
+					
+					IF jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount = 0 THEN
+						SET jsonDataRef.Item[itemCount].dpakPerUnitPriceBeforeDiscount VALUE = NULL;
+					END IF;
+				END IF;
+
+				MOVE priceCursor TO itemListCursor;
+				MOVE priceCursor FIRSTCHILD NAME 'Fprice';
+/*
+				IF priceCursor.ITNO = '13928' THEN
+					DECLARE break BOOLEAN true;
+				END IF;
+*/
+				SET jsonDataRef.Item[itemCount].fpakPrice VALUE = CalculatePrice(priceCursor, 'F');
+				SET jsonDataRef.Item[itemCount].fpakPriceBeforeDiscount VALUE = CalculatePriceBeforeDisc(priceCursor,producDataRef.ExcludeDiscounts, 'F');
+			
+			ELSE
+				
+				SET jsonDataRef.Item[itemCount].dpakPrice VALUE = NULL;
+				SET jsonDataRef.Item[itemCount].dpakPriceBeforeDiscount VALUE = NULL;
+				SET jsonDataRef.Item[itemCount].fpakPrice VALUE = NULL;
+				SET jsonDataRef.Item[itemCount].fpakPriceBeforeDiscount VALUE = NULL;
+				
+			END IF; 
+			
+			MOVE priceCursor TO itemListCursor;
+			MOVE priceCursor FIRSTCHILD NAME 'Cprice';
+			IF (TRIM(priceCursor.ALUN) IN ('KG','L'))
+			--IF (itemListCursor.MMUNMS IN ('KG', 'L', 'STK')) -- TODO stk?
+				THEN
+				
+				SET jsonDataRef.Item[itemCount].comparisonPriceUnit VALUE = priceCursor.ALUN;
+				
+				IF CAST(priceCursor.DIA6 AS DECIMAL) > 0 THEN
+					SET jsonDataRef.Item[itemCount].comparisonPrice VALUE = CAST(priceCursor.LNAM AS DECIMAL) + CAST(priceCursor.DIA6 AS DECIMAL); 
+				ELSE
+					SET jsonDataRef.Item[itemCount].comparisonPrice VALUE = CAST(priceCursor.LNAM AS DECIMAL);
+				END IF;
+			ELSE
+				SET jsonDataRef.Item[itemCount].comparisonPriceUnit VALUE = NULL; 
+				SET jsonDataRef.Item[itemCount].comparisonPrice VALUE = NULL; 
+			END IF;
+
+
+
+
+			DECLARE sellByDate CHAR;
+			SET jsonDataRef.Item[itemCount].sellByDate VALUE = NULL;
+			IF itemListCursor.ZBSLDT=0 THEN
+				SET sellByDate = NULL;
+			ELSE
+				SET sellByDate = itemListCursor.ZBSLDT;
+			END IF;
+
+
+			SET jsonDataRef.Item[itemCount].promotionalProduct = inM3List(itemListCursor,producDataRef.Promational);
+
+			SET jsonDataRef.Item[itemCount].canBeDeliveredAtDate VALUE = NULL;
+			SET jsonDataRef.Item[itemCount].canBuy = TRUE;
+			SET jsonDataRef.Item[itemCount].cannotBuyCode VALUE = NULL;
+		
+
+			DECLARE canBeDeliveredAtDate CHAR producDataRef.CanBeDeliveredData;
+			DECLARE inputOrderDate CHARACTER Environment.Variables.getItemPerCustomerRequestEnviroment.Request.DATE;
+			
+			IF inputOrderDate < canBeDeliveredAtDate THEN
+			
+				IF 
+					EXISTS(producDataRef.CanBeDeliveredData.Row[])
+					AND jsonDataRef.Item[itemCount].promotionalProduct = FALSE
+					AND TRIM(itemListCursor.MMITCL) <> 'OPEX'
+					AND TRIM(itemListCursor.C4PREX) <> '7'
+					THEN
+					IF envVariablesRef.SupplyModelAsMain AND inM3List(itemListCursor, envVariablesRef.SupplyModelItems) THEN
+						
+						SET jsonDataRef.Item[itemCount].canBeDeliveredAtDate VALUE = DateCharFromyyyyMMdd( canBeDeliveredAtDate);
+						
+					ELSEIF 	TRIM(itemListCursor.MBWHLO) <> TRIM(customerRef.OKWHLO) THEN
+						
+						SET jsonDataRef.Item[itemCount].canBeDeliveredAtDate VALUE = DateCharFromyyyyMMdd( canBeDeliveredAtDate);
+						
+					END IF;
+					
+				END IF;
+			
+			ELSE
+				
+				SET jsonDataRef.Item[itemCount].canBeDeliveredAtDate VALUE = NULL;
+
+			END IF;
+
+			IF 
+				sellByDate > TRIM(queryParams.DATE)
+				THEN
+				SET jsonDataRef.Item[itemCount].canBuy = FALSE;
+				IF envVariablesRef.SupplyModelAsMain
+					AND inM3List(itemListCursor, envVariablesRef.SupplyModelItems)THEN
+					SET jsonDataRef.Item[itemCount].sellByDate VALUE = DateCharFromyyyyMMdd(sellByDate);
+				ELSE
+					SET jsonDataRef.Item[itemCount].sellByDate VALUE = DateCharFromyyyyMMdd(sellByDate);
+				END IF;
+				SET jsonDataRef.Item[itemCount].cannotBuyCode = 'BEFORE_SELL_BY_DATE';
+			ELSEIF 
+				EXISTS(producDataRef.OnlyInWarehouseOrderTypes.Row[]) 
+				AND inM3List(itemListCursor, envVariablesRef.SupplyModelItems) 
+				AND itemListCursor.C4PREX <>'7'
+				THEN
+				SET jsonDataRef.Item[itemCount].canBuy = FALSE;
+				SET jsonDataRef.Item[itemCount].cannotBuyCode = 'PRODUCT_NOT_IN_CUSTOMERS_WAREHOUSE';
+			ELSEIF 
+				EXISTS(producDataRef.NotOPEXOrderTypes.Row[]) 
+				AND itemListCursor.MMITCL = 'OPEX' 
+				THEN
+				SET jsonDataRef.Item[itemCount].canBuy = FALSE;
+				SET jsonDataRef.Item[itemCount].cannotBuyCode = 'OPEX_PRODUCT_NOT_ALLOWED';
+			ELSEIF 
+				EXISTS(producDataRef.NotPromotionalProductsOrderTypes.Row[]) 
+				AND inM3List(itemListCursor, producDataRef.Promational) 
+				THEN
+				SET jsonDataRef.Item[itemCount].canBuy = FALSE;
+				SET jsonDataRef.Item[itemCount].cannotBuyCode = 'PROMOTIONAL_PRODUCT_NOT_ALLOWED';
+			END IF;
+
+			IF 
+				noVAT 
+				THEN
+				SET jsonDataRef.Item[itemCount].VAT VALUE = NULL;
+			ELSE
+				SET jsonDataRef.Item[itemCount].VAT VALUE = itemListCursor.CVVTP1;
+			END IF;
+			
+			DECLARE tempRef REFERENCE TO Environment;
+			CREATE LASTCHILD OF jsonDataRef.Item[itemCount] IDENTITY(JSON.Array)allowedOrderLineUnits;
+
+			FOR unit AS itemListCursor.allowedOrderLineUnits.Item[] DO
+				CREATE LASTCHILD OF jsonDataRef.Item[itemCount].allowedOrderLineUnits AS tempRef NAME 'Item';
+				SET tempRef = unit;
+			END FOR;
+
+			MOVE itemListCursor NEXTSIBLING;
+
+		END WHILE;
+	END;
+END MODULE;

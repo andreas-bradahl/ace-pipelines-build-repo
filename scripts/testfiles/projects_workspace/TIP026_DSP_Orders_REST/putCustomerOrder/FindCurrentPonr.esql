@@ -1,0 +1,28 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE FindCurrentPonr
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE currentOrderLineRef REFERENCE TO InputLocalEnvironment.Variables.CurrentOrder;
+		DECLARE lstLine2Ref REFERENCE TO Environment.Variables.HTTPResponses.LstLine2; 
+		
+		DECLARE currentOrderLineNumber CHAR CAST(currentOrderLineRef.orderLineNumber.Item AS CHAR);
+		
+		FOR lstLine2reply AS lstLine2Ref.Item[] DO
+			
+			DECLARE ponr CHAR lstLine2reply.PONR;
+			
+			IF ponr = currentOrderLineNumber THEN
+				 
+				SET OutputRoot.XMLNSC.Values.PONR = ponr; 
+				RETURN TRUE;
+				
+			END IF;
+			
+		END FOR;
+		
+		
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,59 @@
+BROKER SCHEMA putCustomerOrder
+
+
+CREATE COMPUTE MODULE esqlPrepareOIZ340MILstSupplSummary
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE FACI CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.WHLO;
+		DECLARE CUNO CHARACTER Environment.OrderRequest.Data.customerNumber;
+		DECLARE ORTP CHARACTER Environment.OrderRequest.Data.orderType;
+		DECLARE DWDZ CHARACTER Environment.OrderRequest.Data.requestedDeliveryDate;
+		DECLARE SPLM CHARACTER Environment.Variables.HTTPResponses.getOCUSMA00.Item.SPLM;
+		DECLARE POPN CHARACTER;
+		
+		DECLARE multipleWarehouses BOOLEAN FALSE;
+		
+		DECLARE skuRef REFERENCE TO Environment;
+		DECLARE skus REFERENCE TO Environment;
+		CREATE FIELD Environment.Variables.CustomerWarehouseSkus AS skus;
+
+		FOR record AS Environment.OrderRequest.Data.orderLines.Item[] DO
+			
+			SET POPN = record.sku;
+			
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.CONO = 100;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.CUNO = CUNO;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.FACI = FACI;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.POPN = POPN;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORQA = 1;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.ORTP = ORTP;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.DWDZ = DWDZ;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.SPLM = SPLM;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.BCKO = 2;
+			SET OutputLocalEnvironment.Destination.HTTP.QueryString.PADL = 2;
+			
+			PROPAGATE TO TERMINAL 'out';
+			
+			IF NOT(multipleWarehouses) THEN
+				IF NOT(Environment.Variables.isCustomerWarehouse) THEN
+					SET multipleWarehouses = TRUE;
+				END IF;
+			END IF;
+			
+			IF Environment.Variables.isCustomerWarehouse THEN
+				CREATE LASTCHILD OF skus AS skuRef NAME 'sku';
+				SET skuRef = record;
+			END IF;
+			
+			DELETE FIELD Environment.Variables.isCustomerWarehouse;
+						
+		END FOR;
+		
+		SET Environment.Variables.multipleWarehouses = multipleWarehouses;
+		
+		PROPAGATE TO TERMINAL 'out1';
+
+		RETURN FALSE;
+	END;
+END MODULE;

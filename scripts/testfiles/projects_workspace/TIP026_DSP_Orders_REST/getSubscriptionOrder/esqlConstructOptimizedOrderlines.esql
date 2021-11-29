@@ -1,0 +1,210 @@
+BROKER SCHEMA getSubscriptionOrder
+
+
+CREATE COMPUTE MODULE esqlConstructOptimizedOrderlines
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD Environment.Variables.ResponseValues.OptimizedOrderLines;
+		CREATE FIELD OutputRoot.XMLNSC.ns:getSubscriptionOrderResponse;
+		DECLARE outputRootRef REFERENCE TO OutputRoot.XMLNSC.ns:getSubscriptionOrderResponse;
+		DECLARE optimizedOrderLinesRef REFERENCE TO Environment;
+		
+		DECLARE combinedOrderlinesRef REFERENCE TO Environment;
+		
+		DECLARE foundOrderSku BOOLEAN;
+		DECLARE firstOrderLineProcessed BOOLEAN;
+		DECLARE mixedQuantityUnits BOOLEAN;
+		DECLARE buyableInBaseUnit BOOLEAN;
+		
+		FOR skuValue AS Environment.Variables.ResponseValues.Skus.sku[] DO
+			CREATE LASTCHILD OF outputRootRef AS optimizedOrderLinesRef NAMESPACE(ns) NAME 'optimizedOrderLines';
+			SET foundOrderSku = FALSE;
+			SET firstOrderLineProcessed = FALSE;
+			
+			FOR order AS Environment.Variables.HTTPResponses.OIZ163MI_LstLine.Item[] DO
+				
+			--check for mixed units on same sku, will return quanitity in base units if TRUE
+			SET mixedQuantityUnits = FALSE;
+				IF NOT(foundOrderSku) THEN
+				
+					IF skuValue = order.ITNO THEN
+						SET buyableInBaseUnit = order.buyableInBaseUnit;
+									IF COALESCE(THE (SELECT ITEM fieldvalue(i.ALUN)
+			FROM Environment.Variables.HTTPResponses.OIZ163MI_LstLine.Item[] AS i 
+			WHERE i.ITNO = skuValue AND i.ALUN <> order.ALUN ), '0') = '0' THEN 
+			SET mixedQuantityUnits = FALSE;
+			ELSE
+				SET mixedQuantityUnits = TRUE;
+			END IF;
+						SET optimizedOrderLinesRef.ns:sku = order.ITNO;
+						SET optimizedOrderLinesRef.ns:itemDescription = order.FUDS;
+						SET optimizedOrderLinesRef.ns:combinedOrderLineNumbers = 0;
+						SET optimizedOrderLinesRef.ns:totalQuantity = 0;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak AND buyableInBaseUnit = True THEN
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.SPUN;
+						ELSEIF Environment.Variables.Global.Flags.CanOrderInFPak AND buyableInBaseUnit = False AND mixedQuantityUnits = False	THEN
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.ALUN;
+						ELSEIF (mixedQuantityUnits) THEN 
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.SPUN;
+						ELSE
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.ALUN;
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = TRUE;
+						SET optimizedOrderLinesRef.ns:canDecrease = TRUE;
+						SET optimizedOrderLinesRef.ns:canDelete = TRUE;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = TRUE;
+						
+						SET foundOrderSku = TRUE;
+						
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+		
+			FOR orderLine AS InputRoot.XMLNSC.ns:getSubscriptionOrderResponse.ns:optimizedOrderLines.ns:combinedOrderlines[] DO
+				
+				IF skuValue = orderLine.ns:sku THEN
+					
+					IF NOT(firstOrderLineProcessed) THEN
+						
+						SET optimizedOrderLinesRef.ns:combinedOrderLineNumbers = orderLine.ns:orderLineNumber;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak AND buyableInBaseUnit THEN
+							SET optimizedOrderLinesRef.ns:totalQuantity = orderLine.ns:quantityOrderLineBaseUnit;
+						ELSEIF (mixedQuantityUnits) THEN 
+							SET optimizedOrderLinesRef.ns:totalQuantity = orderLine.ns:quantityOrderLineBaseUnit;
+						ELSE
+							SET optimizedOrderLinesRef.ns:totalQuantity = orderLine.ns:quantityOrderLineUnit;							
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = orderLine.ns:canIncrease;
+						SET optimizedOrderLinesRef.ns:canDecrease = orderLine.ns:canDecrease;
+						SET optimizedOrderLinesRef.ns:canDelete = orderLine.ns:canDelete;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = orderLine.ns:canSendComplaint;
+						
+						CREATE LASTCHILD OF optimizedOrderLinesRef AS combinedOrderlinesRef NAMESPACE(ns) NAME 'combinedOrderlines';
+						SET combinedOrderlinesRef = orderLine;
+						
+						SET firstOrderLineProcessed = TRUE;
+						
+					ELSE
+					
+						CREATE NEXTSIBLING OF optimizedOrderLinesRef.ns:combinedOrderLineNumbers NAMESPACE(ns) NAME 'combinedOrderLineNumbers' VALUE orderLine.ns:orderLineNumber;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak AND buyableInBaseUnit THEN
+							SET optimizedOrderLinesRef.ns:totalQuantity = optimizedOrderLinesRef.ns:totalQuantity + orderLine.ns:quantityOrderLineBaseUnit;
+						ELSEIF (mixedQuantityUnits) THEN 
+							SET optimizedOrderLinesRef.ns:totalQuantity = optimizedOrderLinesRef.ns:totalQuantity + orderLine.ns:quantityOrderLineBaseUnit;
+						ELSE	
+							SET optimizedOrderLinesRef.ns:totalQuantity = optimizedOrderLinesRef.ns:totalQuantity + orderLine.ns:quantityOrderLineUnit;						
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = optimizedOrderLinesRef.ns:canIncrease AND orderLine.ns:canIncrease;
+						SET optimizedOrderLinesRef.ns:canDecrease = optimizedOrderLinesRef.ns:canDecrease AND orderLine.ns:canDecrease;
+						SET optimizedOrderLinesRef.ns:canDelete = optimizedOrderLinesRef.ns:canDelete AND orderLine.ns:canDelete;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = optimizedOrderLinesRef.ns:canSendComplaint AND orderLine.ns:canSendComplaint;
+												
+						CREATE LASTCHILD OF optimizedOrderLinesRef AS combinedOrderlinesRef NAMESPACE(ns) NAME 'combinedOrderlines';
+						SET combinedOrderlinesRef = orderLine;
+					
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+
+		END FOR;
+		
+		FOR skuValue AS Environment.Variables.ResponseValues.Skus.skuFoundOtherUnits[] DO
+			
+			CREATE LASTCHILD OF outputRootRef AS optimizedOrderLinesRef NAMESPACE(ns) NAME 'optimizedOrderLines';
+			SET foundOrderSku = FALSE;
+			SET firstOrderLineProcessed = FALSE;
+			
+			FOR order AS Environment.Variables.HTTPResponses.OIZ163MI_LstLine.Item[] DO
+				
+				IF NOT(foundOrderSku) THEN
+				
+					IF skuValue = order.ITNO THEN
+						
+						SET optimizedOrderLinesRef.ns:sku = order.ITNO;
+						SET optimizedOrderLinesRef.ns:itemDescription = order.FUDS;
+						SET optimizedOrderLinesRef.ns:combinedOrderLineNumbers = 0;
+						SET optimizedOrderLinesRef.ns:totalQuantity = 0;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak THEN
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.SPUN;
+						ELSE
+							SET optimizedOrderLinesRef.ns:totalQuantityUnit = order.ALUN;
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = TRUE;
+						SET optimizedOrderLinesRef.ns:canDecrease = TRUE;
+						SET optimizedOrderLinesRef.ns:canDelete = TRUE;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = TRUE;
+						
+						SET foundOrderSku = TRUE;
+						
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+		
+			FOR orderLine AS InputRoot.XMLNSC.ns:getSubscriptionOrderResponse.ns:optimizedOrderLines.ns:combinedOrderlines[] DO
+				
+				IF skuValue = orderLine.ns:sku THEN
+					
+					IF NOT(firstOrderLineProcessed) THEN
+						
+						SET optimizedOrderLinesRef.ns:combinedOrderLineNumbers = orderLine.ns:orderLineNumber;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak THEN
+							SET optimizedOrderLinesRef.ns:totalQuantity = orderLine.ns:quantityOrderLineBaseUnit;
+						ELSE
+							SET optimizedOrderLinesRef.ns:totalQuantity = orderLine.ns:quantityOrderLineUnit;							
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = orderLine.ns:canIncrease;
+						SET optimizedOrderLinesRef.ns:canDecrease = orderLine.ns:canDecrease;
+						SET optimizedOrderLinesRef.ns:canDelete = orderLine.ns:canDelete;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = orderLine.ns:canSendComplaint;
+						
+						CREATE LASTCHILD OF optimizedOrderLinesRef AS combinedOrderlinesRef NAMESPACE(ns) NAME 'combinedOrderlines';
+						SET combinedOrderlinesRef = orderLine;
+						
+						SET firstOrderLineProcessed = TRUE;
+						
+					ELSE
+					
+						CREATE NEXTSIBLING OF optimizedOrderLinesRef.ns:combinedOrderLineNumbers NAMESPACE(ns) NAME 'combinedOrderLineNumbers' VALUE orderLine.ns:orderLineNumber;
+						
+						IF Environment.Variables.Global.Flags.CanOrderInFPak THEN
+							SET optimizedOrderLinesRef.ns:totalQuantity = optimizedOrderLinesRef.ns:totalQuantity + orderLine.ns:quantityOrderLineBaseUnit;
+						ELSE	
+							SET optimizedOrderLinesRef.ns:totalQuantity = optimizedOrderLinesRef.ns:totalQuantity + orderLine.ns:quantityOrderLineUnit;						
+						END IF;
+						
+						SET optimizedOrderLinesRef.ns:canIncrease = optimizedOrderLinesRef.ns:canIncrease AND orderLine.ns:canIncrease;
+						SET optimizedOrderLinesRef.ns:canDecrease = optimizedOrderLinesRef.ns:canDecrease AND orderLine.ns:canDecrease;
+						SET optimizedOrderLinesRef.ns:canDelete = optimizedOrderLinesRef.ns:canDelete AND orderLine.ns:canDelete;
+						SET optimizedOrderLinesRef.ns:canSendComplaint = optimizedOrderLinesRef.ns:canSendComplaint AND orderLine.ns:canSendComplaint;
+												
+						CREATE LASTCHILD OF optimizedOrderLinesRef AS combinedOrderlinesRef NAMESPACE(ns) NAME 'combinedOrderlines';
+						SET combinedOrderlinesRef = orderLine;
+					
+					END IF;
+					
+				END IF;
+				
+			END FOR;
+
+		END FOR;
+
+		RETURN TRUE;
+	END;
+END MODULE;

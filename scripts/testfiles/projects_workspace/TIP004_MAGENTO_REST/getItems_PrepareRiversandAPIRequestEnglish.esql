@@ -1,0 +1,28 @@
+
+
+CREATE COMPUTE MODULE getItems_PrepareRiversandAPIRequestEnglish
+	DECLARE  PropertyRiversand  EXTERNAL  CHARACTER;
+	DECLARE  RiversandBase_Path  EXTERNAL  CHARACTER;
+
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		LOG EVENT SEVERITY 1 VALUES('prepare riversand1');
+		DECLARE httpRef, requestLineRef REFERENCE TO OutputLocalEnvironment;
+		
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP AS httpRef;
+		CREATE FIELD OutputLocalEnvironment.Destination.HTTP.RequestLine AS requestLineRef;
+		
+		--SET OutputLocalEnvironment.Destination.HTTP.RequestURL = RiversandBase_Path;
+		--'http://grunndata-api-test.tine.no';
+		--'http://grunndata-api.tine.no'
+		IF Environment.Variables.SKU IS NOT NULL THEN
+			SET requestLineRef.RequestURI = '/rest/v1/riversand/' || Environment.Variables.SKU; 
+		ELSE
+			SET requestLineRef.RequestURI = '/rest/v1/riversand/all';
+		END IF;
+		SET httpRef.QueryString.key = PropertyRiversand; -- API key
+		SET httpRef.QueryString.locale = 'en_WW';
+		
+		RETURN TRUE;
+	END;
+END MODULE;
