@@ -18,7 +18,7 @@ jq -cr '.[]' "$REPO_LIST" | while read repo; do
         # if [[ $(basename "$dir") =~ $EXCLUDE_PATTERN ]]; then
         if [[ ${dir^^} == *"LIB/" || ${dir^^} == *"JAVA/" || $(basename "${dir^^}") == "TIP000"* ]]; then
             continue
-        elif [[ $(basename "$dir") =~ [tT][iI][pP]${TIP_NUMBER}*/ ]]; then
+        elif [[ $(basename "$dir") =~ [tT][iI][pP]${TIP_NUMBER}* ]]; then
             PACKAGE_COMMAND+=" "$(basename "$dir")
         else
             echo "No valid application folder found - exiting..."
