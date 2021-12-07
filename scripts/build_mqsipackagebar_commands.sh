@@ -12,12 +12,16 @@ jq -cr '.[]' "$REPO_LIST" | while read repo; do
     PACKAGE_COMMAND="mqsipackagebar -a ../bars/${repo}.bar -k"
     # EXCLUDE_PATTERN='\b[tT][iI][pP]000[A-Za-z0-9-_]+|[tT][iI][pP]\d{3}[A-Za-z0-9-_]+[lL][iI][bB]|Java\b'
 
-    for dir in "$PROJECTS_WORKSPACE"/[tT][iI][pP]${TIP_NUMBER}*/; do
+    for dir in "$PROJECTS_WORKSPACE"/*/; do    
+    # for dir in "$PROJECTS_WORKSPACE"/[tT][iI][pP]${TIP_NUMBER}*/; do
         # if [[ $(basename "$dir") =~ $EXCLUDE_PATTERN ]]; then
         if [[ ${dir^^} == *"LIB/" || ${dir^^} == *"JAVA/" || $(basename "${dir^^}") == "TIP000"* ]]; then
             continue
-        else
+        elif [[ $dir =~ [tT][iI][pP]${TIP_NUMBER}*/ ]]; then
             PACKAGE_COMMAND+=" "$(basename "$dir")
+        else
+            echo "No application folder found - exiting..."
+            exit 1
         fi
     done
     echo "$PACKAGE_COMMAND" | tee -a "$OUTFILE"
