@@ -11,4 +11,4 @@ echo $(curl \
     -u tip-github:"$TOKEN" \
     -H "Accept: application/vnd.github.v3+json" \
     https://api.github.com/repos/${GH_USER}/${REPO} | 
-    jq -r '.topics[] | select(. | startswith("pod"))')
+    jq -r '.topics[] | select(. | startswith("project"))')
