@@ -1,0 +1,8 @@
+---
+applications:
+  - tip026-ace-orders-rest-esql-java
+  - tip004-ace-assortements-rest
+dependencies:
+  - tip000-common-logging-lib
+  - tip000-common-faulthandling-lib
+  - tip000-ace-cdm
