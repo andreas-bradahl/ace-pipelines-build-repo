@@ -1,11 +1,17 @@
+"""Fetch ACE bundle from manifest
+
+This script reads a manifest.yaml file with information about an IBM 
+ACE bundle (of applications and dependencies). It reads the
+'applications' and 'dependencies' array sections, and clones
+each of them to a common workspace directory.
+
+Script requires that moduel 'pyyaml' is installed.
+"""
+
 import os
 import sys
 
 import yaml
-
-manifest_file = sys.argv[1]
-branch = sys.argv[2]
-repos_working_dir = sys.argv[3]
 
 def clone_app(repo, branch, repos_working_dir):
     url = f'https://github.com/tineikt/{repo}.git'
@@ -15,6 +21,11 @@ def clone_app(repo, branch, repos_working_dir):
     else:
         print(f'Dependency {repo} already fetched.')
 
+manifest_file = sys.argv[1]
+branch = sys.argv[2]
+repos_working_dir = sys.argv[3]
+
+# Script execution code
 with open(manifest_file, 'r') as f:
     manifest_object = yaml.safe_load(f)
 
