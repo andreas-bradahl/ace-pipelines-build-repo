@@ -1,7 +1,10 @@
 import json
+import sys
 import yaml
 
 def main():
+    manifest_file = sys.argv[1]
+
     with open(manifest_file, 'r') as file:
         manifest_object = yaml.safe_load(file)
 
