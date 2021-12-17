@@ -26,8 +26,12 @@ branch = sys.argv[2]
 repos_working_dir = sys.argv[3]
 
 # Script execution code
-with open(manifest_file, 'r') as f:
-    manifest_object = yaml.safe_load(f)
+try:
+    with open(manifest_file, 'r') as f:
+        manifest_object = yaml.safe_load(f)
+except OSError as e:
+    print("Error reading manifest file")
+    sys.exit(1)
 
 for app in manifest_object['applications']:
     clone_app(app, branch, repos_working_dir)
