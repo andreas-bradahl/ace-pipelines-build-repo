@@ -10,7 +10,6 @@ Script requires that moduel 'pyyaml' is installed.
 
 import os
 import sys
-import json
 
 import yaml
 
@@ -25,9 +24,7 @@ def clone_app(repo, branch, repos_working_dir):
 manifest_file = sys.argv[1]
 branch = sys.argv[2]
 repos_working_dir = sys.argv[3]
-repo_list_file = sys.argv[4]
 
-# Script execution code
 def main():
     try:
         with open(manifest_file, 'r') as f:
@@ -36,14 +33,8 @@ def main():
         print("Error reading manifest file")
         sys.exit(1)
 
-    repo_list = []
     for app in manifest_object['applications']:
         clone_app(app, branch, repos_working_dir)
-        repo_list.append(app)
-
-    # Create repo list file
-    with open(repo_list_file, 'w') as r:
-        json.dump(repo_list, r)
 
     for dep in manifest_object['dependencies']:
         clone_app(dep, branch, repos_working_dir)
