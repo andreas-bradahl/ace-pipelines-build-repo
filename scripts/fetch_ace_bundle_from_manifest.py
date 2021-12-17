@@ -25,23 +25,27 @@ def clone_app(repo, branch, repos_working_dir):
 manifest_file = sys.argv[1]
 branch = sys.argv[2]
 repos_working_dir = sys.argv[3]
+repo_list_file = sys.argv[4]
 
 # Script execution code
-try:
-    with open(manifest_file, 'r') as f:
-        manifest_object = yaml.safe_load(f)
-except OSError as e:
-    print("Error reading manifest file")
-    sys.exit(1)
+def main():
+    try:
+        with open(manifest_file, 'r') as f:
+            manifest_object = yaml.safe_load(f)
+    except OSError as e:
+        print("Error reading manifest file")
+        sys.exit(1)
 
-repo_list = []
-for app in manifest_object['applications']:
-    clone_app(app, branch, repos_working_dir)
-    repo_list.append(app)
+    repo_list = []
+    for app in manifest_object['applications']:
+        clone_app(app, branch, repos_working_dir)
+        repo_list.append(app)
 
-# Create repo list file
-with open('repo_list.json', 'w') as r:
-    json.dump(repo_list, r)
+    # Create repo list file
+    with open(repo_list_file, 'w') as r:
+        json.dump(repo_list, r)
 
-for dep in manifest_object['dependencies']:
-    clone_app(dep, branch, repos_working_dir)
+    for dep in manifest_object['dependencies']:
+        clone_app(dep, branch, repos_working_dir)
+
+main()
