@@ -2,8 +2,10 @@ import json
 import sys
 import yaml
 
+
 def main():
     manifest_file = sys.argv[1]
+    file_path = sys.argv[2]
 
     with open(manifest_file, 'r') as file:
         manifest_object = yaml.safe_load(file)
@@ -12,7 +14,7 @@ def main():
     for app in manifest_object['applications']:
         repo_list.append(app)
 
-    with open('repo_list.json', 'w') as file:
+    with open(file_path, 'w') as file:
         json.dump(repo_list, file)
 
 main()
