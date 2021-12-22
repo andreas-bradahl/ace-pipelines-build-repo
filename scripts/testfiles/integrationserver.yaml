@@ -1,0 +1,31 @@
+apiVersion: appconnect.ibm.com/v1beta1
+kind: IntegrationServer
+metadata:
+  name: tip015
+  namespace: cicd
+spec:
+  adminServerSecure: true
+  barURL: ''
+  designerFlowsOperationMode: disabled
+  license:
+    accept: true
+    license: L-APEH-BTHFYQ
+    use: CloudPakForIntegrationNonProduction
+  pod:
+    containers:
+      runtime:
+        image: image-registry.openshift-image-registry.svc:5000/cicd/tip015
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 300m
+            memory: 300Mi
+  replicas: 1
+  router:
+    timeout: 120s
+  service:
+    endpointType: http
+  version: 11.0.0.10-r3-eus
