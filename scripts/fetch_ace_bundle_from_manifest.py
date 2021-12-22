@@ -29,7 +29,7 @@ def main():
     try:
         with open(manifest_file, 'r') as f:
             manifest_object = yaml.safe_load(f)
-    except OSError as e:
+    except OSError:
         print("Error reading manifest file")
         sys.exit(1)
 
