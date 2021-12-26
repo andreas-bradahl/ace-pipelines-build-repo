@@ -14,7 +14,7 @@ spec:
   pod:
     containers:
       runtime:
-        image: image-registry.openshift-image-registry.svc:5000/cicd/tip015
+        image: image-registry.openshift-image-registry.svc:5000/cicd/tip015:vcxbxcvb
         imagePullPolicy: Always
         resources:
           limits:
