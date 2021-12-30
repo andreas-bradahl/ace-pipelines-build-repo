@@ -1,0 +1,26 @@
+{
+    "integrationservers": [
+      {
+        "name": "dsp-tip004",
+        "applications": [
+          "tip004-ace-assortements-rest"
+        ],
+        "dependencies": [
+          "tip000-common-logging-lib",
+          "tip000-common-faulthandling-lib",
+          "tip000-ace-cdm"
+        ]
+      },
+      {
+        "name": "dsp-tip026",
+        "applications": [
+          "tip026-ace-orders-rest-esql-java"
+        ],
+        "dependencies": [
+          "tip000-common-logging-lib",
+          "tip000-common-faulthandling-lib",
+          "tip000-ace-cdm"
+        ]
+      }
+    ]
+  }

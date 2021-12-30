@@ -24,6 +24,7 @@ def clone_app(repo, branch, repos_working_dir):
 manifest_file = sys.argv[1]
 branch = sys.argv[2]
 repos_working_dir = sys.argv[3]
+pod_name = sys.argv[4]
 
 def main():
     try:
@@ -33,10 +34,14 @@ def main():
         print("Error reading manifest file")
         sys.exit(1)
 
-    for app in manifest_object['applications']:
-        clone_app(app, branch, repos_working_dir)
+    for server in manifest_object['integrationservers']:
+        if server['name'] == pod_name:
+            for app in server['applications']:
+                clone_app(app, branch, repos_working_dir)
 
-    for dep in manifest_object['dependencies']:
-        clone_app(dep, branch, repos_working_dir)
+    for server in manifest_object['integrationservers']:
+        if server['name'] == pod_name:
+            for dep in server['dependencies']:
+                clone_app(dep, branch, repos_working_dir)
 
 main()
