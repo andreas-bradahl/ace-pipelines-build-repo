@@ -34,14 +34,18 @@ def main():
         print("Error reading manifest file")
         sys.exit(1)
 
-    for server in manifest_object['integrationservers']:
-        if server['name'] == pod_name:
-            for app in server['applications']:
-                clone_app(app, branch, repos_working_dir)
+    pod_list = list(filter(lambda pod: pod['name'] == pod_name, manifest_object['integrationservers']))
+    
+    if(len(pod_list) == 0):
+        print(f'Could not find integration server {pod_name} in manifest file.')
+        sys.exit(1)
+    
+    pod = pod_list.pop()
 
-    for server in manifest_object['integrationservers']:
-        if server['name'] == pod_name:
-            for dep in server['dependencies']:
-                clone_app(dep, branch, repos_working_dir)
+    for app in pod['applications']:
+        clone_app(app, branch, repos_working_dir)
+
+    for dep in pod['dependencies']:
+        clone_app(dep, branch, repos_working_dir)
 
 main()
