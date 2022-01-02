@@ -6,6 +6,7 @@ import yaml
 def main():
     manifest_file = sys.argv[1]
     file_path = sys.argv[2]
+    pod_name = sys.argv[3]
 
     with open(manifest_file, 'r') as file:
         manifest_object = yaml.safe_load(file)
