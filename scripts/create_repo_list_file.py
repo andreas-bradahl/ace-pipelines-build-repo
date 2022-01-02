@@ -11,7 +11,15 @@ def main():
         manifest_object = yaml.safe_load(file)
 
     repo_list = []
-    for app in manifest_object['repositories']:
+    pod_list = list(filter(lambda pod: pod['name'] == pod_name, manifest_object['integrationservers']))
+
+    if(len(pod_list) == 0):
+        print(f'Could not find integration server {pod_name} in manifest file.')
+        sys.exit(1)
+
+    pod = pod_list.pop()
+
+    for app in pod['repositories']:
         repo_list.append(app)
 
     with open(file_path, 'w') as file:
