@@ -11,7 +11,7 @@ def main():
         manifest_object = yaml.safe_load(file)
 
     repo_list = []
-    for app in manifest_object['applications']:
+    for app in manifest_object['repositories']:
         repo_list.append(app)
 
     with open(file_path, 'w') as file:
