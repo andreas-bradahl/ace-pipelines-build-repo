@@ -42,10 +42,10 @@ def main():
     
     pod = pod_list.pop()
 
-    for app in pod['applications']:
+    for app in pod['repositories']:
         clone_app(app, branch, repos_working_dir)
 
-    for dep in pod['dependencies']:
+    for dep in pod['libraries']:
         clone_app(dep, branch, repos_working_dir)
 
 main()
