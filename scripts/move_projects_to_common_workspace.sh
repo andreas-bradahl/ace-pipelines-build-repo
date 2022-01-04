@@ -18,7 +18,7 @@ fi
 for dir in */; do
     # Copy all directories in 'projects' folder to workspace
     if [[ -d $dir/"$PROJECTS_FOLDER" ]]; then
-        echo "Putting all $dir projects in $ALL_PROJECTS_WORKSPACE"
+        echo "Copying all project folders from $dir to $ALL_PROJECTS_WORKSPACE"
         cp -r $dir/$PROJECTS_FOLDER/* $ALL_PROJECTS_WORKSPACE
     else
         echo "No '$PROJECTS_FOLDER' folder found for application $dir."
