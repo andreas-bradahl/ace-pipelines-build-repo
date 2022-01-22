@@ -3,13 +3,14 @@ import sys
 import yaml
 
 
-def main():
-    manifest_file = sys.argv[1]
-    file_path = sys.argv[2]
-    pod_name = sys.argv[3]
+def main(manifest_file, output_file, pod_name):
 
-    with open(manifest_file, 'r') as file:
-        manifest_object = yaml.safe_load(file)
+    try:
+        with open(manifest_file, 'r') as file:
+            manifest_object = yaml.safe_load(file)
+    except OSError:
+        print("Error reading manifest file")
+        sys.exit(1)        
 
     repo_list = []
     pod_list = list(filter(lambda pod: pod['name'] == pod_name, manifest_object['integrationservers']))
@@ -23,7 +24,7 @@ def main():
     for app in pod['repositories']:
         repo_list.append(app)
 
-    with open(file_path, 'w') as file:
+    with open(output_file, 'w') as file:
         json.dump(repo_list, file)
 
-main()
+main(sys.argv[1], sys.argv[2], sys.argv[3])
