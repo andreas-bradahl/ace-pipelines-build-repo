@@ -1,17 +1,17 @@
 integrationservers:
 
   - name: dsp-tip004
-    applications:
+    repositories:
       - tip004-ace-assortements-rest
-    dependencies:
+    libraries:
       - tip000-common-logging-lib
       - tip000-common-faulthandling-lib
       - tip000-ace-cdm
 
   - name: dsp-tip026
-    applications:
+    repositories:
       - tip026-ace-orders-rest-esql-java
-    dependencies:
+    libraries:
       - tip000-common-logging-lib
       - tip000-common-faulthandling-lib
       - tip000-ace-cdm
