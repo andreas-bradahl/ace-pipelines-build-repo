@@ -17,17 +17,17 @@ except:
     sys.exit(1)
 
 try:
-    integration_server_object['spec']['labels']['lastEventCommitId'] = commit_id
+    integration_server_object['metadata']['labels']['lastEventCommitId'] = commit_id
 except KeyError:
     print('Could not find tag lastEventCommitId.')
-    print('Should be under spec.labels.lastEventCommitId - aborting ...')
+    print('Should be under metadata.labels.lastEventCommitId - aborting ...')
     sys.exit(1)
 
 try:
-    integration_server_object['spec']['labels']['lastEventRepo'] = event_repo
+    integration_server_object['metadata']['labels']['lastEventRepo'] = event_repo
 except KeyError:
     print('Could not find tag lastEventRepo.')
-    print('Should be under spec.labels.lastEventRepo - aborting ...')
+    print('Should be under metadata.labels.lastEventRepo - aborting ...')
     sys.exit(1)    
 
 try:
