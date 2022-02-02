@@ -1,6 +1,7 @@
 import json
 import sys
 import yaml
+import logging
 
 
 def main(manifest_file, output_file, pod_name):
@@ -9,7 +10,7 @@ def main(manifest_file, output_file, pod_name):
         with open(manifest_file, 'r') as file:
             manifest_object = yaml.safe_load(file)
     except OSError:
-        print("Error reading manifest file")
+        logging.exception("Error reading manifest file")
         sys.exit(1)        
 
     repo_list = []
