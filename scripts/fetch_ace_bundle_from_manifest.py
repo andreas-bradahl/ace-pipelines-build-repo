@@ -10,6 +10,7 @@ Script requires that moduel 'pyyaml' is installed.
 
 import os
 import sys
+import logging
 
 import yaml
 
@@ -31,7 +32,7 @@ def main():
         with open(manifest_file, 'r') as f:
             manifest_object = yaml.safe_load(f)
     except OSError:
-        print("Error reading manifest file")
+        logging.exception("Error reading manifest file")
         sys.exit(1)
 
     pod_list = list(filter(lambda pod: pod['name'] == pod_name, manifest_object['integrationservers']))
